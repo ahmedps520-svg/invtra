@@ -34,7 +34,7 @@ export function EventsEmptyState({ firstName }: { firstName: string }) {
                 transition={{ delay: 0.15 + i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="flex items-center gap-4"
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-bronze-200 bg-bronze-50 font-display text-[15px] text-bronze-700">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-bronze-200 bg-bronze-50 font-display text-[15px] text-bronze-700 lining-nums">
                   {i + 1}
                 </span>
                 <span className="text-[15px] text-ink">{d.empty.steps[k]}</span>

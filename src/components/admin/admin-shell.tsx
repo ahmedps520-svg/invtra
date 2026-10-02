@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -109,13 +109,15 @@ function Nav({ badges, onNavigate }: { badges: AdminBadges; onNavigate?: () => v
 }
 
 function Footer({ user }: { user: { name: string; email: string } }) {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   async function signOut() {
     setBusy(true);
     try {
       await api("/api/auth/logout", { method: "POST" });
     } finally {
-      window.location.assign("/login");
+      router.replace("/login");
+      router.refresh();
     }
   }
   return (
@@ -161,7 +163,12 @@ function Brand() {
 export function AdminShell({ user, badges, children }: { user: { name: string; email: string }; badges: AdminBadges; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => setOpen(false), [pathname]);
+  // Close the drawer whenever the route changes (incl. back/forward).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);

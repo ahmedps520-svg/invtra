@@ -8,7 +8,7 @@ import { cardPreviewProps } from "@/server/events/preview";
 import { AdminAction } from "@/components/admin/actions";
 import { GrantPlanButton } from "@/components/admin/grant-plan";
 import { EventStateBadge } from "@/components/admin/event-state";
-import { DataTable, KeyValues, LinkCell, Mono, Muted, PageHeader, SectionTitle, StatTile, StatusBadge, humanize } from "@/components/admin/ui";
+import { DataTable, KeyValues, Mono, Muted, PageHeader, SectionTitle, StatTile, StatusBadge, humanize } from "@/components/admin/ui";
 import { dt, eventDateTime, money, num, pct, rel } from "@/components/admin/format";
 import { CardPreview } from "@/components/invitation/card-preview";
 import { themes as themeNames } from "@/lib/i18n/dictionaries/en/themes";

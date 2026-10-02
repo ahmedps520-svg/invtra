@@ -43,65 +43,62 @@ export function ThemePicker() {
               <button
                 type="button"
                 onClick={() => setPreviewKey(th.key)}
-                aria-label={fmt(t.previewOf, { name })}
-                className={cn(
-                  "group relative block w-full overflow-hidden rounded-xl bg-sand text-start transition-all duration-500 ease-luxe",
-                  "hover:-translate-y-0.5 hover:shadow-lift focus-visible:-translate-y-0.5",
-                  current ? "shadow-soft ring-2 ring-bronze-500 ring-offset-2 ring-offset-paper" : "ring-1 ring-line",
-                )}
+                aria-label={`${fmt(t.previewOf, { name })}${current ? ` — ${t.current}` : ""}${th.premium ? ` — ${t.premium}` : ""}`}
+                className="group block w-full rounded-xl text-start focus-visible:outline-none"
               >
-                <div className="aspect-[4/5]">
-                  {mounted ? (
-                    <CardPreview
-                      themeKey={th.key}
-                      design={designs[th.key]}
-                      language={event.language}
-                      content={content}
-                      title={name}
-                      className="h-full w-full"
-                    />
-                  ) : (
-                    <div className="skeleton h-full w-full" />
+                <span
+                  className={cn(
+                    "relative block overflow-hidden rounded-xl bg-sand transition-all duration-500 ease-luxe",
+                    "group-hover:-translate-y-0.5 group-hover:shadow-lift group-focus-visible:-translate-y-0.5 group-focus-visible:ring-2 group-focus-visible:ring-bronze-400 group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-paper",
+                    current ? "shadow-soft ring-2 ring-bronze-500 ring-offset-2 ring-offset-paper" : "ring-1 ring-line",
                   )}
-                </div>
-                <span className="absolute inset-x-0 bottom-0 flex translate-y-2 justify-center bg-gradient-to-t from-ink/55 to-transparent pb-3 pt-10 opacity-0 transition-all duration-500 ease-luxe group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-paper/95 px-3 py-1 text-[12px] font-medium text-ink shadow-soft">
-                    <Eye className="size-3.5" />
-                    {t.preview}
+                >
+                  <span className="block aspect-[4/5]">
+                    {mounted ? (
+                      <CardPreview
+                        themeKey={th.key}
+                        design={designs[th.key]}
+                        language={event.language}
+                        content={content}
+                        title={name}
+                        className="h-full w-full"
+                      />
+                    ) : (
+                      <span className="skeleton block h-full w-full" />
+                    )}
                   </span>
+                  <span className="absolute inset-x-0 bottom-0 flex translate-y-2 justify-center bg-gradient-to-t from-ink/55 to-transparent pb-3 pt-10 opacity-0 transition-all duration-500 ease-luxe group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-paper/95 px-3 py-1 text-[12px] font-medium text-ink shadow-soft">
+                      <Eye className="size-3.5" />
+                      {t.preview}
+                    </span>
+                  </span>
+                  {current ? (
+                    <span className="absolute start-2 top-2 flex size-6 items-center justify-center rounded-full bg-bronze-600 text-white shadow-soft ring-2 ring-paper">
+                      <Check className="size-3.5" strokeWidth={2.5} />
+                    </span>
+                  ) : null}
+                  {th.premium ? (
+                    <Badge tone="bronze" className="absolute end-2 top-2 border-bronze-200/80 bg-paper/90 backdrop-blur">
+                      <Sparkles className="size-3" />
+                      {t.premium}
+                    </Badge>
+                  ) : null}
                 </span>
-                {current ? (
-                  <span className="absolute start-2 top-2 flex size-6 items-center justify-center rounded-full bg-bronze-600 text-white shadow-soft ring-2 ring-paper">
-                    <Check className="size-3.5" strokeWidth={2.5} />
-                  </span>
-                ) : null}
-                {th.premium ? (
-                  <Badge tone="bronze" className="absolute end-2 top-2 border-bronze-200/80 bg-paper/90 backdrop-blur">
-                    <Sparkles className="size-3" />
-                    {t.premium}
-                  </Badge>
-                ) : null}
+                <span className="mt-3 block px-0.5">
+                  <span className="block font-display text-lg leading-tight text-ink">{name}</span>
+                  <span className="mt-1 line-clamp-2 block text-[12px] leading-relaxed text-ink-faint">{dict.themes[th.key].description}</span>
+                  {th.premium && !premiumIncluded ? <span className="mt-1.5 block text-[11px] font-medium text-bronze-700">{t.includedWithPremium}</span> : null}
+                  {current ? (
+                    <span className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium text-bronze-700">
+                      <Check className="size-3.5" />
+                      {t.current}
+                    </span>
+                  ) : (
+                    <span className="mt-2 inline-block text-[12px] font-medium text-bronze-700 underline-offset-4 group-hover:underline">{t.preview}</span>
+                  )}
+                </span>
               </button>
-              <div className="mt-3 px-0.5">
-                <p className="font-display text-lg leading-tight text-ink">{name}</p>
-                <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-ink-faint">{dict.themes[th.key].description}</p>
-                {th.premium && !premiumIncluded ? <p className="mt-1.5 text-[11px] font-medium text-bronze-700">{t.includedWithPremium}</p> : null}
-                {current ? (
-                  <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium text-bronze-700">
-                    <Check className="size-3.5" />
-                    {t.current}
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setPreviewKey(th.key)}
-                    aria-label={fmt(t.previewOf, { name })}
-                    className="mt-2 text-[12px] font-medium text-bronze-700 underline-offset-4 hover:underline"
-                  >
-                    {t.preview}
-                  </button>
-                )}
-              </div>
             </li>
           );
         })}
