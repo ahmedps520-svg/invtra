@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { getTheme } from "@/lib/themes/registry";
 import { monogramOf, cn } from "@/lib/utils";
 import { star } from "@/lib/card/ornaments";
+import { heroMotif } from "@/lib/card/hero-motifs";
 import { Divider, Txt, useInvitation } from "./primitives";
 import s from "./invitation.module.css";
 
@@ -65,6 +67,30 @@ function Names({ className }: { className?: string }) {
   return <div className={className}>{render(en, false, "text-[3.4rem] sm:text-7xl")}</div>;
 }
 
+/** The theme's illustration (teddy, moon, lanterns…) drawn in the event's palette. */
+function Motif() {
+  const { vm, animation } = useInvitation();
+  const motif = getTheme(vm.themeKey).page.motif;
+  const palette = vm.design.palette;
+  const art = useMemo(() => (motif ? heroMotif(motif, palette) : null), [motif, palette]);
+  if (!art) return null;
+  const style = { width: `min(72vw, ${art.width}px)` };
+  const html = { __html: art.svg };
+  return animation === "none" ? (
+    <div className="mb-8" style={style} aria-hidden="true" dangerouslySetInnerHTML={html} />
+  ) : (
+    <motion.div
+      className="mb-8"
+      style={style}
+      aria-hidden="true"
+      initial={{ opacity: 0, y: -14, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+      dangerouslySetInnerHTML={html}
+    />
+  );
+}
+
 function HeroText({ light }: { light?: boolean }) {
   const { vm } = useInvitation();
   return (
@@ -72,7 +98,9 @@ function HeroText({ light }: { light?: boolean }) {
       {vm.event.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={vm.event.logoUrl} alt="" className="mb-8 h-16 w-auto object-contain" />
-      ) : null}
+      ) : (
+        <Motif />
+      )}
       <Txt en={vm.copy.en.eyebrow} ar={vm.copy.ar.eyebrow} as="p" className={cn(s.eyebrow, "mb-6", light && "text-white/85")} inline />
       <Names />
       <Txt
@@ -105,7 +133,7 @@ function ScrollCue({ light }: { light?: boolean }) {
 
 export function Hero() {
   const { vm } = useInvitation();
-  const style = getTheme(vm.themeKey).page.hero;
+  const { hero: style, motif } = getTheme(vm.themeKey).page;
   const cover = vm.event.coverUrl;
 
   if (style === "split") {
@@ -145,13 +173,15 @@ export function Hero() {
               <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, color-mix(in srgb, var(--inv-bg) 55%, transparent), var(--inv-bg))" }} />
             </>
           ) : null}
-          <svg className={cn("absolute top-8 h-10 w-24", s.accent)} viewBox="-50 -10 100 40" fill="currentColor" aria-hidden="true">
-            {Array.from({ length: 11 }).map((_, i) => {
-              const a = (Math.PI * (20 + i * 14)) / 180;
-              return <path key={i} d={`M${Math.cos(a) * 12} ${Math.sin(a) * 12 - 8}L${Math.cos(a) * 30} ${Math.sin(a) * 30 - 8}`} stroke="currentColor" strokeWidth="1" />;
-            })}
-            <path d="M-8 -8A8 8 0 0 0 8 -8Z" />
-          </svg>
+          {motif ? null : (
+            <svg className={cn("absolute top-8 h-10 w-24", s.accent)} viewBox="-50 -10 100 40" fill="currentColor" aria-hidden="true">
+              {Array.from({ length: 11 }).map((_, i) => {
+                const a = (Math.PI * (20 + i * 14)) / 180;
+                return <path key={i} d={`M${Math.cos(a) * 12} ${Math.sin(a) * 12 - 8}L${Math.cos(a) * 30} ${Math.sin(a) * 30 - 8}`} stroke="currentColor" strokeWidth="1" />;
+              })}
+              <path d="M-8 -8A8 8 0 0 0 8 -8Z" />
+            </svg>
+          )}
           <HeroText />
           <ScrollCue />
         </div>
@@ -162,10 +192,12 @@ export function Hero() {
   if (style === "arch") {
     return (
       <header className="relative flex min-h-[100svh] flex-col items-center justify-center px-5 pb-24 pt-16">
-        <svg className={cn("mb-6 size-6", s.accent)} viewBox="-12 -12 24 24" aria-hidden="true">
-          <path d={star(0, 0, 11)} fill="currentColor" />
-        </svg>
-        <div className={cn(s.arch, "relative w-full max-w-md overflow-hidden border px-6 pb-14 pt-24")} style={{ borderColor: "var(--inv-accent)", background: "var(--inv-surface)" }}>
+        {motif ? null : (
+          <svg className={cn("mb-6 size-6", s.accent)} viewBox="-12 -12 24 24" aria-hidden="true">
+            <path d={star(0, 0, 11)} fill="currentColor" />
+          </svg>
+        )}
+        <div className={cn(s.arch, "relative w-full max-w-md overflow-hidden border px-6 pb-14", motif ? "pt-16" : "pt-24")} style={{ borderColor: "var(--inv-accent)", background: "var(--inv-surface)" }}>
           <div className={cn(s.arch, "pointer-events-none absolute inset-2 border")} style={{ borderColor: "var(--inv-line)" }} />
           {cover ? (
             // eslint-disable-next-line @next/next/no-img-element

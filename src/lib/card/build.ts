@@ -144,7 +144,7 @@ export function buildCardSvg(input: CardInput): string {
   const latinBody = family(design.fonts.body);
   const arDisplay = family(design.fonts.arabicDisplay);
   const arBody = family(design.fonts.arabicBody);
-  const displayWeight = design.fonts.display === "jost" ? 300 : design.fonts.display === "cinzel" ? 500 : 500;
+  const displayWeight = design.fonts.display === "jost" ? 300 : design.fonts.display === "quicksand" ? 600 : 500;
   const bodyItalic = ["cormorant", "playfair"].includes(design.fonts.body);
   const amp = ["cormorant", "playfair"].includes(design.fonts.display);
 

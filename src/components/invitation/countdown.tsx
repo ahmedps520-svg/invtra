@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { Label, Reveal, useInvitation, useNumber } from "./primitives";
 import s from "./invitation.module.css";
+
+const subscribeClock = (onTick: () => void) => {
+  const t = setInterval(onTick, 1000);
+  return () => clearInterval(t);
+};
+/** Current time, whole seconds (stable between ticks so React doesn't re-render needlessly). */
+const clockSnapshot = () => Math.floor(Date.now() / 1000) * 1000;
 
 /** Live countdown to the event start (rendered client-side only to avoid hydration drift). */
 export function Countdown() {
@@ -11,12 +18,7 @@ export function Countdown() {
   const num = useNumber();
   const target = new Date(vm.event.startsAt).getTime();
   const end = vm.event.endsAt ? new Date(vm.event.endsAt).getTime() : target + 6 * 3600_000;
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => {
-    setNow(Date.now());
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useSyncExternalStore(subscribeClock, clockSnapshot, () => null);
 
   if (now !== null && now >= target) {
     return (

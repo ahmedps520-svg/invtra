@@ -1,17 +1,54 @@
+import type { EventType } from "@prisma/client";
 import type { InvitationDesign } from "@/lib/design/schema";
 
-export const THEME_KEYS = ["minimal", "luxury", "romantic", "modern", "traditional", "arabic", "bilingual"] as const;
+export const THEME_KEYS = [
+  "minimal",
+  "luxury",
+  "romantic",
+  "modern",
+  "traditional",
+  "arabic",
+  "bilingual",
+  "royal",
+  "garden",
+  "henna",
+  "moonlight",
+  "teddy",
+  "clouds",
+  "lullaby",
+  "confetti",
+  "lantern",
+] as const;
 export type ThemeKey = (typeof THEME_KEYS)[number];
 
-export type CardOrnament = "hairline" | "deco" | "floral" | "geometric" | "baroque" | "arabesque" | "arch";
+export type CardOrnament =
+  | "hairline"
+  | "deco"
+  | "floral"
+  | "geometric"
+  | "baroque"
+  | "arabesque"
+  | "arch"
+  | "royal"
+  | "garden"
+  | "henna"
+  | "moonlight"
+  | "teddy"
+  | "clouds"
+  | "lullaby"
+  | "confetti"
+  | "lantern";
 export type HeroStyle = "centered" | "framed" | "arch" | "split" | "monogram";
 export type SectionStyle = "lines" | "cards" | "panels";
+export type HeroMotif = "royal" | "garden" | "henna" | "moonlight" | "teddy" | "clouds" | "lullaby" | "confetti" | "lantern";
 
 export interface ThemeDefinition {
   key: ThemeKey;
   /** Language the theme is designed around; any theme can render any language. */
   recommendedLanguage: "EN" | "AR" | "BILINGUAL";
   premium: boolean;
+  /** Occasions this design is made for (used for filtering and suggestions). */
+  occasions: EventType[];
   defaults: InvitationDesign;
   card: {
     ornament: CardOrnament;
@@ -29,6 +66,8 @@ export interface ThemeDefinition {
     sectionStyle: SectionStyle;
     namesUppercase: boolean;
     /** Decorative motif used between page sections. */
-    divider: "line" | "diamond" | "floral" | "star" | "dots";
+    divider: "line" | "diamond" | "floral" | "star" | "dots" | "moon" | "heart";
+    /** Illustration shown at the top of the guest website's hero. */
+    motif?: HeroMotif;
   };
 }

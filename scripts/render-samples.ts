@@ -7,23 +7,11 @@ import path from "node:path";
 import { THEME_LIST } from "@/lib/themes/registry";
 import { buildCardSvg, type CardLanguage } from "@/lib/card/build";
 import { renderSvgToPng } from "@/server/render/card";
+import { themeSampleContent } from "@/lib/card/sample";
 
 const out = process.argv[2] ?? "storage/samples";
 mkdirSync(out, { recursive: true });
 
-const content = {
-  eventType: "WEDDING" as const,
-  title: "The Wedding of Ahmed & Sara",
-  titleAr: "حفل زفاف أحمد وسارة",
-  hostNames: "Ahmed & Sara",
-  hostNamesAr: "أحمد و سارة",
-  date: { en: "Saturday, 12 December 2026", ar: "السبت، ١٢ ديسمبر ٢٠٢٦" },
-  time: { en: "7:30 PM", ar: "٧:٣٠ مساءً" },
-  venueName: "The Grand Ballroom, Four Seasons Resort",
-  venueNameAr: "القاعة الكبرى، فندق فور سيزونز",
-  address: "Jumeirah Beach Road, Dubai",
-  addressAr: "شارع جميرا، دبي",
-};
 
 const only = process.env.THEME;
 const langs: CardLanguage[] = (process.env.LANGS?.split(",") as CardLanguage[]) ?? ["EN", "AR", "BILINGUAL"];
@@ -35,7 +23,7 @@ for (const theme of THEME_LIST) {
       theme,
       design: theme.defaults,
       language,
-      content,
+      content: themeSampleContent(theme.key),
       guest: { name: language === "AR" ? "عائلة الأحمد" : "Khalid & Noura Al Mansoori", allowedCount: 2 },
       qrText: "HTTP://LOCALHOST:3000/Q/8F3K92QXHT",
     });

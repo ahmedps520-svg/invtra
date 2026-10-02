@@ -61,7 +61,6 @@ export function Gallery() {
             aria-label={fmt(d.gallery.photo, { n: open + 1, total: images.length })}
             onClick={close}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <motion.img
               key={images[open].url}
               src={images[open].url}

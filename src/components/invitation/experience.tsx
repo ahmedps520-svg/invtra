@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { InvitationDesign } from "@/lib/design/schema";
 import { normalizeDesign } from "@/lib/design/schema";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
+import { heroPattern } from "@/lib/card/hero-motifs";
 import { copyFor } from "@/lib/invitation-copy";
 import { fmt } from "@/lib/i18n/config";
 import { LogoMark } from "@/components/brand/logo";
@@ -29,7 +30,12 @@ type Status = "PENDING" | "ACCEPTED" | "DECLINED";
  */
 export function InvitationExperience({ vm: initial, via, checkin }: { vm: InvitationVM; via?: "qr" | "link"; checkin?: boolean }) {
   const [vm, setVm] = useState(initial);
-  useEffect(() => setVm(initial), [initial]);
+  const [prevInitial, setPrevInitial] = useState(initial);
+  if (initial !== prevInitial) {
+    // New server data (e.g. after router.refresh()) replaces any live-preview state.
+    setPrevInitial(initial);
+    setVm(initial);
+  }
 
   // Live preview: the design editor posts draft designs into this iframe.
   useEffect(() => {
@@ -79,6 +85,11 @@ export function InvitationExperience({ vm: initial, via, checkin }: { vm: Invita
   }, [initial.mode, initial.token, via]);
 
   const style = useMemo(() => themeVars(vm.design), [vm.design]);
+  const motif = getTheme(vm.themeKey).page.motif;
+  const pattern = useMemo(
+    () => (motif && vm.design.background.mode === "theme" && !vm.event.backgroundUrl ? heroPattern(motif, vm.design.palette) : null),
+    [motif, vm.design.background.mode, vm.design.palette, vm.event.backgroundUrl],
+  );
   const dir = vm.lang === "ar" ? "rtl" : "ltr";
 
   return (
@@ -87,6 +98,7 @@ export function InvitationExperience({ vm: initial, via, checkin }: { vm: Invita
         <noscript>
           <style>{"[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}"}</style>
         </noscript>
+        {pattern ? <div className="pointer-events-none fixed inset-0" style={{ backgroundImage: pattern }} aria-hidden="true" /> : null}
         {vm.event.backgroundUrl ? (
           <div className="pointer-events-none fixed inset-0" aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -107,10 +119,13 @@ function Body({ checkin }: { checkin?: boolean }) {
   const num = useNumber();
   const [status, setStatus] = useState<Status>(vm.guest?.rsvpStatus ?? "PENDING");
   const [attending, setAttending] = useState<number | null>(vm.guest?.attendingCount ?? null);
-  useEffect(() => {
+  const serverRsvp = `${vm.guest?.rsvpStatus}:${vm.guest?.attendingCount}`;
+  const [prevServerRsvp, setPrevServerRsvp] = useState(serverRsvp);
+  if (serverRsvp !== prevServerRsvp) {
+    setPrevServerRsvp(serverRsvp);
     setStatus(vm.guest?.rsvpStatus ?? "PENDING");
     setAttending(vm.guest?.attendingCount ?? null);
-  }, [vm.guest?.rsvpStatus, vm.guest?.attendingCount]);
+  }
   const sec = vm.design.sections;
   const g = vm.guest;
 

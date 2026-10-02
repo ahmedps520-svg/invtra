@@ -4,6 +4,7 @@ import { createContext, useContext, type CSSProperties, type ElementType, type R
 import { motion, useReducedMotion } from "framer-motion";
 import { star } from "@/lib/card/ornaments";
 import { fontStack } from "@/lib/design/fonts";
+import { getTheme } from "@/lib/themes/registry";
 import { luminance } from "@/lib/qr";
 import { cn } from "@/lib/utils";
 import type { InvitationDesign } from "@/lib/design/schema";
@@ -45,7 +46,7 @@ export function themeVars(design: InvitationDesign): CSSProperties {
     "--inv-on-accent": luminance(p.accent) > 0.45 ? "#15120f" : "#ffffff",
     "--inv-display": display,
     "--inv-body": body,
-    "--inv-display-weight": design.fonts.display === "jost" ? 300 : design.fonts.display === "pinyon" ? 400 : 500,
+    "--inv-display-weight": design.fonts.display === "jost" ? 300 : design.fonts.display === "pinyon" ? 400 : design.fonts.display === "quicksand" ? 600 : 500,
   } as CSSProperties;
 }
 
@@ -135,7 +136,7 @@ export function Reveal({ children, className, delay = 0, as = "div" }: { childre
 
 export function Divider({ className }: { className?: string }) {
   const { vm } = useInvitation();
-  const kind = vm.themeKey ? themeDivider(vm.themeKey) : "line";
+  const kind = getTheme(vm.themeKey).page.divider;
   return (
     <div className={cn("flex items-center justify-center", s.accent, className)} aria-hidden="true">
       <svg width="180" height="24" viewBox="-90 -12 180 24" fill="currentColor">
@@ -167,6 +168,20 @@ export function Divider({ className }: { className?: string }) {
             <circle cx="-32" r="2" />
             <circle cx="32" r="2" />
           </>
+        ) : kind === "moon" ? (
+          <>
+            <path d="M-90 0H-26M26 0H90" stroke="currentColor" strokeWidth="1" />
+            <path d="M3 -10A10 10 0 1 0 3 10A7.6 7.6 0 1 1 3 -10Z" />
+            <path d={star(-38, 0, 5, 4, 0.35)} />
+            <path d={star(38, 0, 5, 4, 0.35)} />
+          </>
+        ) : kind === "heart" ? (
+          <>
+            <path d="M-90 0H-24M24 0H90" stroke="currentColor" strokeWidth="1" strokeDasharray="3 4" />
+            <path d="M0 9C-3 6 -11 1 -11 -4.5C-11 -8.5 -8 -11 -4.8 -11C-2.6 -11 -1 -9.8 0 -8.2C1 -9.8 2.6 -11 4.8 -11C8 -11 11 -8.5 11 -4.5C11 1 3 6 0 9Z" />
+            <circle cx="-16" r="2" opacity="0.6" />
+            <circle cx="16" r="2" opacity="0.6" />
+          </>
         ) : (
           <>
             <rect x="-30" y="-4" width="8" height="8" />
@@ -180,22 +195,6 @@ export function Divider({ className }: { className?: string }) {
   );
 }
 
-function themeDivider(key: string): "line" | "diamond" | "floral" | "star" | "dots" {
-  switch (key) {
-    case "luxury":
-    case "traditional":
-      return "diamond";
-    case "romantic":
-      return "floral";
-    case "arabic":
-    case "bilingual":
-      return "star";
-    case "modern":
-      return "dots";
-    default:
-      return "line";
-  }
-}
 
 export function SectionHeading({ label, title }: { label: (d: InvitationDict) => string; title?: { en: string; ar?: string | null } }) {
   return (

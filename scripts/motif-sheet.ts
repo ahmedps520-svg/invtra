@@ -1,0 +1,16 @@
+import { writeFileSync } from "node:fs";
+import { renderSvgToPng } from "@/server/render/card";
+import * as m from "@/lib/card/motifs";
+const out = process.argv[2];
+const W = 1200, H = 800;
+let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#FBF7F1"/>`;
+s += `<rect x="0" y="0" width="300" height="400" fill="#1B2440"/>` + m.crescent(150, 150, 70, "#E2C58B") + m.sparkle(60, 80, 14, "#E2C58B") + m.sparkle(240, 260, 10, "#E2C58B") + m.starField({ x: 0, y: 0, w: 300, h: 400 }, 30, "#F4EFE6") + m.cloud(150, 370, 220, "#2A3762");
+s += m.teddy(450, 140, 48, { fur: "#C49A6C", light: "#F1DFC6", dark: "#5A4535", bow: "#D98C7A" }) + m.balloon(340, 90, 34, "#D98C7A", "#9C8571", 410, 205) + m.balloon(560, 70, 30, "#9DB8A6", "#9C8571", 490, 205);
+s += m.cribMobile(800, 0, 360, { line: "#B39B6C", a: "#E0C27A", b: "#C9A9D6", cloud: "#FFFFFF" });
+s += `<rect x="900" y="0" width="300" height="400" fill="#14213D"/>` + m.lantern(990, 0, 60, 170, { metal: "#D9A441", glow: "#FFD27A", glass: "#3B4A6B" }) + m.lantern(1110, 0, 120, 130, { metal: "#D9A441", glow: "#FFD27A", glass: "#3B4A6B" });
+s += m.mandala(150, 600, 170, "#B5562C") + m.paisley(380, 560, 60, 20, "#B5562C") + m.paisley(470, 660, 40, -40, "#B5562C");
+s += `<rect x="560" y="420" width="260" height="380" fill="#0F2E26"/>` + m.crown(690, 520, 140, { gold: "#C9A35B", jewel: "#7A1F2B" }) + m.blossom(620, 700, 30, "#FFFFFF", "#C9A35B") + m.blossom(760, 690, 22, "#F3EBDA", "#C9A35B", 20);
+s += m.branch(860, 780, 940, 440, 7, 40, "#7E9A72") + m.confetti({ x: 960, y: 420, w: 240, h: 380 }, 50, ["#E07A5F", "#F2CC8F", "#81B29A", "#3D405B"]);
+s += m.heart(400, 330, 20, "#D98C7A") + m.star5(460, 330, 16, "#E0C27A") + m.cloud(820, 370, 200, "#EEF4FA", 1, "#8FB3D3");
+s += "</svg>";
+writeFileSync(out, renderSvgToPng(s));

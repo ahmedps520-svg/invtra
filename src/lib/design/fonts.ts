@@ -11,14 +11,16 @@ export const FONTS = {
   "reem-kufi": { family: "Reem Kufi", script: "arabic", kind: "sans" },
   "plex-arabic": { family: "IBM Plex Sans Arabic", script: "arabic", kind: "sans" },
   "el-messiri": { family: "El Messiri", script: "arabic", kind: "sans" },
+  quicksand: { family: "Quicksand", script: "latin", kind: "sans" },
+  baloo: { family: "Baloo Bhaijaan 2", script: "arabic", kind: "sans" },
 } as const;
 
 export type FontKey = keyof typeof FONTS;
 
-export const LATIN_DISPLAY_FONTS: FontKey[] = ["cormorant", "cinzel", "pinyon", "playfair", "italiana", "jost"];
-export const LATIN_BODY_FONTS: FontKey[] = ["cormorant", "jost", "playfair"];
-export const ARABIC_DISPLAY_FONTS: FontKey[] = ["amiri", "aref-ruqaa", "reem-kufi", "el-messiri"];
-export const ARABIC_BODY_FONTS: FontKey[] = ["amiri", "plex-arabic", "el-messiri", "reem-kufi"];
+export const LATIN_DISPLAY_FONTS: FontKey[] = ["cormorant", "cinzel", "pinyon", "playfair", "italiana", "jost", "quicksand"];
+export const LATIN_BODY_FONTS: FontKey[] = ["cormorant", "jost", "playfair", "quicksand"];
+export const ARABIC_DISPLAY_FONTS: FontKey[] = ["amiri", "aref-ruqaa", "reem-kufi", "el-messiri", "baloo"];
+export const ARABIC_BODY_FONTS: FontKey[] = ["amiri", "plex-arabic", "el-messiri", "reem-kufi", "baloo"];
 
 /** Weights that exist for each family (see scripts/fetch-fonts.py). */
 export const FONT_WEIGHTS: Record<string, number[]> = {
@@ -33,6 +35,8 @@ export const FONT_WEIGHTS: Record<string, number[]> = {
   "Reem Kufi": [400, 500, 600],
   "IBM Plex Sans Arabic": [300, 400, 500, 600],
   "El Messiri": [400, 500, 600],
+  Quicksand: [400, 500, 600, 700],
+  "Baloo Bhaijaan 2": [400, 500, 600, 700],
 };
 
 export function nearestWeight(family: string, weight: number): number {

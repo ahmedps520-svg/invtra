@@ -57,6 +57,12 @@ export const common = {
     BIRTHDAY: "Birthday",
     CORPORATE: "Corporate event",
     GRADUATION: "Graduation",
+    NEWBORN: "New baby & visits",
+    BABY_SHOWER: "Baby shower",
+    AQIQAH: "Aqiqah",
+    HENNA: "Henna night",
+    ANNIVERSARY: "Anniversary",
+    RAMADAN: "Ramadan & Eid gathering",
     OTHER: "Other occasion",
   },
   eventLanguages: {

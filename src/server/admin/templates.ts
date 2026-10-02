@@ -11,7 +11,8 @@ import { TEMPLATE_VARIABLES } from "@/lib/whatsapp/templates";
  * can be toggled at any time.
  */
 
-export const EVENT_TYPES = ["WEDDING", "ENGAGEMENT", "BIRTHDAY", "CORPORATE", "GRADUATION", "OTHER"] as const;
+import { EVENT_TYPES } from "@/lib/events/types";
+export { EVENT_TYPES };
 export const TEMPLATE_LANGUAGES = ["en", "en_US", "en_GB", "ar"] as const;
 export const EDITABLE_STATUSES = ["DRAFT", "REJECTED"] as const;
 

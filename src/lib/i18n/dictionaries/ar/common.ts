@@ -59,6 +59,12 @@ export const common: typeof en = {
     BIRTHDAY: "عيد ميلاد",
     CORPORATE: "فعالية شركة",
     GRADUATION: "حفل تخرج",
+    NEWBORN: "استقبال مولود وزيارات",
+    BABY_SHOWER: "حفل استقبال مولود منتظر",
+    AQIQAH: "عقيقة",
+    HENNA: "ليلة حناء",
+    ANNIVERSARY: "ذكرى زواج",
+    RAMADAN: "غبقة ولقاءات رمضان والعيد",
     OTHER: "مناسبة أخرى",
   },
   eventLanguages: {

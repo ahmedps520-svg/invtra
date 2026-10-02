@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidTimeZone } from "@/lib/time";
+import { EVENT_TYPES } from "@/lib/events/types";
 
 const optionalText = (max: number) =>
   z
@@ -22,7 +23,7 @@ export const scheduleItemSchema = z.object({
 
 /** Event details form (step 1). Date/time are wall-clock values in `timezone`. */
 export const eventInputSchema = z.object({
-  type: z.enum(["WEDDING", "ENGAGEMENT", "BIRTHDAY", "CORPORATE", "GRADUATION", "OTHER"]),
+  type: z.enum(EVENT_TYPES),
   language: z.enum(["EN", "AR", "BILINGUAL"]),
   title: z.string().trim().min(2, "Give your event a name").max(140),
   titleAr: optionalText(140),

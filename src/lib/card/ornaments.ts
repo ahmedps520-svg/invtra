@@ -1,5 +1,6 @@
 import type { InvitationDesign } from "@/lib/design/schema";
 import type { CardOrnament } from "@/lib/themes/types";
+import { balloon, blossom, branch, cloud, confetti, crescent, cribMobile, crown, heart, lantern, mandala, mix, paisley, sparkle, star5, starField, teddy } from "./motifs";
 
 /**
  * Decorative layers for each theme's invitation card, drawn procedurally so they
@@ -148,6 +149,16 @@ function starDivider(color: string) {
     `<g transform="translate(${cx} ${cy}) scale(${s})"><path d="M-96 0H-24M24 0H96" stroke="${color}" stroke-width="1.2"/><path d="${star(0, 0, 13)}" fill="${color}"/><circle cx="-34" cy="0" r="2.5" fill="${color}"/><circle cx="34" cy="0" r="2.5" fill="${color}"/></g>`;
 }
 
+function moonDivider(color: string) {
+  return (cx: number, cy: number, s: number) =>
+    `<g transform="translate(${cx} ${cy}) scale(${s})"><path d="M-90 0H-24M24 0H90" stroke="${color}" stroke-width="1.2"/>${crescent(0, 0, 11, color, -30)}${sparkle(-36, -2, 5, color)}${sparkle(36, -2, 5, color)}</g>`;
+}
+
+function heartDivider(color: string) {
+  return (cx: number, cy: number, s: number) =>
+    `<g transform="translate(${cx} ${cy}) scale(${s})"><path d="M-80 0H-22M22 0H80" stroke="${color}" stroke-width="1.4" stroke-dasharray="2 6" stroke-linecap="round"/>${heart(0, 0, 12, color)}</g>`;
+}
+
 export function buildOrnament(kind: CardOrnament, ctx: OrnamentContext): OrnamentResult {
   const { W, H, palette: p, footerTop, texture } = ctx;
   const a = p.accent;
@@ -259,6 +270,141 @@ export function buildOrnament(kind: CardOrnament, ctx: OrnamentContext): Ornamen
         `<path d="${star(W / 2, 98, 15, 4, 0.35)}" fill="${a}"/>` +
         `<circle cx="${W / 2 - 34}" cy="98" r="2.5" fill="${a}"/><circle cx="${W / 2 + 34}" cy="98" r="2.5" fill="${a}"/>`;
       return { background, foreground, content: { x: 200, w: W - 400, top: 260, bottom: footerTop - 30 }, divider: starDivider(a), bottomPad: 80, sidePad: 160 };
+    }
+    case "royal": {
+      let damask = "";
+      if (texture) for (let y = 30; y < H; y += 64) for (let x = (y / 64) % 2 ? 32 : 0; x < W; x += 64) damask += `M${x} ${y - 5}L${x + 5} ${y}L${x} ${y + 5}L${x - 5} ${y}Z`;
+      const background = texture ? `<path d="${damask}" fill="${a}" opacity="0.07"/>` : "";
+      const foreground =
+        `<path d="${gappedRect(40, W, H, 230)}" fill="none" stroke="${a}" stroke-width="2.4"/>` +
+        `<path d="${gappedRect(54, W, H, 230)}" fill="none" stroke="${a}" stroke-width="0.9" opacity="0.75"/>` +
+        cornerFlourish(68, 68, 1, 1, a) +
+        cornerFlourish(W - 68, 68, -1, 1, a) +
+        cornerFlourish(68, H - 68, 1, -1, a) +
+        cornerFlourish(W - 68, H - 68, -1, -1, a) +
+        crown(W / 2, 52, 118, { gold: a, jewel: mix(a, "#7A1F2B", 0.78) });
+      return { background, foreground, content: { x: 160, w: W - 320, top: 205, bottom: footerTop - 30 }, divider: diamondDivider(a), bottomPad: 100, sidePad: 130 };
+    }
+    case "garden": {
+      const petal = mix(a, "#ffffff", 0.72);
+      const foreground =
+        branch(54, H - 70, 120, 70, 13, 44, a, 0.9) +
+        branch(W - 54, H - 70, W - 120, 70, 13, 44, a, 0.9) +
+        branch(W / 2 - 14, 112, W / 2 - 150, 96, 4, 24, a) +
+        branch(W / 2 + 14, 112, W / 2 + 150, 96, 4, 24, a) +
+        blossom(W / 2, 112, 15, petal, a) +
+        blossom(118, 330, 20, petal, a, 15) +
+        blossom(W - 112, 560, 18, petal, a, 40) +
+        blossom(96, 820, 16, petal, a, 70) +
+        blossom(W - 100, 1040, 20, petal, a, 10);
+      return { background: "", foreground, content: { x: 190, w: W - 380, top: 185, bottom: footerTop - 30 }, divider: floralDivider(a), bottomPad: 80, sidePad: 170 };
+    }
+    case "henna": {
+      let dots = "";
+      for (let x = 52; x <= W - 52; x += 22) dots += `<circle cx="${x}" cy="40" r="2.4"/><circle cx="${x}" cy="${H - 40}" r="2.4"/>`;
+      for (let y = 62; y <= H - 62; y += 22) dots += `<circle cx="40" cy="${y}" r="2.4"/><circle cx="${W - 40}" cy="${y}" r="2.4"/>`;
+      const background = texture ? mandala(W / 2, H + 40, 330, a, 0.08) : "";
+      const foreground =
+        `<g fill="${a}" opacity="0.75">${dots}</g>` +
+        `<rect x="54" y="54" width="${W - 108}" height="${H - 108}" fill="none" stroke="${a}" stroke-width="1" opacity="0.6"/>` +
+        mandala(W / 2, 36, 215, a, 0.9) +
+        paisley(150, H - 175, 58, 25, a) +
+        `<g transform="translate(${W} 0) scale(-1 1)">${paisley(150, H - 175, 58, 25, a)}</g>` +
+        paisley(140, 150, 38, -35, a, 0.8) +
+        `<g transform="translate(${W} 0) scale(-1 1)">${paisley(140, 150, 38, -35, a, 0.8)}</g>`;
+      return { background, foreground, content: { x: 170, w: W - 340, top: 285, bottom: footerTop - 30 }, divider: diamondDivider(a), bottomPad: 90, sidePad: 150 };
+    }
+    case "moonlight": {
+      const background = texture
+        ? `<defs><radialGradient id="mg" cx="50%" cy="12%" r="80%"><stop offset="0" stop-color="${p.surface}"/><stop offset="1" stop-color="${p.background}"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#mg)"/>` +
+          starField({ x: 30, y: 30, w: W - 60, h: H - 60 }, 90, p.text, 5, { x: 200, y: 280, w: W - 400, h: footerTop - 300 })
+        : "";
+      const foreground =
+        `<rect x="34" y="34" width="${W - 68}" height="${H - 68}" rx="26" fill="none" stroke="${a}" stroke-width="1.2" opacity="0.45"/>` +
+        crescent(W / 2 + 8, 148, 60, a, -28) +
+        sparkle(W / 2 - 118, 104, 15, a) +
+        sparkle(W / 2 + 118, 78, 10, a) +
+        sparkle(W / 2 + 146, 196, 8, a, 0.85) +
+        sparkle(W / 2 - 152, 210, 7, a, 0.8) +
+        cloud(150, H - 34, 380, p.surface, 0.95) +
+        cloud(W - 130, H - 58, 320, p.surface, 0.85);
+      return { background, foreground, content: { x: 150, w: W - 300, top: 262, bottom: footerTop - 30 }, divider: moonDivider(a), bottomPad: 90, sidePad: 130 };
+    }
+    case "teddy": {
+      const pink = mix(a, "#E59A8A", 0.62);
+      const sage = mix(p.muted, "#9DB8A6", 0.72);
+      const blue = mix(a, "#9CB7D6", 0.72);
+      let dots = "";
+      if (texture) for (let y = 30; y < H; y += 54) for (let x = (y / 54) % 2 ? 27 : 0; x < W; x += 54) dots += `<circle cx="${x}" cy="${y}" r="2.6"/>`;
+      const background = texture ? `<g fill="${a}" opacity="0.13">${dots}</g>` : "";
+      const s = 56;
+      const hy = 124;
+      const foreground =
+        `<rect x="34" y="34" width="${W - 68}" height="${H - 68}" rx="30" fill="none" stroke="${a}" stroke-width="2.2" stroke-dasharray="2 11" stroke-linecap="round" opacity="0.7"/>` +
+        balloon(W / 2 - 190, 116, 44, pink, p.muted, W / 2 - 46, hy + 1.45 * s) +
+        balloon(W / 2 + 188, 86, 40, blue, p.muted, W / 2 + 46, hy + 1.45 * s) +
+        balloon(W / 2 - 300, 196, 28, sage, p.muted, W / 2 - 50, hy + 1.5 * s) +
+        teddy(W / 2, hy, s, { fur: a, light: mix(a, "#ffffff", 0.64), dark: p.text, bow: pink }) +
+        heart(140, 120, 14, pink, 0.8) +
+        heart(W - 150, 250, 11, pink, 0.7) +
+        star5(W - 160, 120, 10, mix(a, "#E8C77A", 0.6)) +
+        star5(170, 300, 8, mix(a, "#E8C77A", 0.6), 0.8);
+      return { background, foreground, content: { x: 150, w: W - 300, top: 318, bottom: footerTop - 30 }, divider: heartDivider(mix(a, "#E59A8A", 0.4)), bottomPad: 85, sidePad: 120 };
+    }
+    case "clouds": {
+      const background = texture
+        ? `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(p.background, a, 0.22)}"/><stop offset="0.55" stop-color="${p.background}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#sky)"/>`
+        : "";
+      const gold = mix(a, "#E8C77A", 0.7);
+      const foreground =
+        cloud(180, 175, 300, p.surface, 1, a) +
+        cloud(W - 200, 128, 250, p.surface, 1, a) +
+        cloud(108, H - 160, 240, p.surface, 1, a) +
+        cloud(W - 130, H - 104, 300, p.surface, 1, a) +
+        crescent(W / 2 + 175, 96, 30, gold, -25) +
+        star5(W / 2 - 165, 92, 12, gold) +
+        sparkle(W / 2 + 70, 66, 11, gold) +
+        sparkle(W / 2 - 60, 150, 7, gold, 0.8) +
+        star5(W - 92, 340, 8, gold, 0.85) +
+        sparkle(84, 380, 9, gold, 0.85);
+      return { background, foreground, content: { x: 150, w: W - 300, top: 245, bottom: footerTop - 30 }, divider: starDivider(a), bottomPad: 85, sidePad: 120 };
+    }
+    case "lullaby": {
+      const gold = mix(a, "#E2C27A", 0.55);
+      const background = texture ? starField({ x: 40, y: 40, w: W - 80, h: 560 }, 34, a, 9, { x: 180, y: 260, w: W - 360, h: 400 }) : "";
+      const foreground = cribMobile(W / 2, 0, 500, { line: mix(a, p.text, 0.35), a: gold, b: a, cloud: p.surface });
+      return { background, foreground, content: { x: 150, w: W - 300, top: 300, bottom: footerTop - 30 }, divider: moonDivider(a), bottomPad: 80, sidePad: 120 };
+    }
+    case "confetti": {
+      const colors = [a, mix(a, "#F2CC8F", 0.75), mix(p.muted, "#81B29A", 0.75), p.text, mix(a, "#ffffff", 0.45)];
+      const avoid = { x: 150, y: 250, w: W - 300, h: footerTop - 250 };
+      const foreground =
+        confetti({ x: 30, y: 30, w: W - 60, h: 230 }, 80, colors, 3) +
+        confetti({ x: 30, y: 260, w: 120, h: H - 380 }, 26, colors, 4) +
+        confetti({ x: W - 150, y: 260, w: 120, h: H - 380 }, 26, colors, 5) +
+        `<path d="M70 40C110 80 40 110 90 150S60 220 110 250" stroke="${colors[1]}" stroke-width="3" fill="none" stroke-linecap="round"/>` +
+        `<path d="M${W - 70} 40C${W - 110} 80 ${W - 40} 110 ${W - 90} 150S${W - 60} 220 ${W - 110} 250" stroke="${colors[2]}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      void avoid;
+      return { background: "", foreground, content: { x: 160, w: W - 320, top: 255, bottom: footerTop - 30 }, divider: dotsDivider(a), bottomPad: 85, sidePad: 160 };
+    }
+    case "lantern": {
+      const glow = mix(a, "#FFE3A3", 0.6);
+      const glass = mix(p.background, a, 0.16);
+      const background = texture
+        ? `<defs><radialGradient id="lg" cx="50%" cy="0%" r="70%"><stop offset="0" stop-color="${p.surface}"/><stop offset="1" stop-color="${p.background}"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#lg)"/>` +
+          starField({ x: 30, y: 30, w: W - 60, h: 520 }, 40, p.text, 13, { x: 210, y: 240, w: W - 420, h: 360 })
+        : "";
+      const c = { metal: a, glow, glass };
+      const foreground =
+        lantern(170, 0, 70, 175, c) +
+        lantern(310, 0, 18, 112, c) +
+        lantern(W - 170, 0, 108, 175, c) +
+        lantern(W - 310, 0, 36, 112, c) +
+        crescent(W / 2 + 6, 112, 46, a, -30) +
+        sparkle(W / 2 - 70, 82, 10, a) +
+        sparkle(W / 2 + 64, 150, 7, a, 0.85) +
+        `<rect x="34" y="34" width="${W - 68}" height="${H - 68}" fill="none" stroke="${a}" stroke-width="1" opacity="0.35"/>`;
+      return { background, foreground, content: { x: 230, w: W - 460, top: 250, bottom: footerTop - 30 }, divider: starDivider(a), bottomPad: 90, sidePad: 150 };
     }
     case "hairline":
     default: {

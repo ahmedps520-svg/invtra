@@ -36,7 +36,43 @@ export type PaletteName =
   | "roseCopper"
   | "porcelainNavy"
   | "sageStone"
-  | "blushBronze";
+  | "blushBronze"
+  | "emeraldCrown"
+  | "sapphireGold"
+  | "burgundyCrown"
+  | "ivoryRoyal"
+  | "sageGarden"
+  | "eucalyptusMist"
+  | "blushGarden"
+  | "oliveGrove"
+  | "hennaTerracotta"
+  | "saffronHenna"
+  | "rosewoodHenna"
+  | "emeraldHenna"
+  | "nightSky"
+  | "duskPlum"
+  | "midnightTeal"
+  | "ivoryMoon"
+  | "honeyBear"
+  | "babyBlueBear"
+  | "blushBear"
+  | "mintBear"
+  | "skyBlue"
+  | "blushSky"
+  | "mintSky"
+  | "butterSky"
+  | "lavenderLullaby"
+  | "babyBlueLullaby"
+  | "blushLullaby"
+  | "sageLullaby"
+  | "coralParty"
+  | "navyParty"
+  | "mintParty"
+  | "berryParty"
+  | "midnightLantern"
+  | "plumLantern"
+  | "emeraldLantern"
+  | "ivoryLantern";
 
 export interface PalettePreset {
   name: PaletteName;
@@ -97,6 +133,60 @@ export const PALETTE_PRESETS: Record<ThemeKey, PalettePreset[]> = {
     { name: "nightGold", palette: { background: "#101828", surface: "#182235", text: "#F2EDE3", muted: "#A2A9B8", accent: "#C9A66B" } },
     { name: "sageStone", palette: { background: "#F0F2EC", surface: "#FAFBF8", text: "#263027", muted: "#7B857C", accent: "#7D8F6E" } },
     { name: "blushBronze", palette: { background: "#F8EFEC", surface: "#FFFAF8", text: "#3A2A28", muted: "#9A8480", accent: "#A97A62" } },
+  ],
+  royal: [
+    { name: "emeraldCrown", palette: { background: "#0F2E26", surface: "#143A30", text: "#F3EBDA", muted: "#B8C2B6", accent: "#C9A35B" } },
+    { name: "sapphireGold", palette: { background: "#0F1E3D", surface: "#16284D", text: "#F2ECDF", muted: "#AEB6C8", accent: "#C9A35B" } },
+    { name: "burgundyCrown", palette: { background: "#3A1019", surface: "#4A1722", text: "#F5E9DC", muted: "#C9AFA8", accent: "#D2AE6A" } },
+    { name: "ivoryRoyal", palette: { background: "#F7F2E7", surface: "#FFFCF5", text: "#1F2A24", muted: "#7E857B", accent: "#9A7A3C" } },
+  ],
+  garden: [
+    { name: "sageGarden", palette: { background: "#F1F4EC", surface: "#FBFCF8", text: "#2F3B2F", muted: "#7D8A79", accent: "#7E9A72" } },
+    { name: "eucalyptusMist", palette: { background: "#EEF3F1", surface: "#FAFCFB", text: "#23332F", muted: "#76877F", accent: "#5F8A7A" } },
+    { name: "blushGarden", palette: { background: "#F8EFEC", surface: "#FFFAF8", text: "#3D2C2B", muted: "#94817D", accent: "#B47F74" } },
+    { name: "oliveGrove", palette: { background: "#F3F1E6", surface: "#FCFBF5", text: "#2E3020", muted: "#7F8068", accent: "#7A7B45" } },
+  ],
+  henna: [
+    { name: "hennaTerracotta", palette: { background: "#F6EADB", surface: "#FCF4EA", text: "#4A2A1E", muted: "#9B7B66", accent: "#B5562C" } },
+    { name: "saffronHenna", palette: { background: "#F8EEDA", surface: "#FFF8EA", text: "#43301A", muted: "#97805F", accent: "#C9862B" } },
+    { name: "rosewoodHenna", palette: { background: "#F5E6E3", surface: "#FCF3F1", text: "#47232A", muted: "#9A7A7E", accent: "#9E3F4E" } },
+    { name: "emeraldHenna", palette: { background: "#EEF2EA", surface: "#FAFCF6", text: "#1F3328", muted: "#768878", accent: "#2F6B4F" } },
+  ],
+  moonlight: [
+    { name: "nightSky", palette: { background: "#1B2440", surface: "#243057", text: "#F4EFE6", muted: "#AEB4C8", accent: "#E2C58B" } },
+    { name: "duskPlum", palette: { background: "#2A1E36", surface: "#352747", text: "#F5EEF2", muted: "#B8A9BF", accent: "#E3BFA0" } },
+    { name: "midnightTeal", palette: { background: "#132B33", surface: "#1A3842", text: "#EEF4F2", muted: "#A5BCBB", accent: "#D8C28A" } },
+    { name: "ivoryMoon", palette: { background: "#F5F2EA", surface: "#FFFDF8", text: "#25304D", muted: "#7C8398", accent: "#B99757" } },
+  ],
+  teddy: [
+    { name: "honeyBear", palette: { background: "#F8F1E7", surface: "#FFFAF3", text: "#5A4535", muted: "#9C8571", accent: "#C49A6C" } },
+    { name: "babyBlueBear", palette: { background: "#EEF4F9", surface: "#FBFDFF", text: "#2F435A", muted: "#7D8FA3", accent: "#8FAFCB" } },
+    { name: "blushBear", palette: { background: "#FAEFEF", surface: "#FFF8F8", text: "#5A3A3E", muted: "#A0858A", accent: "#D99A9F" } },
+    { name: "mintBear", palette: { background: "#EEF6F1", surface: "#FAFDFB", text: "#2E4A3E", muted: "#7C978A", accent: "#86B59F" } },
+  ],
+  clouds: [
+    { name: "skyBlue", palette: { background: "#EAF2FA", surface: "#FFFFFF", text: "#2E4157", muted: "#7E91A6", accent: "#7FA6CC" } },
+    { name: "blushSky", palette: { background: "#FBEFF2", surface: "#FFFFFF", text: "#553946", muted: "#A08791", accent: "#E3A3B5" } },
+    { name: "mintSky", palette: { background: "#EAF6F1", surface: "#FFFFFF", text: "#284A3F", muted: "#789A8E", accent: "#7CC2A8" } },
+    { name: "butterSky", palette: { background: "#FBF5E3", surface: "#FFFFFF", text: "#4C4129", muted: "#9C9070", accent: "#E3C36B" } },
+  ],
+  lullaby: [
+    { name: "lavenderLullaby", palette: { background: "#F6F1F5", surface: "#FFFCFE", text: "#4B4253", muted: "#988FA0", accent: "#B59BC9" } },
+    { name: "babyBlueLullaby", palette: { background: "#F0F5FA", surface: "#FCFEFF", text: "#33445A", muted: "#8292A5", accent: "#93B4D6" } },
+    { name: "blushLullaby", palette: { background: "#FBF1F1", surface: "#FFFBFB", text: "#523C44", muted: "#A08A90", accent: "#DDA2AE" } },
+    { name: "sageLullaby", palette: { background: "#F1F5EF", surface: "#FCFDFB", text: "#34433A", muted: "#83917F", accent: "#9BB89A" } },
+  ],
+  confetti: [
+    { name: "coralParty", palette: { background: "#FBF7F2", surface: "#FFFFFF", text: "#1F1D2B", muted: "#6D6A7C", accent: "#E07A5F" } },
+    { name: "navyParty", palette: { background: "#1F2240", surface: "#2A2E52", text: "#F7F3EC", muted: "#B0B3C8", accent: "#F2CC8F" } },
+    { name: "mintParty", palette: { background: "#F0F7F3", surface: "#FFFFFF", text: "#1E2B26", muted: "#6A7C73", accent: "#3FA37C" } },
+    { name: "berryParty", palette: { background: "#FBF2F5", surface: "#FFFFFF", text: "#2B1B24", muted: "#7C6873", accent: "#C2457A" } },
+  ],
+  lantern: [
+    { name: "midnightLantern", palette: { background: "#14213D", surface: "#1C2B4D", text: "#F5EDE0", muted: "#AFB5C6", accent: "#D9A441" } },
+    { name: "plumLantern", palette: { background: "#2B1730", surface: "#38203F", text: "#F6ECE6", muted: "#BCA7B8", accent: "#E0AE52" } },
+    { name: "emeraldLantern", palette: { background: "#0F2A25", surface: "#163731", text: "#F2ECDD", muted: "#A9BBB2", accent: "#D6A548" } },
+    { name: "ivoryLantern", palette: { background: "#F7F1E4", surface: "#FFFBF2", text: "#23304A", muted: "#7D8396", accent: "#B07A1F" } },
   ],
 };
 

@@ -1,4 +1,5 @@
 "use client";
+import { EVENT_TYPES } from "@/lib/events/types";
 
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, type ReactNode } from "react";
@@ -34,7 +35,6 @@ export type TemplateFormValues = {
   eventTypes: string[];
 };
 
-const EVENT_TYPES = ["WEDDING", "ENGAGEMENT", "BIRTHDAY", "CORPORATE", "GRADUATION", "OTHER"];
 const LANGUAGES = [
   { value: "en", label: "English (en)" },
   { value: "en_US", label: "English US (en_US)" },

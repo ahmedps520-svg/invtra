@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { buildCardSvg, buildCustomCardSvg, type CardContent, type CardImage, type CardLanguage } from "@/lib/card/build";
 import type { InvitationDesign } from "@/lib/design/schema";
 import { getTheme, type ThemeKey } from "@/lib/themes/registry";
-import { SAMPLE_CARD_CONTENT, SAMPLE_GUEST } from "@/lib/card/sample";
+import { SAMPLE_GUEST, themeSampleContent } from "@/lib/card/sample";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,7 +15,7 @@ export function CardPreview({
   themeKey,
   design,
   language = "EN",
-  content = SAMPLE_CARD_CONTENT,
+  content,
   guest,
   qrText,
   qrPlaceholder = true,
@@ -44,7 +44,7 @@ export function CardPreview({
       return buildCustomCardSvg({ image: customImage, design: d, qrText, qrPlaceholder, caption: language === "AR" ? "امسح الرمز لعرض دعوتك" : "Scan for your invitation" }).svg;
     }
     const g = guest === undefined ? (language === "AR" ? SAMPLE_GUEST.ar : SAMPLE_GUEST.en) : guest;
-    return buildCardSvg({ theme, design: d, language, content, guest: g, qrText, qrPlaceholder, backgroundImage });
+    return buildCardSvg({ theme, design: d, language, content: content ?? themeSampleContent(theme.key), guest: g, qrText, qrPlaceholder, backgroundImage });
   }, [themeKey, design, language, content, guest, qrText, qrPlaceholder, backgroundImage, customImage]);
 
   return (

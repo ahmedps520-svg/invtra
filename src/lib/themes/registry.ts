@@ -40,6 +40,7 @@ function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" | "monog
 export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   minimal: {
     key: "minimal",
+    occasions: ["WEDDING", "ENGAGEMENT", "ANNIVERSARY", "BIRTHDAY", "GRADUATION", "CORPORATE", "NEWBORN", "OTHER"],
     recommendedLanguage: "EN",
     premium: false,
     defaults: design({
@@ -52,6 +53,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   },
   luxury: {
     key: "luxury",
+    occasions: ["WEDDING", "ENGAGEMENT", "ANNIVERSARY", "CORPORATE"],
     recommendedLanguage: "EN",
     premium: true,
     defaults: design({
@@ -64,6 +66,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   },
   romantic: {
     key: "romantic",
+    occasions: ["WEDDING", "ENGAGEMENT", "ANNIVERSARY", "BABY_SHOWER"],
     recommendedLanguage: "EN",
     premium: false,
     defaults: design({
@@ -76,6 +79,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   },
   modern: {
     key: "modern",
+    occasions: ["CORPORATE", "GRADUATION", "BIRTHDAY", "WEDDING", "OTHER"],
     recommendedLanguage: "EN",
     premium: false,
     defaults: design({
@@ -89,6 +93,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   },
   traditional: {
     key: "traditional",
+    occasions: ["WEDDING", "ENGAGEMENT", "HENNA", "AQIQAH"],
     recommendedLanguage: "EN",
     premium: true,
     defaults: design({
@@ -102,6 +107,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   },
   arabic: {
     key: "arabic",
+    occasions: ["WEDDING", "ENGAGEMENT", "HENNA", "AQIQAH", "RAMADAN"],
     recommendedLanguage: "AR",
     premium: false,
     defaults: design({
@@ -114,6 +120,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   },
   bilingual: {
     key: "bilingual",
+    occasions: ["WEDDING", "ENGAGEMENT", "NEWBORN", "AQIQAH", "CORPORATE", "OTHER"],
     recommendedLanguage: "BILINGUAL",
     premium: false,
     defaults: design({
@@ -123,6 +130,128 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
     }),
     card: { ornament: "arch", stackNames: false, namesUppercase: false, eyebrowUppercase: true, nameScale: 0.95, panel: false },
     page: { hero: "arch", sectionStyle: "lines", namesUppercase: false, divider: "star" },
+  },
+  royal: {
+    key: "royal",
+    recommendedLanguage: "EN",
+    premium: true,
+    occasions: ["WEDDING", "ENGAGEMENT", "ANNIVERSARY", "CORPORATE"],
+    defaults: design({
+      palette: { background: "#0F2E26", surface: "#143A30", text: "#F3EBDA", muted: "#B8C2B6", accent: "#C9A35B" },
+      fonts: { display: "cinzel", body: "cormorant", arabicDisplay: "aref-ruqaa", arabicBody: "amiri" },
+      animation: "elegant",
+      card: { ...baseCard, qr: { ...baseCard.qr, style: "classic" } },
+    }),
+    card: { ornament: "royal", stackNames: true, namesUppercase: true, eyebrowUppercase: true, nameScale: 0.82, panel: false },
+    page: { hero: "framed", sectionStyle: "panels", namesUppercase: true, divider: "diamond", motif: "royal" },
+  },
+  garden: {
+    key: "garden",
+    recommendedLanguage: "EN",
+    premium: false,
+    occasions: ["ENGAGEMENT", "BABY_SHOWER", "BIRTHDAY", "WEDDING", "ANNIVERSARY", "OTHER"],
+    defaults: design({
+      palette: { background: "#F1F4EC", surface: "#FBFCF8", text: "#2F3B2F", muted: "#7D8A79", accent: "#7E9A72" },
+      fonts: { display: "cormorant", body: "jost", arabicDisplay: "amiri", arabicBody: "plex-arabic" },
+      animation: "subtle",
+    }),
+    card: { ornament: "garden", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 1, panel: false },
+    page: { hero: "centered", sectionStyle: "cards", namesUppercase: false, divider: "floral", motif: "garden" },
+  },
+  henna: {
+    key: "henna",
+    recommendedLanguage: "AR",
+    premium: true,
+    occasions: ["HENNA", "WEDDING", "ENGAGEMENT"],
+    defaults: design({
+      palette: { background: "#F6EADB", surface: "#FCF4EA", text: "#4A2A1E", muted: "#9B7B66", accent: "#B5562C" },
+      fonts: { display: "playfair", body: "cormorant", arabicDisplay: "aref-ruqaa", arabicBody: "amiri" },
+      animation: "elegant",
+    }),
+    card: { ornament: "henna", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 0.95, panel: false },
+    page: { hero: "arch", sectionStyle: "panels", namesUppercase: false, divider: "diamond", motif: "henna" },
+  },
+  moonlight: {
+    key: "moonlight",
+    recommendedLanguage: "EN",
+    premium: true,
+    occasions: ["NEWBORN", "AQIQAH", "BABY_SHOWER"],
+    defaults: design({
+      palette: { background: "#1B2440", surface: "#243057", text: "#F4EFE6", muted: "#AEB4C8", accent: "#E2C58B" },
+      fonts: { display: "cormorant", body: "quicksand", arabicDisplay: "el-messiri", arabicBody: "baloo" },
+      animation: "elegant",
+      card: { ...baseCard, qr: { ...baseCard.qr, style: "dots" } },
+    }),
+    card: { ornament: "moonlight", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 1.05, panel: false },
+    page: { hero: "centered", sectionStyle: "cards", namesUppercase: false, divider: "moon", motif: "moonlight" },
+  },
+  teddy: {
+    key: "teddy",
+    recommendedLanguage: "EN",
+    premium: false,
+    occasions: ["NEWBORN", "BABY_SHOWER", "BIRTHDAY", "AQIQAH"],
+    defaults: design({
+      palette: { background: "#F8F1E7", surface: "#FFFAF3", text: "#5A4535", muted: "#9C8571", accent: "#C49A6C" },
+      fonts: { display: "quicksand", body: "quicksand", arabicDisplay: "baloo", arabicBody: "baloo" },
+      animation: "subtle",
+      card: { ...baseCard, qr: { ...baseCard.qr, style: "dots" } },
+    }),
+    card: { ornament: "teddy", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 0.95, panel: false },
+    page: { hero: "centered", sectionStyle: "cards", namesUppercase: false, divider: "heart", motif: "teddy" },
+  },
+  clouds: {
+    key: "clouds",
+    recommendedLanguage: "EN",
+    premium: false,
+    occasions: ["NEWBORN", "BABY_SHOWER", "AQIQAH", "BIRTHDAY"],
+    defaults: design({
+      palette: { background: "#EAF2FA", surface: "#FFFFFF", text: "#2E4157", muted: "#7E91A6", accent: "#7FA6CC" },
+      fonts: { display: "quicksand", body: "quicksand", arabicDisplay: "baloo", arabicBody: "baloo" },
+      animation: "subtle",
+      card: { ...baseCard, qr: { ...baseCard.qr, style: "dots" } },
+    }),
+    card: { ornament: "clouds", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 0.95, panel: false },
+    page: { hero: "centered", sectionStyle: "cards", namesUppercase: false, divider: "star", motif: "clouds" },
+  },
+  lullaby: {
+    key: "lullaby",
+    recommendedLanguage: "EN",
+    premium: true,
+    occasions: ["NEWBORN", "BABY_SHOWER", "AQIQAH"],
+    defaults: design({
+      palette: { background: "#F6F1F5", surface: "#FFFCFE", text: "#4B4253", muted: "#988FA0", accent: "#B59BC9" },
+      fonts: { display: "cormorant", body: "quicksand", arabicDisplay: "el-messiri", arabicBody: "baloo" },
+      animation: "elegant",
+    }),
+    card: { ornament: "lullaby", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 1.05, panel: false },
+    page: { hero: "centered", sectionStyle: "lines", namesUppercase: false, divider: "moon", motif: "lullaby" },
+  },
+  confetti: {
+    key: "confetti",
+    recommendedLanguage: "EN",
+    premium: false,
+    occasions: ["BIRTHDAY", "GRADUATION", "CORPORATE", "OTHER"],
+    defaults: design({
+      palette: { background: "#FBF7F2", surface: "#FFFFFF", text: "#1F1D2B", muted: "#6D6A7C", accent: "#E07A5F" },
+      fonts: { display: "jost", body: "jost", arabicDisplay: "reem-kufi", arabicBody: "plex-arabic" },
+      animation: "subtle",
+      card: { ...baseCard, qr: { ...baseCard.qr, style: "rounded" } },
+    }),
+    card: { ornament: "confetti", stackNames: true, namesUppercase: true, eyebrowUppercase: true, nameScale: 0.9, panel: false },
+    page: { hero: "centered", sectionStyle: "cards", namesUppercase: true, divider: "dots", motif: "confetti" },
+  },
+  lantern: {
+    key: "lantern",
+    recommendedLanguage: "AR",
+    premium: true,
+    occasions: ["RAMADAN", "AQIQAH", "CORPORATE"],
+    defaults: design({
+      palette: { background: "#14213D", surface: "#1C2B4D", text: "#F5EDE0", muted: "#AFB5C6", accent: "#D9A441" },
+      fonts: { display: "cormorant", body: "cormorant", arabicDisplay: "aref-ruqaa", arabicBody: "amiri" },
+      animation: "elegant",
+    }),
+    card: { ornament: "lantern", stackNames: true, namesUppercase: false, eyebrowUppercase: true, nameScale: 1, panel: false },
+    page: { hero: "arch", sectionStyle: "panels", namesUppercase: false, divider: "star", motif: "lantern" },
   },
 };
 

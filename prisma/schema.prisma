@@ -92,6 +92,12 @@ enum EventType {
   CORPORATE
   GRADUATION
   OTHER
+  NEWBORN // new baby & hospital / home visits
+  BABY_SHOWER
+  AQIQAH
+  HENNA
+  ANNIVERSARY
+  RAMADAN // iftar, ghabga & Eid gatherings
 }
 
 enum EventLanguage {
