@@ -89,6 +89,8 @@ export const dashboard = {
     createEyebrow: "Step 1 · Event",
     createTitle: "Tell us about your event",
     createIntro: "Start with the essentials. You can change anything later — even after sending.",
+    chosenDesign: "Design: {name}",
+    chosenDesignHint: "Your chosen design is ready for you in the next step — you can still change it.",
     editEyebrow: "Step 1 · Event",
     editTitle: "Event details",
     editIntro:

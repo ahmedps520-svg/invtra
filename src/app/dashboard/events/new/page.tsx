@@ -5,14 +5,17 @@ import { getI18n } from "@/server/i18n";
 import { EventForm } from "@/components/dashboard/event-form";
 import { STEP_KEYS } from "@/components/dashboard/steps";
 import { cn } from "@/lib/utils";
+import { isThemeKey } from "@/lib/themes/registry";
 
 export async function generateMetadata() {
   const { dict } = await getI18n();
   return { title: dict.dashboard.meta.newEvent };
 }
 
-export default async function NewEventPage() {
-  await requireUser("/dashboard/events/new");
+export default async function NewEventPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams;
+  const theme = typeof sp.theme === "string" && isThemeKey(sp.theme) ? sp.theme : null;
+  await requireUser(theme ? `/dashboard/events/new?theme=${theme}` : "/dashboard/events/new");
   const { dict } = await getI18n();
   const d = dict.dashboard;
   return (
@@ -39,7 +42,7 @@ export default async function NewEventPage() {
           </li>
         ))}
       </ol>
-      <EventForm mode="create" />
+      <EventForm mode="create" themeKey={theme} />
     </div>
   );
 }

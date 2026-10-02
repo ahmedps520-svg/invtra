@@ -129,8 +129,18 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
       setStaleAccepted(res.staleAccepted);
       setErrorMessage(null);
       retryDelay.current = 0;
-      const mediaChanged = MEDIA_FIELDS.some((f) => snapshot[f] !== before[f]) || snapshot.design.background.imageKey !== before.design.background.imageKey;
-      if (mediaChanged) setSiteVersion((v) => v + 1);
+      // The guest page renders these on the server (media URLs, wording, numerals, QR art), so the
+      // website preview reloads after they are saved; everything else updates live via postMessage.
+      const a = snapshot.design;
+      const b = before.design;
+      const serverSide =
+        MEDIA_FIELDS.some((f) => snapshot[f] !== before[f]) ||
+        a.background.imageKey !== b.background.imageKey ||
+        a.digits !== b.digits ||
+        !same(a.texts, b.texts) ||
+        a.card.qr.style !== b.card.qr.style ||
+        a.card.qr.showLogo !== b.card.qr.showLogo;
+      if (serverSide) setSiteVersion((v) => v + 1);
       return true;
     } catch (e) {
       const network = e instanceof ApiError && e.code === "network_error";

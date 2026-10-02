@@ -13,10 +13,13 @@ import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Switch } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
+import { fmt } from "@/lib/i18n/config";
 import { COMMON_TIME_ZONES, zoneOffsetMs } from "@/lib/time";
+import { getTheme, isThemeKey } from "@/lib/themes/registry";
+import { CardPreview } from "@/components/invitation/card-preview";
 import { eventInputSchema, type EventInput } from "@/lib/validation/event";
 import { cn } from "@/lib/utils";
-import { errorMessage, plural } from "./i18n";
+import { errorMessage, plural, themeName } from "./i18n";
 import { ScheduleEditor, type ScheduleRow } from "./schedule-editor";
 
 type Lang = "EN" | "AR" | "BILINGUAL";
@@ -177,14 +180,30 @@ function useBrowserTimeZone(): string | null {
   );
 }
 
-export function EventForm({ mode, eventId, initial }: { mode: "create" | "edit"; eventId?: string; initial?: EventInput | null }) {
+export function EventForm({
+  mode,
+  eventId,
+  initial,
+  themeKey,
+}: {
+  mode: "create" | "edit";
+  eventId?: string;
+  initial?: EventInput | null;
+  /** Design preselected on the marketing site (/dashboard/events/new?theme=…). */
+  themeKey?: string | null;
+}) {
   const { dict, locale } = useI18n();
   const d = dict.dashboard.form;
   const router = useRouter();
   const toast = useToast();
   const browserTz = useBrowserTimeZone();
 
-  const [form, setForm] = useState<FormState>(() => fromInput(initial));
+  const [form, setForm] = useState<FormState>(() => {
+    const f = fromInput(initial);
+    // A design chosen on the marketing site suggests its language.
+    if (!initial && themeKey && isThemeKey(themeKey)) f.language = getTheme(themeKey).recommendedLanguage;
+    return f;
+  });
   const [baseline, setBaseline] = useState(() => JSON.stringify(fromInput(initial)));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -274,7 +293,10 @@ export function EventForm({ mode, eventId, initial }: { mode: "create" | "edit";
     setSaving(true);
     try {
       if (mode === "create") {
-        const res = await api<{ event: { id: string } }>("/api/events", { method: "POST", body: payload });
+        const res = await api<{ event: { id: string } }>("/api/events", {
+          method: "POST",
+          body: themeKey && isThemeKey(themeKey) ? { ...payload, themeKey } : payload,
+        });
         setLeaving(true);
         router.push(`/dashboard/events/${res.event.id}/design`);
         return;
@@ -378,10 +400,28 @@ export function EventForm({ mode, eventId, initial }: { mode: "create" | "edit";
 
   return (
     <form onSubmit={submit} noValidate className="animate-fade-up">
-      <div className="mb-8 max-w-2xl">
-        <p className="eyebrow">{mode === "create" ? d.createEyebrow : d.editEyebrow}</p>
-        <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">{mode === "create" ? d.createTitle : d.editTitle}</h2>
-        <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{mode === "create" ? d.createIntro : d.editIntro}</p>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
+        <div className="max-w-2xl">
+          <p className="eyebrow">{mode === "create" ? d.createEyebrow : d.editEyebrow}</p>
+          <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">{mode === "create" ? d.createTitle : d.editTitle}</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{mode === "create" ? d.createIntro : d.editIntro}</p>
+        </div>
+        {mode === "create" && themeKey && isThemeKey(themeKey) ? (
+          <div className="flex max-w-sm items-center gap-4 rounded-2xl border border-bronze-200 bg-bronze-50/70 p-3 pe-5">
+            <CardPreview
+              themeKey={themeKey}
+              language={form.language}
+              qrPlaceholder={false}
+              guest={null}
+              className="w-14 shrink-0 rounded-[2px] shadow-soft ring-1 ring-ink/5"
+              title={themeName(dict, themeKey)}
+            />
+            <div className="min-w-0">
+              <p className="font-display text-lg text-ink">{fmt(d.chosenDesign, { name: themeName(dict, themeKey) })}</p>
+              <p className="mt-0.5 text-[12.5px] leading-snug text-ink-faint">{d.chosenDesignHint}</p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <Card className="px-5 py-8 sm:px-10 sm:py-10">
