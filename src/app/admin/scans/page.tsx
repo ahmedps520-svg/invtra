@@ -3,7 +3,7 @@ import { requireAdmin } from "@/server/auth/guards";
 import { getScanOverview } from "@/server/admin/scans";
 import { currentParams, type SearchParams } from "@/server/admin/params";
 import { ContextChip, DataTable, LinkCell, Mono, Muted, PageHeader, Pagination, SectionTitle, StatTile } from "@/components/admin/ui";
-import { dt, num, pct, rel } from "@/components/admin/format";
+import { dt, num, pct, plural, rel } from "@/components/admin/format";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "QR scans & views" };
@@ -29,7 +29,7 @@ export default async function ScansPage({ searchParams }: { searchParams: Promis
           {num(data.viewsBySource.LINK ?? 0)} via link · {num(data.viewsBySource.QR ?? 0)} via QR
         </StatTile>
         <StatTile label="Devices" value={pct(data.viewsByDevice.mobile ?? 0, t.views)} hint="of views on mobile">
-          {num(t.viewedInvitations)} invitations opened at least once
+          {plural(t.viewedInvitations, "invitation")} opened at least once
         </StatTile>
       </div>
 

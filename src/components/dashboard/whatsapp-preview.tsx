@@ -13,12 +13,14 @@ export function ChatFrame({
   children,
   className,
   bodyClassName,
+  bodyRef,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
+  bodyRef?: React.Ref<HTMLDivElement>;
 }) {
   return (
     <div className={cn("overflow-hidden rounded-[1.75rem] border border-line bg-paper shadow-lift", className)}>
@@ -35,6 +37,7 @@ export function ChatFrame({
         </div>
       </div>
       <div
+        ref={bodyRef}
         className={cn("space-y-2.5 px-3 py-4 sm:px-4", bodyClassName)}
         style={{
           backgroundColor: "#efeae2",

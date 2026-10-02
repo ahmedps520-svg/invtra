@@ -7,6 +7,7 @@ import { deepMerge, type DeepPartial, type InvitationDesign } from "@/lib/design
 import { getTheme, type ThemeKey } from "@/lib/themes/registry";
 import type { CardContent } from "@/lib/card/build";
 import { useI18n } from "@/components/i18n/provider";
+import { useToast } from "@/components/ui/toast";
 import type { DesignSaveResponse, Draft, EditorEvent, EditorGalleryImage, EditorProps, EditorThemeOption, EditorUpload, MediaKeyField } from "./types";
 
 export type SaveStatus = "saved" | "pending" | "error";
@@ -90,6 +91,7 @@ function saveBody(d: Draft, s: Draft): Record<string, unknown> | null {
 export function EditorProvider({ props, children }: { props: EditorProps; children: ReactNode }) {
   const { dict } = useI18n();
   const router = useRouter();
+  const toast = useToast();
   const eventId = props.event.id;
 
   const [draft, setDraft] = useState<Draft>(props.initial);
@@ -105,6 +107,8 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
   const [gallery, setGalleryState] = useState<EditorGalleryImage[]>(props.gallery);
   const [siteVersion, setSiteVersion] = useState(0);
   const uploadsRef = useRef(uploads);
+  const retryDelay = useRef(0);
+  const saveNowRef = useRef<() => Promise<boolean>>(() => Promise.resolve(true));
 
   const errorText = dict.editor.save.error;
   const networkText = dict.common.errors.network;
@@ -124,16 +128,27 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
       setSaved(snapshot);
       setStaleAccepted(res.staleAccepted);
       setErrorMessage(null);
+      retryDelay.current = 0;
       const mediaChanged = MEDIA_FIELDS.some((f) => snapshot[f] !== before[f]) || snapshot.design.background.imageKey !== before.design.background.imageKey;
       if (mediaChanged) setSiteVersion((v) => v + 1);
       return true;
     } catch (e) {
-      setErrorMessage(e instanceof ApiError && e.code === "network_error" ? networkText : errorText);
+      const network = e instanceof ApiError && e.code === "network_error";
+      const message = network ? networkText : errorText;
+      if (!retryDelay.current) toast(message, "error");
+      setErrorMessage(message);
+      // Connection hiccups and server errors retry by themselves (4s, 8s … 60s); a rejected change waits for the next edit or Retry.
+      const transient = !(e instanceof ApiError) || e.status === 0 || e.status === 429 || e.status >= 500;
+      if (transient) {
+        retryDelay.current = Math.min(60_000, retryDelay.current ? retryDelay.current * 2 : 4000);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => void saveNowRef.current(), retryDelay.current);
+      }
       return false;
     } finally {
       setSaving(false);
     }
-  }, [eventId, errorText, networkText]);
+  }, [eventId, errorText, networkText, toast]);
 
   const saveNow = useCallback((): Promise<boolean> => {
     if (timer.current) {
@@ -144,6 +159,9 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
     queue.current = run.catch(() => false);
     return run;
   }, [doSave]);
+  useEffect(() => {
+    saveNowRef.current = saveNow;
+  }, [saveNow]);
 
   const update = useCallback(
     (recipe: (d: Draft) => Draft, opts?: { immediate?: boolean }) => {

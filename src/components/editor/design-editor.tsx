@@ -75,7 +75,7 @@ function EditorLayout() {
           <h2 className="font-display text-[2rem] leading-tight text-ink sm:text-[2.5rem]">{t.heading}</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-ink-faint">{t.intro}</p>
         </div>
-        <SaveIndicator />
+        <SaveIndicator className="lg:hidden" />
       </header>
 
       <StaleBanner />
@@ -107,6 +107,9 @@ function EditorLayout() {
             <div className="sticky top-24">
               <div className="rounded-3xl border border-line bg-paper p-5 shadow-soft xl:p-6">
                 <PreviewPane />
+              </div>
+              <div className="mt-4 flex justify-center">
+                <SaveIndicator />
               </div>
             </div>
           </aside>
@@ -175,7 +178,7 @@ function useSummaries(): Record<SectionId, { text: ReactNode; aside?: ReactNode 
   };
 }
 
-function SaveIndicator() {
+function SaveIndicator({ className }: { className?: string }) {
   const { dict } = useI18n();
   const t = dict.editor.save;
   const { status, errorMessage, saveNow } = useEditor();
@@ -185,6 +188,7 @@ function SaveIndicator() {
       className={cn(
         "inline-flex min-h-9 items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors duration-300",
         status === "error" ? "border-rosewood/25 bg-rosewood-soft/70 text-rosewood" : "border-line bg-paper/80 text-ink-faint",
+        className,
       )}
     >
       {status === "pending" ? (
