@@ -28,6 +28,11 @@ export async function recordActivity(
   data?: Record<string, unknown>,
   guestId?: string | null,
 ) {
+  // "Send me a test" guests are the host's own number — keep them out of the feed.
+  if (guestId) {
+    const g = await tx.guest.findUnique({ where: { id: guestId }, select: { isTest: true } });
+    if (g?.isTest) return;
+  }
   await tx.activity.create({
     data: { eventId, kind, guestId: guestId ?? null, data: data ? JSON.parse(JSON.stringify(data)) : undefined },
   });

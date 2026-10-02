@@ -3,15 +3,9 @@
  * https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes
  */
 
-export type FailureReason =
-  | "not_on_whatsapp"
-  | "invalid_number"
-  | "window_closed"
-  | "opted_out"
-  | "rate_limited"
-  | "template_unavailable"
-  | "configuration"
-  | "unknown";
+import { failureReason, type FailureReason } from "@/lib/whatsapp/failures";
+
+export { failureReason, type FailureReason };
 
 export class WhatsAppApiError extends Error {
   constructor(
@@ -46,46 +40,4 @@ export function isRetryable(code: number | null, httpStatus: number | null): boo
 
 export function isSystemic(code: number | null): boolean {
   return code !== null && SYSTEMIC.has(code);
-}
-
-export function failureReason(code: number | null): FailureReason {
-  switch (code) {
-    case 131026:
-      return "not_on_whatsapp";
-    case 100:
-    case 1013:
-    case 131021:
-    case 131030:
-      return "invalid_number";
-    case 131047:
-      return "window_closed";
-    case 131049:
-    case 131050:
-      return "opted_out";
-    case 4:
-    case 80007:
-    case 130429:
-    case 131048:
-    case 131056:
-      return "rate_limited";
-    case 132000:
-    case 132001:
-    case 132005:
-    case 132007:
-    case 132012:
-    case 132015:
-    case 132016:
-    case 132068:
-      return "template_unavailable";
-    case 0:
-    case 3:
-    case 10:
-    case 190:
-    case 200:
-    case 131005:
-    case 133010:
-      return "configuration";
-    default:
-      return "unknown";
-  }
 }

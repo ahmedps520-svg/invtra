@@ -115,7 +115,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   bilingual: {
     key: "bilingual",
     recommendedLanguage: "BILINGUAL",
-    premium: true,
+    premium: false,
     defaults: design({
       palette: { background: "#F8F5EF", surface: "#FFFFFF", text: "#1D2A3A", muted: "#7A8494", accent: "#A9844E" },
       fonts: { display: "cormorant", body: "cormorant", arabicDisplay: "amiri", arabicBody: "amiri" },

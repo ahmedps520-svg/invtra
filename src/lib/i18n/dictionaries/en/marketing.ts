@@ -236,7 +236,7 @@ export const marketing = {
       PREMIUM: {
         tagline: "For weddings and celebrations where every detail matters.",
         features: [
-          "All premium designs — Luxury, Traditional & Bilingual",
+          "Premium designs — Luxury & Traditional",
           "Everything in Basic",
           "Priority support",
         ],

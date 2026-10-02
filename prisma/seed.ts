@@ -20,7 +20,7 @@ async function main() {
     await db.invitationTheme.upsert({
       where: { key: t.key },
       create: { key: t.key, isPremium: t.premium, sortOrder: i, isActive: true },
-      update: {},
+      update: {}, // admins control isPremium/isActive afterwards (Admin → Themes)
     });
   }
 
