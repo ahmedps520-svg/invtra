@@ -11,7 +11,7 @@ import { failureReason, isRetryable, WhatsAppApiError } from "@/server/whatsapp/
 import { contrastRatio, qrSvg, qrTargetUrl, safeQrColors } from "@/lib/qr";
 import { buildCardSvg, buildCustomCardSvg } from "@/lib/card/build";
 import { THEME_LIST } from "@/lib/themes/registry";
-import { SAMPLE_CARD_CONTENT } from "@/lib/card/sample";
+import { SAMPLE_CARD_CONTENT, themeSampleContent } from "@/lib/card/sample";
 import { normalizeDesign } from "@/lib/design/schema";
 import { renderSvgToPng } from "@/server/render/card";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
@@ -154,7 +154,7 @@ describe("invitation cards", () => {
     "%s / %s renders and its QR scans",
     async (key, language) => {
       const theme = THEME_LIST.find((t) => t.key === key)!;
-      const svg = buildCardSvg({ theme, design: theme.defaults, language, content: SAMPLE_CARD_CONTENT, guest: { name: "Khalid", allowedCount: 2 }, qrText });
+      const svg = buildCardSvg({ theme, design: theme.defaults, language, content: themeSampleContent(theme.key), guest: { name: "Khalid", allowedCount: 2 }, qrText });
       expect(svg.startsWith("<svg")).toBe(true);
       const png = renderSvgToPng(svg, 720);
       expect(await decodeQr(png)).toBe(qrText);

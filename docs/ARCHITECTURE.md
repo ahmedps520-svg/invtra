@@ -49,7 +49,7 @@ Guest taps DECLINE ─► webhook ─► DECLINED ─► thank-you text only (no
 | Config | `src/server/env.ts` | zod-validated; refuses mock providers in production |
 | Auth | `src/server/auth/*` | scrypt hashes, random session tokens stored as SHA-256, httpOnly SameSite cookies, sliding 30-day expiry |
 | Security | `src/proxy.ts`, `src/server/security/*` | CSP with per-request nonces, CSRF origin check, Postgres-backed rate limiting, signed media URLs |
-| Themes | `src/lib/themes/registry.ts` | 7 themes = palette + fonts + card ornament + page hero/section style |
+| Themes | `src/lib/themes/registry.ts` | 16 themes = palette + fonts + card ornament + page hero/section style + suited occasions; illustrations (teddy, moons, lanterns…) in `src/lib/card/motifs.ts` |
 | Invitation image | `src/lib/card/*`, `src/server/render/card.ts` | isomorphic SVG builder (live preview in browser) rasterised with resvg (HarfBuzz shaping → correct Arabic) |
 | QR | `src/lib/qr/index.ts` | styled QR (rounded/dots/classic, centre logo, EC level H), contrast-enforced, upper-case alphanumeric URL |
 | Guest page | `src/app/i/[token]`, `src/components/invitation/*` | themed, bilingual, RSVP, entry pass, host check-in |

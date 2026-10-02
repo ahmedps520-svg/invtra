@@ -5,10 +5,10 @@ export const marketing = {
   meta: {
     homeTitle: "INVTRA — Your Invitation. Reimagined.",
     homeDescription:
-      "Create beautiful digital invitations, send them directly through WhatsApp, and let every guest receive their own personalised invitation and QR code.",
+      "Beautiful digital invitations for weddings, new babies and hospital visits, baby showers, birthdays, Ramadan gatherings and more — sent through WhatsApp, with a personal invitation and QR code for every guest.",
     designsTitle: "Invitation designs",
     designsDescription:
-      "Seven signature invitation designs for weddings, engagements and celebrations — in Arabic, English or both, delivered to every guest on WhatsApp.",
+      "Sixteen signature invitation designs for weddings, new babies and hospital visits, baby showers, aqiqah, birthdays, Ramadan & Eid and corporate events — in Arabic, English or both, delivered to every guest on WhatsApp.",
     pricingTitle: "Pricing",
     pricingDescription:
       "Simple, one-time pricing per event. WhatsApp messaging included, a personal QR code for every guest, and three free test sends to your own number.",
@@ -105,7 +105,7 @@ export const marketing = {
   designs: {
     eyebrow: "Invitation designs",
     title: "Designed like fine stationery.",
-    body: "Seven signature designs, each shown exactly as your guests will receive it. Every design works in Arabic, English or both.",
+    body: "Sixteen signature designs — from royal weddings to teddy bears and moonlit lullabies for a new baby — each shown exactly as your guests will receive it, in Arabic, English or both.",
     cta: "Explore all designs",
     previous: "Previous designs",
     next: "More designs",
@@ -223,7 +223,7 @@ export const marketing = {
     contactSubject: "Custom event enquiry",
     plans: {
       BASIC: {
-        tagline: "For intimate gatherings and family occasions.",
+        tagline: "For intimate gatherings, hospital visits and family occasions.",
         features: [
           "Standard INVTRA designs",
           "Upload your own design",
@@ -234,9 +234,9 @@ export const marketing = {
         ],
       },
       PREMIUM: {
-        tagline: "For weddings and celebrations where every detail matters.",
+        tagline: "For weddings, new arrivals and celebrations where every detail matters.",
         features: [
-          "Premium designs — Luxury & Traditional",
+          "Every premium design — Royal, Moonlight, Lullaby, Henna, Lantern, Luxury & Traditional",
           "Everything in Basic",
           "Priority support",
         ],
@@ -260,6 +260,10 @@ export const marketing = {
     title: "Frequently asked questions",
     body: "Can't find what you're looking for? Write to us at {email} and we'll gladly help.",
     items: [
+      {
+        q: "Is INVTRA only for weddings?",
+        a: "Not at all. INVTRA is for every occasion: welcoming a newborn and hospital or home visits, baby showers, aqiqah, birthdays, graduations, anniversaries, henna nights, Ramadan and Eid gatherings, corporate events and more. Each occasion has its own wording, WhatsApp message and designs — teddy bears, moons and clouds for babies, lanterns for Ramadan, confetti for birthdays.",
+      },
       {
         q: "Do you use the official WhatsApp?",
         a: "Yes. Every invitation is sent through the official WhatsApp Business Platform from Meta, using message templates that Meta has approved. Messages come from INVTRA's business account — never from a personal phone or unofficial automation.",
@@ -311,11 +315,38 @@ export const marketing = {
     secondary: "View pricing",
   },
 
+  occasions: {
+    eyebrow: "For every occasion",
+    title: "Not just weddings.",
+    titleAccent: "Every moment worth sharing.",
+    body: "Welcoming a newborn, visiting at the hospital, a Ramadan ghabga or a birthday — every occasion gets its own designs, wording and WhatsApp message.",
+    items: {
+      newborn: { title: "New baby & hospital visits", body: "Teddy bears, moons and soft colours to welcome your little one — and invite visitors." },
+      shower: { title: "Baby showers", body: "Clouds, balloons and pastel palettes for the newest member of the family." },
+      aqiqah: { title: "Aqiqah", body: "Gentle, moonlit designs to give thanks and celebrate your child's arrival." },
+      weddings: { title: "Weddings & engagements", body: "Timeless designs for the biggest day — and every celebration leading up to it." },
+      henna: { title: "Henna nights", body: "Mandalas and warm terracotta inspired by traditional henna art." },
+      birthdays: { title: "Birthdays & graduations", body: "Confetti, colour and a little sparkle for milestones big and small." },
+      ramadan: { title: "Ramadan & Eid", body: "Lanterns and crescent moons for ghabgas, iftars and Eid gatherings." },
+      anniversaries: { title: "Anniversaries", body: "Blossoming designs to celebrate the years together." },
+    },
+    more: "…and corporate launches, gala dinners and any gathering worth celebrating.",
+    cta: "See the designs",
+  },
+
   designsPage: {
     eyebrow: "The collection",
     title: "Invitation designs",
     body: "Each design is rendered live, exactly as it will reach your guests. Switch the language to see how every design carries Arabic, English, or both.",
     languageLabel: "Preview language",
+    filters: {
+      label: "Occasion",
+      all: "All designs",
+      weddings: "Weddings & henna",
+      baby: "Baby & newborn",
+      celebrations: "Birthdays & parties",
+      community: "Ramadan & corporate",
+    },
     preview: "Preview",
     use: "Use this design",
     designedFor: "Designed for {language}",

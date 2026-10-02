@@ -72,6 +72,7 @@ export const editor: typeof en = {
     siteTab: "صفحة الضيف",
     alreadyUsing: "أنت تستخدم هذا التصميم",
     previewOf: "معاينة تصميم «{name}»",
+    suggested: "مصمَّم لهذه المناسبة",
   },
 
   image: {

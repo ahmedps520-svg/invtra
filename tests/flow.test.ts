@@ -328,3 +328,48 @@ describe("invitation pipeline", () => {
     expect((notices.at(-1)?.content as { body: string }).body).toMatch(/no longer active/);
   });
 });
+
+describe("occasions beyond weddings", () => {
+  it("picks the occasion's own template and design", async () => {
+    const { pickTemplate } = await import("@/server/whatsapp/compose");
+    const key = async (type: Parameters<typeof pickTemplate>[0]["type"], language: "EN" | "AR" = "EN") =>
+      (await pickTemplate({ type, language, messageTemplateId: null }, { locale: null }))?.key;
+    expect(await key("WEDDING")).toBe("formal_wedding_en");
+    expect(await key("NEWBORN")).toBe("newborn_visit_en");
+    expect(await key("AQIQAH", "AR")).toBe("newborn_visit_ar");
+    expect(await key("BIRTHDAY")).toBe("celebration_en");
+    expect(await key("CORPORATE")).toBe("elegant_en");
+
+    const event = await createEvent(userId, {
+      type: "NEWBORN",
+      language: "EN",
+      title: "Welcome, Baby Yousef",
+      titleAr: null,
+      hostNames: "Yousef",
+      hostNamesAr: null,
+      date: "2030-03-20",
+      time: "16:00",
+      endTime: "20:00",
+      timezone: "Asia/Dubai",
+      venueName: "Al Zahra Hospital, Suite 512",
+      venueNameAr: null,
+      address: "Al Barsha, Dubai",
+      addressAr: null,
+      mapsUrl: null,
+      dressCode: null,
+      dressCodeAr: null,
+      notes: null,
+      notesAr: null,
+      parkingInfo: null,
+      accommodationInfo: null,
+      specialInstructions: null,
+      contactName: null,
+      contactPhone: null,
+      contactEmail: null,
+      rsvpDeadline: null,
+      allowWebRsvp: true,
+      schedule: [],
+    });
+    expect(event.themeKey).toBe("teddy");
+  });
+});

@@ -43,7 +43,10 @@ export default async function ReviewPage({
     db.invitationTheme.findUnique({ where: { key: event.themeKey } }),
   ]);
 
-  const templates: ReviewTemplate[] = rows.map((t) => ({
+  // Only templates suited to this occasion (a newborn visit shouldn't offer wedding wording), most specific first.
+  const fits = rows.filter((t) => t.eventTypes.includes(event.type));
+  const ordered = fits.length ? [...fits].sort((a, b) => a.eventTypes.length - b.eventTypes.length || a.sortOrder - b.sortOrder) : rows;
+  const templates: ReviewTemplate[] = ordered.map((t) => ({
     id: t.id,
     name: t.name,
     nameAr: t.nameAr,

@@ -41,9 +41,14 @@ export default async function DesignPage({ params }: { params: Promise<{ id: str
   const rows = new Map(themeRows.map((r) => [r.key, r]));
   const theme = getTheme(event.themeKey);
   const order = (key: string) => rows.get(key)?.sortOrder ?? THEME_KEYS.indexOf(key as (typeof THEME_KEYS)[number]);
+  // Designs made for this occasion come first (a newborn sees Teddy, Clouds, Moonlight…), then the rest.
+  const fit = (t: (typeof THEME_LIST)[number]) => {
+    const i = t.occasions.indexOf(event.type);
+    return i < 0 ? 99 : Math.min(i, 2);
+  };
   const themes = THEME_LIST.filter((t) => (rows.get(t.key)?.isActive ?? true) || t.key === theme.key)
-    .sort((a, b) => order(a.key) - order(b.key))
-    .map((t) => ({ key: t.key, premium: rows.get(t.key)?.isPremium ?? t.premium }));
+    .sort((a, b) => fit(a) - fit(b) || order(a.key) - order(b.key))
+    .map((t) => ({ key: t.key, premium: rows.get(t.key)?.isPremium ?? t.premium, suggested: fit(t) <= 1 }));
 
   const props: EditorProps = {
     event: {

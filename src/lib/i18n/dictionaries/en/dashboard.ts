@@ -1,9 +1,25 @@
+import type { EventType } from "@prisma/client";
+
 /**
  * Customer dashboard copy. Plural-sensitive strings are `Plural` objects; render them
  * with `plural(locale, forms, n)` from `@/components/dashboard/i18n` (Arabic uses the
  * extra zero/two/few/many forms).
  */
 export type Plural = { zero?: string; one: string; two?: string; few?: string; many?: string; other: string };
+
+/** Event-form wording that changes with the occasion ("Baby's name" instead of "Host names"…). */
+export type OccasionFieldText = {
+  titlePh: string;
+  titleArPh: string;
+  hostNames: string;
+  hostNamesEn: string;
+  hostNamesAr: string;
+  hostNamesHint: string;
+  hostNamesPh: string;
+  hostNamesArPh: string;
+  venuePh?: string;
+  venueArPh?: string;
+};
 
 const p = (one: string, other: string): Plural => ({ one, other });
 
@@ -27,6 +43,12 @@ export const dashboard = {
     admin: "Admin",
     simulator: "WhatsApp simulator",
     account: "Account",
+    previewMode: {
+      title: "Preview mode",
+      body: "WhatsApp messages are simulated and are not delivered to real phones yet.",
+      simulator: "See what guests receive",
+      admin: "Connect your WhatsApp Business account to send for real",
+    },
     signOut: "Sign out",
     signingOut: "Signing out…",
     menu: "Open account menu",
@@ -126,6 +148,122 @@ export const dashboard = {
       hostNamesPh: "Ahmed & Sara",
       hostNamesAr: "Host names in Arabic",
       hostNamesArPh: "أحمد وسارة",
+      byType: {
+        ENGAGEMENT: {
+          titlePh: "The Engagement of Ahmed & Sara",
+          titleArPh: "خطوبة أحمد وسارة",
+          hostNames: "Couple's names",
+          hostNamesEn: "Couple's names in English",
+          hostNamesAr: "Couple's names in Arabic",
+          hostNamesHint: "As they should appear on the invitation.",
+          hostNamesPh: "Ahmed & Sara",
+          hostNamesArPh: "أحمد وسارة",
+        },
+        HENNA: {
+          titlePh: "Henna Night of Sara",
+          titleArPh: "ليلة حناء سارة",
+          hostNames: "Bride's name",
+          hostNamesEn: "Bride's name in English",
+          hostNamesAr: "Bride's name in Arabic",
+          hostNamesHint: "Shown large on the invitation.",
+          hostNamesPh: "Sara",
+          hostNamesArPh: "سارة",
+          venuePh: "Al Waha Hall",
+          venueArPh: "قاعة الواحة",
+        },
+        NEWBORN: {
+          titlePh: "Welcome, Baby Yousef",
+          titleArPh: "أهلًا بالمولود يوسف",
+          hostNames: "Baby's name",
+          hostNamesEn: "Baby's name in English",
+          hostNamesAr: "Baby's name in Arabic",
+          hostNamesHint: "Shown large on the invitation — usually the baby's first name.",
+          hostNamesPh: "Yousef",
+          hostNamesArPh: "يوسف",
+          venuePh: "Al Zahra Hospital, Suite 512",
+          venueArPh: "مستشفى الزهراء، جناح ٥١٢",
+        },
+        BABY_SHOWER: {
+          titlePh: "Baby Shower for Lina & Omar",
+          titleArPh: "حفل استقبال مولود لينا وعمر",
+          hostNames: "Parents' names",
+          hostNamesEn: "Parents' names in English",
+          hostNamesAr: "Parents' names in Arabic",
+          hostNamesHint: "Or the mum-to-be's name — as it should appear on the invitation.",
+          hostNamesPh: "Lina & Omar",
+          hostNamesArPh: "لينا وعمر",
+          venuePh: "The Garden Café",
+          venueArPh: "مقهى الحديقة",
+        },
+        AQIQAH: {
+          titlePh: "Aqiqah of Yousef",
+          titleArPh: "عقيقة يوسف",
+          hostNames: "Baby's name",
+          hostNamesEn: "Baby's name in English",
+          hostNamesAr: "Baby's name in Arabic",
+          hostNamesHint: "Shown large on the invitation — usually the baby's first name.",
+          hostNamesPh: "Yousef",
+          hostNamesArPh: "يوسف",
+          venuePh: "Al Mansoori Majlis",
+          venueArPh: "مجلس المنصوري",
+        },
+        BIRTHDAY: {
+          titlePh: "Mariam's 30th Birthday",
+          titleArPh: "عيد ميلاد مريم الثلاثون",
+          hostNames: "Birthday person's name",
+          hostNamesEn: "Name in English",
+          hostNamesAr: "Name in Arabic",
+          hostNamesHint: "Shown large on the invitation.",
+          hostNamesPh: "Mariam",
+          hostNamesArPh: "مريم",
+          venuePh: "The Rooftop, Downtown",
+          venueArPh: "روف توب، وسط المدينة",
+        },
+        GRADUATION: {
+          titlePh: "Mariam's Graduation",
+          titleArPh: "حفل تخرج مريم",
+          hostNames: "Graduate's name",
+          hostNamesEn: "Graduate's name in English",
+          hostNamesAr: "Graduate's name in Arabic",
+          hostNamesHint: "Shown large on the invitation.",
+          hostNamesPh: "Mariam Al Hashimi",
+          hostNamesArPh: "مريم الهاشمي",
+        },
+        ANNIVERSARY: {
+          titlePh: "Khalid & Noura's 25th Anniversary",
+          titleArPh: "الذكرى الخامسة والعشرون لزواج خالد ونورة",
+          hostNames: "Couple's names",
+          hostNamesEn: "Couple's names in English",
+          hostNamesAr: "Couple's names in Arabic",
+          hostNamesHint: "As they should appear on the invitation.",
+          hostNamesPh: "Khalid & Noura",
+          hostNamesArPh: "خالد ونورة",
+        },
+        RAMADAN: {
+          titlePh: "Ramadan Ghabga",
+          titleArPh: "غبقة رمضانية",
+          hostNames: "Hosted by",
+          hostNamesEn: "Host in English",
+          hostNamesAr: "Host in Arabic",
+          hostNamesHint: "A family or person — e.g. \"The Al Mansoori Family\".",
+          hostNamesPh: "The Al Mansoori Family",
+          hostNamesArPh: "عائلة المنصوري",
+          venuePh: "Al Mansoori Majlis",
+          venueArPh: "مجلس المنصوري",
+        },
+        CORPORATE: {
+          titlePh: "Annual Gala Dinner 2026",
+          titleArPh: "حفل العشاء السنوي ٢٠٢٦",
+          hostNames: "Company or host",
+          hostNamesEn: "Company or host in English",
+          hostNamesAr: "Company or host in Arabic",
+          hostNamesHint: "Your company or organisation, as it should appear on the invitation.",
+          hostNamesPh: "Horizon Holdings",
+          hostNamesArPh: "هورايزن القابضة",
+          venuePh: "Museum of the Future",
+          venueArPh: "متحف المستقبل",
+        },
+      } as Partial<Record<EventType, OccasionFieldText>>,
       date: "Date",
       time: "Starts at",
       endTime: "Ends at",

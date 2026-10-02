@@ -171,7 +171,7 @@ export function Divider({ className }: { className?: string }) {
         ) : kind === "moon" ? (
           <>
             <path d="M-90 0H-26M26 0H90" stroke="currentColor" strokeWidth="1" />
-            <path d="M3 -10A10 10 0 1 0 3 10A7.6 7.6 0 1 1 3 -10Z" />
+            <path d="M7.5 -8.66A10 10 0 1 0 7.5 8.66A10 10 0 0 1 7.5 -8.66Z" />
             <path d={star(-38, 0, 5, 4, 0.35)} />
             <path d={star(38, 0, 5, 4, 0.35)} />
           </>

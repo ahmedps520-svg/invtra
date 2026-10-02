@@ -155,14 +155,41 @@ export function sampleCardContent(type: EventType = "WEDDING"): CardContent {
   return { eventType: SAMPLES[type] ? type : "WEDDING", ...rest };
 }
 
+/** Per-theme sample tweaks so the baby designs don't all show the same baby. */
+const THEME_SAMPLES: Record<string, { type: EventType; sample?: Partial<Sample> }> = {
+  teddy: {
+    type: "NEWBORN",
+    sample: {
+      title: "Welcome, Baby Layla",
+      titleAr: "أهلًا بالمولودة ليلى",
+      hostNames: "Layla",
+      hostNamesAr: "ليلى",
+      venueName: "Mediclinic City Hospital, Room 318",
+      venueNameAr: "مستشفى ميديكلينيك سيتي، غرفة ٣١٨",
+      address: "Dubai Healthcare City",
+      addressAr: "مدينة دبي الطبية",
+    },
+  },
+  clouds: { type: "BABY_SHOWER" },
+  lullaby: { type: "AQIQAH", sample: { title: "Aqiqah of Hamad", titleAr: "عقيقة حمد", hostNames: "Hamad", hostNamesAr: "حمد" } },
+};
+
 /** The occasion a theme is shown with in previews (its first recommended occasion). */
 export function themeSampleType(themeKey: string): EventType {
   const t = getTheme(themeKey);
-  return t.occasions.find((o) => SAMPLES[o]) ?? "WEDDING";
+  return THEME_SAMPLES[t.key]?.type ?? t.occasions.find((o) => SAMPLES[o]) ?? "WEDDING";
+}
+
+/** Full sample (incl. wall-clock start) for a theme's demo. */
+export function themeSample(themeKey: string): Sample & { eventType: EventType } {
+  const eventType = themeSampleType(themeKey);
+  return { ...sampleFor(eventType), ...THEME_SAMPLES[getTheme(themeKey).key]?.sample, eventType: SAMPLES[eventType] ? eventType : "WEDDING" };
 }
 
 export function themeSampleContent(themeKey: string): CardContent {
-  return sampleCardContent(themeSampleType(themeKey));
+  const { startTime: _ignored, ...rest } = themeSample(themeKey);
+  void _ignored;
+  return rest;
 }
 
 /** @deprecated use themeSampleContent / sampleCardContent */

@@ -104,9 +104,9 @@ export function heroPattern(motif: HeroMotif, p: Palette): string | null {
   switch (motif) {
     case "moonlight":
     case "lantern":
-      return tile(320, 320, starField({ x: 0, y: 0, w: 320, h: 320 }, 18, p.text, 31));
+      return tile(320, 320, `<g opacity="0.4">${starField({ x: 0, y: 0, w: 320, h: 320 }, 14, p.text, 31)}</g>`);
     case "lullaby":
-      return tile(320, 320, starField({ x: 0, y: 0, w: 320, h: 320 }, 8, p.accent, 17));
+      return tile(320, 320, `<g opacity="0.4">${starField({ x: 0, y: 0, w: 320, h: 320 }, 8, p.accent, 17)}</g>`);
     case "teddy":
       return tile(54, 54, `<circle cx="13" cy="13" r="2.4" fill="${p.accent}" opacity="0.16"/><circle cx="40" cy="40" r="2.4" fill="${p.accent}" opacity="0.16"/>`);
     case "confetti": {

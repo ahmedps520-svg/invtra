@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { THEME_LIST } from "@/lib/themes/registry";
+import { OCCASION_GROUP_KEYS, isOccasionGroup, occasionGroup } from "@/lib/events/types";
 import { DesignsGallery, type GalleryItem } from "@/components/marketing/designs-gallery";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { OwnDesignTile } from "@/components/marketing/own-design-tile";
@@ -25,8 +26,9 @@ function startHref(signedIn: boolean, theme?: string) {
   return signedIn ? target : `/signup?next=${encodeURIComponent(target)}`;
 }
 
-export default async function DesignsPage() {
-  const [{ dict, locale }, user] = await Promise.all([getI18n(), getSessionUser()]);
+export default async function DesignsPage({ searchParams }: { searchParams: Promise<{ occasion?: string | string[] }> }) {
+  const [{ dict, locale }, user, sp] = await Promise.all([getI18n(), getSessionUser(), searchParams]);
+  const occasion = isOccasionGroup(sp.occasion) ? sp.occasion : "all";
   const signedIn = Boolean(user);
   const t = dict.marketing.designsPage;
 
@@ -37,6 +39,10 @@ export default async function DesignsPage() {
     premium: theme.premium,
     recommendedLanguage: theme.recommendedLanguage,
     useHref: startHref(signedIn, theme.key),
+    // How central each occasion family is to the design (0 = made for it); absent = not suited.
+    occasions: Object.fromEntries(
+      OCCASION_GROUP_KEYS.map((g) => [g, theme.occasions.findIndex((o) => occasionGroup(o) === g)]).filter(([, i]) => (i as number) >= 0),
+    ),
   }));
 
   return (
@@ -51,6 +57,7 @@ export default async function DesignsPage() {
         <div className="mt-12">
           <DesignsGallery
             items={items}
+            initialOccasion={occasion}
             labels={{
               premium: dict.themes.premium,
               languages: { EN: dict.common.language.en, AR: dict.common.language.ar, BILINGUAL: dict.common.language.bilingual },

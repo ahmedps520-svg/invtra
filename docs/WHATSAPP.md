@@ -69,6 +69,10 @@ The standard set lives in `src/server/whatsapp/catalog.ts` and is loaded by `npm
 | formal_wedding_ar | invtra_formal_wedding_ar | ar | Invitation |
 | elegant_ar | invtra_elegant_invite_ar | ar | Invitation |
 | bilingual | invtra_bilingual_invite | ar | Invitation (Arabic + English) |
+| newborn_visit_en | invtra_newborn_visit | en | Invitation — new baby / hospital visit, aqiqah |
+| newborn_visit_ar | invtra_newborn_visit_ar | ar | Invitation — new baby / hospital visit, aqiqah |
+| celebration_en | invtra_celebration_invite | en | Invitation — baby showers, birthdays, graduations, anniversaries |
+| celebration_ar | invtra_celebration_invite_ar | ar | Invitation — baby showers, birthdays, graduations, anniversaries |
 | update_en | invtra_invitation_update | en | Update (URL button `/i/{{1}}`) |
 | update_ar | invtra_invitation_update_ar | ar | Update |
 
@@ -84,6 +88,10 @@ Getting them approved — either:
   **Approved**; or
 - **In WhatsApp Manager:** create templates with exactly the same name, language, body,
   header type and buttons, then press *Sync status* in Admin → Templates.
+
+Each template lists the occasions it was written for (`eventTypes`): customers only see the
+templates that fit their event, and when they haven't chosen one the most specific match is
+used (e.g. a newborn visit gets "New baby visit", not the wedding text).
 
 Only `APPROVED` + active templates are offered to customers and used for sending. If a
 template is paused or disabled by Meta, the running batch is cancelled and the error is shown

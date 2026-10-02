@@ -124,7 +124,9 @@ export async function pickTemplate(
   }
   const exact = candidates.filter((t) => t.locale === locale);
   const pool = exact.length ? exact : forLocale;
-  return pool.find((t) => t.eventTypes.includes(event.type)) ?? pool[0] ?? null;
+  // The most specific template written for this occasion (e.g. "New baby visit" before "Elegant").
+  const fitting = pool.filter((t) => t.eventTypes.includes(event.type)).sort((a, b) => a.eventTypes.length - b.eventTypes.length);
+  return fitting[0] ?? pool[0] ?? null;
 }
 
 const DELIVERY = {

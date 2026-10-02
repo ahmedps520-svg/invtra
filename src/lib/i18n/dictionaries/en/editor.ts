@@ -70,6 +70,7 @@ export const editor = {
     siteTab: "Guest website",
     alreadyUsing: "You're using this design",
     previewOf: "Preview of the {name} design",
+    suggested: "Made for this occasion",
   },
 
   image: {

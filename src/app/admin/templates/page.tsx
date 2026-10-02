@@ -151,6 +151,7 @@ export default async function TemplatesPage() {
           </>
         }
       />
+      {mock ? <ConnectWhatsApp appUrl={e.APP_URL} /> : null}
       <div className="mb-8 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-ink-soft">
         <span>{plural(templates.length, "template")}</span>
         <span>{plural(approved.length, "approved & enabled template")}</span>
@@ -181,5 +182,52 @@ export default async function TemplatesPage() {
         })}
       </div>
     </>
+  );
+}
+
+/** Mock mode: the checklist for sending real WhatsApp messages (details in docs/WHATSAPP.md). */
+function ConnectWhatsApp({ appUrl }: { appUrl: string }) {
+  const webhook = `${appUrl.replace(/\/$/, "")}/api/webhooks/whatsapp`;
+  const steps: React.ReactNode[] = [
+    <>
+      In <b>Meta Business Suite</b> create (or open) your business, then at <b>developers.facebook.com</b> create an app of type
+      <i> Business</i> and add the <b>WhatsApp</b> product.
+    </>,
+    <>
+      In <b>WhatsApp Manager</b> add the phone number that will send invitations (it must not be in use on the WhatsApp app) and
+      its display name, e.g. &ldquo;INVTRA&rdquo;. Copy the <b>Phone number ID</b> and <b>WhatsApp Business Account ID</b>.
+    </>,
+    <>
+      Business Settings → Users → <b>System users</b>: create one, assign the app and the WhatsApp account with
+      <code> whatsapp_business_messaging</code> and <code>whatsapp_business_management</code>, and generate a <b>permanent token</b>.
+    </>,
+    <>
+      App → Settings → Basic: copy the <b>App ID</b> and <b>App Secret</b>. Add a payment method in WhatsApp Manager (Meta charges
+      per conversation).
+    </>,
+    <>
+      On your server (Render → invtra → Environment) set <code>WHATSAPP_PROVIDER=cloud</code>, <code>WHATSAPP_ACCESS_TOKEN</code>,{" "}
+      <code>WHATSAPP_PHONE_NUMBER_ID</code>, <code>WHATSAPP_BUSINESS_ACCOUNT_ID</code>, <code>WHATSAPP_APP_ID</code> and{" "}
+      <code>WHATSAPP_APP_SECRET</code> (replace the generated value), then save — the service redeploys.
+    </>,
+    <>
+      Meta app → WhatsApp → Configuration → Webhook: callback URL <code>{webhook}</code>, verify token = the value of{" "}
+      <code>WHATSAPP_VERIFY_TOKEN</code> in your environment, and subscribe to <b>messages</b>.
+    </>,
+    <>Come back here and press <b>Submit to Meta</b> on each template. Once Meta approves them, invitations go out for real.</>,
+  ];
+  return (
+    <section id="connect" className="mb-10 scroll-mt-24 rounded-2xl border border-bronze-200 bg-bronze-50/60 px-6 py-6">
+      <h2 className="font-display text-2xl text-ink">Connect WhatsApp to send real messages</h2>
+      <p className="mt-1.5 text-[13.5px] text-ink-soft">
+        INVTRA is running on the WhatsApp simulator, so nothing reaches real phones. Guests&rsquo; replies can be tried at{" "}
+        <a href="/dev/whatsapp" className="text-bronze-700 underline underline-offset-4">/dev/whatsapp</a>. To go live:
+      </p>
+      <ol className="mt-4 list-decimal space-y-2.5 ps-5 text-[13.5px] leading-relaxed text-ink-soft marker:text-bronze-600 [&_code]:rounded [&_code]:bg-paper [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px] [&_code]:text-ink">
+        {steps.map((s, i) => (
+          <li key={i}>{s}</li>
+        ))}
+      </ol>
+    </section>
   );
 }

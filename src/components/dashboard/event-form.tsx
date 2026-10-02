@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Briefcase, Cake, ChevronDown, Gem, GraduationCap, Heart, PartyPopper } from "lucide-react";
+import { Baby, Briefcase, Cake, ChevronDown, Flower2, Gem, Gift, GraduationCap, Heart, HeartHandshake, MoonStar, PartyPopper, Sparkles } from "lucide-react";
 import type { ZodIssue } from "zod";
 import { useI18n } from "@/components/i18n/provider";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,15 @@ type EventType = EventInput["type"];
 const EVENT_TYPES: { value: EventType; icon: React.ReactNode }[] = [
   { value: "WEDDING", icon: <Heart /> },
   { value: "ENGAGEMENT", icon: <Gem /> },
+  { value: "HENNA", icon: <Flower2 /> },
+  { value: "NEWBORN", icon: <Baby /> },
+  { value: "BABY_SHOWER", icon: <Gift /> },
+  { value: "AQIQAH", icon: <Sparkles /> },
   { value: "BIRTHDAY", icon: <Cake /> },
-  { value: "CORPORATE", icon: <Briefcase /> },
   { value: "GRADUATION", icon: <GraduationCap /> },
+  { value: "ANNIVERSARY", icon: <HeartHandshake /> },
+  { value: "RAMADAN", icon: <MoonStar /> },
+  { value: "CORPORATE", icon: <Briefcase /> },
   { value: "OTHER", icon: <PartyPopper /> },
 ];
 
@@ -337,7 +343,7 @@ export function EventForm({
     }
   }
 
-  const f = d.fields;
+  const f = { ...d.fields, ...d.fields.byType[form.type] };
   const input = (key: TextKey, props: React.InputHTMLAttributes<HTMLInputElement> & { error?: string } = {}) => {
     const { error, ...rest } = props;
     const e = error ?? err(key);

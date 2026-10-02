@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { recordActivity } from "@/server/activity";
 import { cancelPendingJobs } from "@/server/queue/queue";
 import { zonedToUtc, utcToZoned } from "@/lib/time";
-import { DEFAULT_THEME, getTheme, isThemeKey } from "@/lib/themes/registry";
+import { DEFAULT_THEME, getTheme, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
 import type { EventInput } from "@/lib/validation/event";
 
 /** Fields printed on the invitation image — changing them requires re-sending updates. */
@@ -46,14 +46,20 @@ function toEventData(input: EventInput) {
   };
 }
 
+/** The design a new event starts with when the customer hasn't picked one yet. */
+const OCCASION_THEME: Partial<Record<EventInput["type"], ThemeKey>> = {
+  NEWBORN: "teddy",
+  BABY_SHOWER: "clouds",
+  AQIQAH: "moonlight",
+  HENNA: "henna",
+  RAMADAN: "lantern",
+  BIRTHDAY: "confetti",
+  GRADUATION: "confetti",
+};
+
 export async function createEvent(userId: string, input: EventInput, preferredTheme?: string | null) {
-  const themeKey = isThemeKey(preferredTheme)
-    ? preferredTheme
-    : input.language === "AR"
-      ? "arabic"
-      : input.language === "BILINGUAL"
-        ? "bilingual"
-        : DEFAULT_THEME;
+  const byLanguage: ThemeKey = input.language === "AR" ? "arabic" : input.language === "BILINGUAL" ? "bilingual" : DEFAULT_THEME;
+  const themeKey: ThemeKey = isThemeKey(preferredTheme) ? preferredTheme : (OCCASION_THEME[input.type] ?? byLanguage);
   const theme = getTheme(themeKey);
   return db.$transaction(async (tx) => {
     const event = await tx.event.create({

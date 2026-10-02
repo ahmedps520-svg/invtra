@@ -1,8 +1,10 @@
 # INVTRA · إنفترا
 
-**Your Invitation. Reimagined.** — premium digital invitations for weddings, engagements,
-birthdays, corporate events and graduations, delivered to every guest through the official
-WhatsApp Business Platform, each with their own personal invitation and QR code.
+**Your Invitation. Reimagined.** — premium digital invitations for every occasion: weddings,
+engagements and henna nights, new babies and hospital visits, baby showers and aqiqah,
+birthdays, graduations, anniversaries, Ramadan & Eid gatherings and corporate events —
+delivered to every guest through the official WhatsApp Business Platform, each with their own
+personal invitation and QR code.
 
 > Create → Personalize → Send → Accept → Receive → Scan → Celebrate
 
@@ -10,8 +12,10 @@ WhatsApp Business Platform, each with their own personal invitation and QR code.
 
 1. A customer signs up at **invtra.store**, creates an event (names, date, venue, maps link,
    dress code, programme, contact…) in English, Arabic or both.
-2. They pick one of seven themes (Minimal, Luxury, Romantic, Modern, Traditional, Arabic,
-   Bilingual) and customise it in a live editor — or upload their own finished invitation.
+2. They pick one of sixteen designs — Minimal, Luxury, Romantic, Modern, Traditional, Arabic,
+   Bilingual, Royal, Garden, Henna, Moonlight, Teddy, Clouds, Lullaby, Confetti, Lantern —
+   (the ones made for their occasion are suggested first) and customise it in a live editor,
+   or upload their own finished invitation.
 3. They add guests (or import CSV/Excel) with WhatsApp numbers, review and confirm.
 4. INVTRA's worker sends every guest an approved WhatsApp template with
    **ACCEPT INVITATION / DECLINE** buttons.

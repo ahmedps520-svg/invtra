@@ -1,5 +1,6 @@
 import type { EventType, TemplatePurpose } from "@prisma/client";
 import type { TemplateButton, TemplateVariable } from "@/lib/whatsapp/templates";
+import { EVENT_TYPES } from "@/lib/events/types";
 
 /**
  * INVTRA's standard WhatsApp templates. `npm run db:seed` loads them into the
@@ -25,7 +26,9 @@ export interface CatalogTemplate {
   sortOrder: number;
 }
 
-const ALL: EventType[] = ["WEDDING", "ENGAGEMENT", "BIRTHDAY", "CORPORATE", "GRADUATION", "OTHER"];
+const ALL: EventType[] = [...EVENT_TYPES];
+const BABY: EventType[] = ["NEWBORN", "AQIQAH"];
+const PARTY: EventType[] = ["BABY_SHOWER", "BIRTHDAY", "GRADUATION", "ANNIVERSARY", "OTHER"];
 const ACCEPT_DECLINE_EN: TemplateButton[] = [
   { type: "QUICK_REPLY", text: "Accept Invitation", action: "ACCEPT" },
   { type: "QUICK_REPLY", text: "Decline", action: "DECLINE" },
@@ -130,6 +133,78 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       ],
       eventTypes: ALL,
       sortOrder: 5,
+    },
+    {
+      key: "newborn_visit_en",
+      name: "New baby visit",
+      nameAr: "زيارة المولود",
+      description: "Welcome a new baby — invite family and friends to visit at the hospital or at home.",
+      purpose: "INVITATION",
+      metaName: "invtra_newborn_visit",
+      language: "en",
+      locale: "en",
+      category: "UTILITY",
+      headerType: "IMAGE",
+      body: "Dear {{1}}, with hearts full of joy we welcome our little one, {{2}}.\n\nWe would love for you to visit us on {{3}} at {{4}}. Will you be joining us?",
+      variables: ["guest_name", "host_names", "event_date", "venue"],
+      footer: "Sent with INVTRA",
+      buttons: ACCEPT_DECLINE_EN,
+      eventTypes: BABY,
+      sortOrder: 6,
+    },
+    {
+      key: "newborn_visit_ar",
+      name: "New baby visit (Arabic)",
+      nameAr: "زيارة المولود",
+      description: "استقبال مولود جديد — دعوة الأهل والأصدقاء للزيارة في المستشفى أو المنزل.",
+      purpose: "INVITATION",
+      metaName: "invtra_newborn_visit_ar",
+      language: "ar",
+      locale: "ar",
+      category: "UTILITY",
+      headerType: "IMAGE",
+      body: "أهلًا {{1}}،\n\nبقلوب يغمرها الفرح نستقبل مولودنا {{2}}، ويسعدنا أن تشاركونا فرحتنا بزيارتكم يوم {{3}} في {{4}}.\n\nهل تقبلون الدعوة؟",
+      variables: ["guest_name", "host_names_ar", "event_date_ar", "venue_ar"],
+      footer: "أُرسلت عبر إنفترا",
+      buttons: ACCEPT_DECLINE_AR,
+      eventTypes: BABY,
+      sortOrder: 7,
+    },
+    {
+      key: "celebration_en",
+      name: "Celebration",
+      nameAr: "احتفال",
+      description: "A warm, friendly invitation for baby showers, birthdays, graduations and parties.",
+      purpose: "INVITATION",
+      metaName: "invtra_celebration_invite",
+      language: "en",
+      locale: "en",
+      category: "UTILITY",
+      headerType: "IMAGE",
+      body: "Hi {{1}}, you're invited to {{2}} on {{3}} at {{4}}.\n\nIt wouldn't be the same without you. Will you celebrate with us?",
+      variables: ["guest_name", "event_name", "event_date", "venue"],
+      footer: "Sent with INVTRA",
+      buttons: ACCEPT_DECLINE_EN,
+      eventTypes: PARTY,
+      sortOrder: 8,
+    },
+    {
+      key: "celebration_ar",
+      name: "Celebration (Arabic)",
+      nameAr: "احتفال",
+      description: "دعوة ودّية لحفلات استقبال المواليد وأعياد الميلاد والتخرج.",
+      purpose: "INVITATION",
+      metaName: "invtra_celebration_invite_ar",
+      language: "ar",
+      locale: "ar",
+      category: "UTILITY",
+      headerType: "IMAGE",
+      body: "أهلًا {{1}}،\n\nأنتم مدعوون إلى {{2}} يوم {{3}} في {{4}}.\n\nلن تكتمل فرحتنا إلا بوجودكم، هل تشاركوننا؟",
+      variables: ["guest_name", "event_name_ar", "event_date_ar", "venue_ar"],
+      footer: "أُرسلت عبر إنفترا",
+      buttons: ACCEPT_DECLINE_AR,
+      eventTypes: PARTY,
+      sortOrder: 9,
     },
     {
       key: "update_en",

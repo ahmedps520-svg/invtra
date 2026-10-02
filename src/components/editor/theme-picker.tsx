@@ -87,6 +87,7 @@ export function ThemePicker() {
                 </span>
                 <span className="mt-3 block px-0.5">
                   <span className="block font-display text-lg leading-tight text-ink">{name}</span>
+                  {th.suggested && event.type !== "OTHER" ? <span className="mt-1 block text-[11.5px] font-medium text-bronze-700">{t.suggested}</span> : null}
                   <span className="mt-1 line-clamp-2 block text-[12px] leading-relaxed text-ink-faint">{dict.themes[th.key].description}</span>
                   {th.premium && !premiumIncluded ? <span className="mt-1.5 block text-[11px] font-medium text-bronze-700">{t.includedWithPremium}</span> : null}
                   {current ? (

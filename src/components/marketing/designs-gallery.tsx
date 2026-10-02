@@ -9,6 +9,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/toggle";
 import { fmt } from "@/lib/i18n/config";
 import type { CardLanguage } from "@/lib/card/build";
+import { OCCASION_GROUP_KEYS, type OccasionGroup } from "@/lib/events/types";
 import { cn } from "@/lib/utils";
 
 export type GalleryItem = {
@@ -18,15 +19,21 @@ export type GalleryItem = {
   premium: boolean;
   recommendedLanguage: CardLanguage;
   useHref: string;
+  /** Occasion families the design suits → rank (0 = designed first and foremost for it). */
+  occasions: Partial<Record<OccasionGroup, number>>;
 };
+
+type Filter = OccasionGroup | "all";
 
 /** All invitation themes, rendered live, with a preview-language switch. */
 export function DesignsGallery({
   items,
   labels,
   extra,
+  initialOccasion = "all",
 }: {
   items: GalleryItem[];
+  initialOccasion?: Filter;
   /** Rendered as the closing tile of the grid. */
   extra?: ReactNode;
   labels: { premium: string; languages: Record<CardLanguage, string>; languageNames: Record<CardLanguage, string> };
@@ -34,9 +41,36 @@ export function DesignsGallery({
   const { dict, locale } = useI18n();
   const t = dict.marketing.designsPage;
   const [language, setLanguage] = useState<CardLanguage>(locale === "ar" ? "AR" : "EN");
+  const [occasion, setOccasion] = useState<Filter>(initialOccasion);
+  const shown =
+    occasion === "all"
+      ? items
+      : items.filter((it) => it.occasions[occasion] !== undefined).sort((a, b) => a.occasions[occasion]! - b.occasions[occasion]!);
+  const choose = (next: Filter) => {
+    setOccasion(next);
+    // Keep the address shareable without a navigation.
+    window.history.replaceState(null, "", next === "all" ? "/designs" : `/designs?occasion=${next}`);
+  };
 
   return (
     <div>
+      <div role="radiogroup" aria-label={t.filters.label} className="mb-10 flex flex-wrap justify-center gap-2">
+        {(["all", ...OCCASION_GROUP_KEYS] as Filter[]).map((f) => (
+          <button
+            key={f}
+            type="button"
+            role="radio"
+            aria-checked={occasion === f}
+            onClick={() => choose(f)}
+            className={cn(
+              "rounded-full border px-4 py-2 text-[13.5px] font-medium transition-all duration-300 ease-luxe",
+              occasion === f ? "border-ink bg-ink text-ivory shadow-soft" : "border-line-strong bg-paper/70 text-ink-soft hover:border-bronze-400 hover:text-ink",
+            )}
+          >
+            {t.filters[f]}
+          </button>
+        ))}
+      </div>
       <div className="flex flex-col items-center gap-3">
         <span id="preview-language" className="text-[12px] text-ink-faint">
           {t.languageLabel}
@@ -58,7 +92,7 @@ export function DesignsGallery({
       </div>
 
       <ul className="mt-14 grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3">
-        {items.map((it) => (
+        {shown.map((it) => (
           <li key={it.key} className="group flex flex-col">
             <div className="relative overflow-hidden rounded-[1.5rem] border border-line bg-sand/70 px-[12%] py-[10%] transition-colors duration-700 ease-luxe group-hover:bg-mist/70">
               <div aria-hidden="true" className="paper-grain pointer-events-none absolute inset-0" />

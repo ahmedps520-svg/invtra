@@ -41,6 +41,8 @@ export interface EditorGalleryImage {
 export interface EditorThemeOption {
   key: ThemeKey;
   premium: boolean;
+  /** Designed with this event's occasion in mind (listed first). */
+  suggested: boolean;
 }
 
 export interface EditorEvent {

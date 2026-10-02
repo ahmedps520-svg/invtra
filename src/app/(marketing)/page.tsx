@@ -6,6 +6,7 @@ import { env } from "@/server/env";
 import { THEME_LIST } from "@/lib/themes/registry";
 import { Hero } from "@/components/marketing/hero";
 import { Journey } from "@/components/marketing/journey";
+import { Occasions } from "@/components/marketing/occasions";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { DesignsShowcase, type ShowcaseItem } from "@/components/marketing/designs-showcase";
 import { WhatsAppSection } from "@/components/marketing/whatsapp-section";
@@ -83,6 +84,7 @@ export default async function HomePage() {
       />
 
       <Hero dict={dict} locale={locale} ctaHref={ctaHref} />
+      <Occasions dict={dict} />
       <Journey dict={dict} />
       <HowItWorks dict={dict} ctaHref={ctaHref} />
 

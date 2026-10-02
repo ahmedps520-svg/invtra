@@ -19,6 +19,12 @@ export const EVENT_TYPES = [
 /** Occasion families used to group designs and marketing copy. */
 export type OccasionGroup = "weddings" | "baby" | "celebrations" | "community";
 
+export const OCCASION_GROUP_KEYS: OccasionGroup[] = ["weddings", "baby", "celebrations", "community"];
+
+export function isOccasionGroup(v: unknown): v is OccasionGroup {
+  return typeof v === "string" && (OCCASION_GROUP_KEYS as string[]).includes(v);
+}
+
 export const OCCASION_GROUPS: Record<OccasionGroup, EventType[]> = {
   weddings: ["WEDDING", "ENGAGEMENT", "HENNA", "ANNIVERSARY"],
   baby: ["NEWBORN", "BABY_SHOWER", "AQIQAH"],
