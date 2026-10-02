@@ -27,6 +27,8 @@ const schema = z
     WHATSAPP_APP_SECRET: z.string().optional(),
     WHATSAPP_VERIFY_TOKEN: z.string().optional(),
     WHATSAPP_API_VERSION: z.string().default("v23.0"),
+    // Meta App id — needed only to upload the sample header image when submitting IMAGE templates.
+    WHATSAPP_APP_ID: z.string().optional(),
     WHATSAPP_MAX_MPS: z.coerce.number().int().positive().default(20),
 
     // Object storage
@@ -49,6 +51,8 @@ const schema = z
     PAYMENT_CURRENCY: z.enum(["USD", "AED", "SAR", "KWD", "QAR", "BHD", "OMR"]).default("USD"),
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    // Shown to customers for PAYMENT_PROVIDER=manual (bank transfer details etc.).
+    PAYMENT_MANUAL_INSTRUCTIONS: z.string().optional(),
 
     // Background jobs
     INLINE_WORKER: bool,
