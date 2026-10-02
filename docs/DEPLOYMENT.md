@@ -18,16 +18,18 @@ persistent disk for uploads and rendered invitations, and the `invtra.store` dom
    (idempotent) and serves on Render's `$PORT`. Health check: `/api/health`.
    Your app is immediately reachable at `https://invtra.onrender.com`.
 5. **Point your domain** — the Blueprint already added `invtra.store` and `www.invtra.store`
-   to the service. In Render → *invtra* → *Settings → Custom Domains* you'll see the DNS
-   records to create at your domain registrar — typically:
+   to the web service. In the Render Dashboard open the **invtra** web service (not the
+   database or the Blueprint page) → **Settings** → scroll to **Custom Domains** (add them
+   with **+ Add Custom Domain** if they aren't listed). Create these records at your
+   domain registrar:
    - `@` (root) → **A** record → `216.24.57.1`
    - `www` → **CNAME** → `invtra.onrender.com`
 
    Remove any other A/AAAA records for `@`. Render verifies the domain and issues HTTPS
    certificates automatically (usually within minutes of DNS propagating).
 
-Costs on Render (at time of writing): web service *Starter* plan (needed for the disk) and
-Postgres *Basic-256mb* — both can be resized later from the dashboard.
+Costs on Render: the web service uses the paid `0.5c-512mb` instance (a paid instance is needed
+for the persistent disk) and Postgres `0.1c-256mb` — both can be resized later.
 
 Every push to the deployed branch redeploys automatically (`autoDeploy: true`).
 
