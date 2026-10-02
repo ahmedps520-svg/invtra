@@ -43,10 +43,10 @@ function FontPicker({
             <span
               lang={arabic ? "ar" : "en"}
               dir={arabic ? "rtl" : "ltr"}
-              className={display ? "block truncate text-ink" : "block text-ink"}
+              className="block text-ink [overflow-wrap:anywhere]"
               style={{
                 fontFamily: fontStack(k),
-                fontSize: display ? (FONTS[k].kind === "script" ? 26 : 21) : 16,
+                fontSize: display ? (FONTS[k].kind === "script" ? 25 : 20) : 16,
                 fontWeight: 400,
                 lineHeight: 1.35,
               }}

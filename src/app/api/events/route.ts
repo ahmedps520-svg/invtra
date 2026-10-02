@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 import { db } from "@/server/db";
 import { ok, parseJson, requireApiUser, route } from "@/server/http";
 import { enforceRateLimit } from "@/server/security/rate-limit";
@@ -18,7 +19,8 @@ export const GET = route("events.list", async () => {
 export const POST = route("events.create", async (req: NextRequest) => {
   const user = await requireApiUser();
   await enforceRateLimit(`events.create:${user.id}`, 30, 3600);
-  const input = await parseJson(req, eventInputSchema);
-  const event = await createEvent(user.id, input);
+  // Optional `themeKey` preselects a design chosen on the marketing site (/designs → "Use this design").
+  const { themeKey, ...input } = await parseJson(req, eventInputSchema.extend({ themeKey: z.string().max(40).optional() }));
+  const event = await createEvent(user.id, input, themeKey);
   return ok({ event: { id: event.id } }, { status: 201 });
 });

@@ -1,15 +1,16 @@
 import { randomBytes } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 // Must be set before the env module is first read.
 const WEBHOOK_SECRET = "whsec_test_" + randomBytes(12).toString("hex");
 process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET;
+process.env.STRIPE_SECRET_KEY = "sk_test_invtra";
 
 const { db } = await import("@/server/db");
 const { upgradePrice, PLANS } = await import("@/lib/plans");
 const { THEMES } = await import("@/lib/themes/registry");
 const service = await import("@/server/payments/service");
-const { verifyStripeSignature, signStripePayload, toStripeAmount, stripeForm } = await import("@/server/payments/stripe");
+const { verifyStripeSignature, signStripePayload, toStripeAmount, stripeForm, stripeProvider } = await import("@/server/payments/stripe");
 const { handleStripeWebhook } = await import("@/server/payments/webhook");
 
 const run = randomBytes(5).toString("hex");
@@ -277,5 +278,47 @@ describe("Stripe webhook", () => {
     });
     expect(r.status).toBe(200);
     expect((await db.order.findUniqueOrThrow({ where: { id: pending.id } })).status).toBe("CANCELLED");
+  });
+});
+
+describe("Stripe Checkout session request", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("creates a payment-mode session with the order amount passed through unchanged", async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init: RequestInit) => {
+        calls.push({ url: String(url), init });
+        return new Response(JSON.stringify({ id: "cs_test_123", url: "https://checkout.stripe.com/c/pay/cs_test_123" }), { status: 200 });
+      }),
+    );
+    const order = { id: "ord_1", eventId: "evt_1", plan: "PREMIUM", amount: 24000, currency: "KWD" } as never;
+    const r = await stripeProvider.createCheckout(order, { successUrl: "https://invtra.store/ok", cancelUrl: "https://invtra.store/no" }, { customerEmail: "a@b.co", description: "INVTRA Premium plan — Test" });
+    expect(r).toEqual({ redirectUrl: "https://checkout.stripe.com/c/pay/cs_test_123", providerRef: "cs_test_123" });
+    expect(calls[0].url).toBe("https://api.stripe.com/v1/checkout/sessions");
+    const headers = new Headers(calls[0].init.headers);
+    expect(headers.get("authorization")).toBe("Bearer sk_test_invtra");
+    expect(headers.get("content-type")).toBe("application/x-www-form-urlencoded");
+    const form = new URLSearchParams(String(calls[0].init.body));
+    expect(Object.fromEntries(form)).toMatchObject({
+      mode: "payment",
+      "line_items[0][quantity]": "1",
+      "line_items[0][price_data][currency]": "kwd",
+      "line_items[0][price_data][unit_amount]": "24000",
+      "line_items[0][price_data][product_data][name]": "INVTRA Premium plan — Test",
+      client_reference_id: "ord_1",
+      "metadata[orderId]": "ord_1",
+      success_url: "https://invtra.store/ok",
+      cancel_url: "https://invtra.store/no",
+      customer_email: "a@b.co",
+    });
+  });
+
+  it("surfaces Stripe API errors", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: { message: "Invalid currency: xyz", code: "parameter_invalid" } }), { status: 400 })));
+    await expect(
+      stripeProvider.createCheckout({ id: "o", eventId: null, plan: "BASIC", amount: 4900, currency: "USD" } as never, { successUrl: "https://x/ok", cancelUrl: "https://x/no" }),
+    ).rejects.toMatchObject({ message: "Invalid currency: xyz", status: 400, code: "parameter_invalid" });
   });
 });

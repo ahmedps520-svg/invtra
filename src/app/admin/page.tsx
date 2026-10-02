@@ -75,15 +75,19 @@ export default async function AdminOverviewPage() {
                 : `Oldest runnable job has waited ${duration(q.oldestPendingMs)} (${q.oldestPendingType}).`
             }
           />
-          <div className="mb-4 grid grid-cols-5 divide-x divide-line overflow-hidden rounded-2xl border border-line bg-paper text-center shadow-soft">
+          <div className="mb-4 grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line text-center shadow-soft sm:grid-cols-6">
             {(["PENDING", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"] as const).map((s) => (
-              <div key={s} className="px-2 py-3">
-                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink-faint">{s.toLowerCase()}</p>
+              <div key={s} className="bg-paper px-2 py-3">
+                <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-ink-faint">{s.toLowerCase()}</p>
                 <p className={`mt-1 font-display text-2xl lining-nums tabular-nums ${s === "FAILED" && q.counts.FAILED ? "text-rosewood" : s === "PENDING" && backlog ? "text-ochre" : "text-ink"}`}>
                   {num(q.counts[s])}
                 </p>
               </div>
             ))}
+            <div className="bg-paper px-2 py-3">
+              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-ink-faint">oldest wait</p>
+              <p className={`mt-1 font-display text-2xl lining-nums ${backlog ? "text-ochre" : "text-ink"}`}>{q.oldestPendingMs === null ? "—" : duration(q.oldestPendingMs)}</p>
+            </div>
           </div>
           <DataTable
             caption="Recently failed jobs"

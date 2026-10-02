@@ -1,50 +1,51 @@
 # Deploying invtra.store
 
-## Go live on invtra.store in ~10 minutes (Railway)
+## Go live on invtra.store with Render (~10 minutes)
 
-The repository ships a `Dockerfile` and `railway.json`, so it deploys as-is.
+The repository contains a Render Blueprint (`render.yaml`) and a `Dockerfile`, so Render
+creates everything for you: the web service (Docker), a PostgreSQL database, a 5 GB
+persistent disk for uploads and rendered invitations, and the `invtra.store` domains.
 
-1. **Create the project** — railway.com → *New Project* → *Deploy from GitHub repo* →
-   `ahmedps520-svg/invtra`, branch `claude/beautiful-cray-wtskxa` (or `main` once merged).
-2. **Add a database** — in the project: *Create* → *Database* → *PostgreSQL*.
-3. **Add a volume** to the web service (uploaded photos & rendered invitations):
-   *Settings → Volumes* → mount path `/app/storage`.
-4. **Variables** on the web service (*Variables → Raw editor*):
+1. **Push** — the code is on GitHub (`ahmedps520-svg/invtra`).
+2. **Create the Blueprint** — render.com → *New* → *Blueprint* → connect GitHub → choose the
+   `invtra` repository and the branch (`claude/beautiful-cray-wtskxa`, or `main` once merged)
+   → Render reads `render.yaml`.
+3. **Fill the two prompted values** — `ADMIN_EMAIL` (your email) and `ADMIN_PASSWORD`
+   (a strong password; this is your staff login for `/admin`). Everything else is preset;
+   `APP_SECRET` and the webhook secrets are generated automatically.
+4. **Apply** — Render builds the Docker image, creates the database, and starts the app.
+   On every start the container applies migrations, seeds themes/templates/admin
+   (idempotent) and serves on Render's `$PORT`. Health check: `/api/health`.
+   Your app is immediately reachable at `https://invtra.onrender.com`.
+5. **Point your domain** — the Blueprint already added `invtra.store` and `www.invtra.store`
+   to the service. In Render → *invtra* → *Settings → Custom Domains* you'll see the DNS
+   records to create at your domain registrar — typically:
+   - `@` (root) → **A** record → `216.24.57.1`
+   - `www` → **CNAME** → `invtra.onrender.com`
 
-   ```
-   DATABASE_URL=${{Postgres.DATABASE_URL}}
-   APP_URL=https://invtra.store
-   APP_SECRET=<run: openssl rand -base64 48>
-   INLINE_WORKER=true
-   STORAGE_DRIVER=local
-   LOCAL_STORAGE_DIR=/app/storage
-   ADMIN_EMAIL=you@yourmail.com
-   ADMIN_PASSWORD=<a strong password>
-   WHATSAPP_APP_SECRET=<any random string for now>
-   # Preview mode until WhatsApp (Meta) and payments are connected:
-   WHATSAPP_PROVIDER=mock
-   PAYMENT_PROVIDER=mock
-   ALLOW_MOCK_IN_PRODUCTION=true
-   SEED_DEMO=true
-   ```
+   Remove any other A/AAAA records for `@`. Render verifies the domain and issues HTTPS
+   certificates automatically (usually within minutes of DNS propagating).
 
-   The container runs `npm run start:prod`: applies migrations, seeds themes/templates/admin
-   (idempotent) and starts on `$PORT`. Health check: `/api/health`.
-5. **Domain** — web service → *Settings → Networking → Custom domain* → add `invtra.store`
-   and `www.invtra.store`. Railway shows a CNAME target for each. At your domain registrar:
-   - `www` → **CNAME** → the target Railway shows
-   - `@` (root) → **ALIAS / ANAME / CNAME-flattening** → the same target (if your registrar
-     can't do this for the root, move DNS to Cloudflare (free) which supports it)
+Costs on Render (at time of writing): web service *Starter* plan (needed for the disk) and
+Postgres *Basic-256mb* — both can be resized later from the dashboard.
 
-   HTTPS certificates are issued automatically once DNS resolves.
+Every push to the deployed branch redeploys automatically (`autoDeploy: true`).
 
-**Preview mode** (`ALLOW_MOCK_IN_PRODUCTION=true`) lets you see and click through everything
-— designs, dashboard, the whole guest flow via `/dev/whatsapp` — but sends no real WhatsApp
-messages and takes no real payments. Before inviting real customers: connect WhatsApp
-([WHATSAPP.md](WHATSAPP.md)) with `WHATSAPP_PROVIDER=cloud`, set `PAYMENT_PROVIDER=stripe` or
-`manual`, configure SMTP, and **remove `ALLOW_MOCK_IN_PRODUCTION`**. For more traffic, set
-`INLINE_WORKER=false` and add a second service from the same repo with start command
-`npm run worker` (same variables + volume), or switch storage to R2/S3.
+**Preview mode.** The Blueprint starts with `WHATSAPP_PROVIDER=mock`,
+`PAYMENT_PROVIDER=mock` and `ALLOW_MOCK_IN_PRODUCTION=true`, so you can explore everything
+— landing page, designs, dashboard, and the full guest journey via `/dev/whatsapp` — without
+sending real WhatsApp messages or taking payments. A demo account is seeded
+(`demo@invtra.store` / `demo-password-2026`). **Before inviting real customers:**
+1. connect WhatsApp ([WHATSAPP.md](WHATSAPP.md)): set `WHATSAPP_PROVIDER=cloud` and the
+   `WHATSAPP_*` credentials (replace the generated `WHATSAPP_APP_SECRET` with your Meta App
+   Secret), then point Meta's webhook to `https://invtra.store/api/webhooks/whatsapp`;
+2. set `PAYMENT_PROVIDER=stripe` (+ keys) or `manual` (+ `PAYMENT_MANUAL_INSTRUCTIONS`);
+3. configure email (`EMAIL_PROVIDER=smtp`, `SMTP_URL`);
+4. delete `ALLOW_MOCK_IN_PRODUCTION` and `SEED_DEMO` (and remove the demo account in /admin).
+
+For higher volume, switch storage to Cloudflare R2/S3 (`STORAGE_DRIVER=s3`), set
+`INLINE_WORKER=false` and add a Render *Background Worker* from the same repo with start
+command `npm run worker`.
 
 ---
 
@@ -55,7 +56,7 @@ INVTRA needs three things at runtime: the **web app**, at least one **queue work
 
 | Component | Suggestion |
 | --- | --- |
-| Web | Node 20+ container (Fly.io, Render, Railway, AWS ECS/App Runner, a VPS…) running `npm start`, behind HTTPS |
+| Web | Node 20+ container (Render — see above —, Fly.io, Railway, AWS ECS/App Runner, a VPS…) running `npm run start:prod`, behind HTTPS |
 | Worker | Same image, command `npm run worker` (scale horizontally; workers coordinate through the database) |
 | Database | Managed PostgreSQL 14+ (Neon, Supabase, RDS, Crunchy…) with daily backups |
 | Storage | Cloudflare R2 or AWS S3 — **private** bucket |

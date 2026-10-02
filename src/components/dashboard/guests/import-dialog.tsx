@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { formatNumber } from "@/lib/format";
-import { PHONE_COUNTRIES } from "@/lib/phone";
+import { formatPhone, PHONE_COUNTRIES } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural } from "../i18n";
 
@@ -202,14 +202,14 @@ export function ImportDialog({
               ) : null}
             </div>
             <div className="mt-3 max-h-[46vh] overflow-auto rounded-2xl border border-line">
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full text-sm sm:min-w-[640px]">
                 <thead className="sticky top-0 z-10 bg-ivory text-[11px] uppercase tracking-[0.12em] text-ink-faint">
                   <tr>
-                    <th className="px-3 py-2.5 text-start font-medium">{d.columns.row}</th>
+                    <th className="hidden px-3 py-2.5 text-start font-medium sm:table-cell">{d.columns.row}</th>
                     <th className="px-3 py-2.5 text-start font-medium">{d.columns.name}</th>
-                    <th className="px-3 py-2.5 text-start font-medium">{d.columns.phone}</th>
-                    <th className="px-3 py-2.5 text-start font-medium">{d.columns.group}</th>
-                    <th className="px-3 py-2.5 text-center font-medium">{d.columns.guests}</th>
+                    <th className="hidden px-3 py-2.5 text-start font-medium sm:table-cell">{d.columns.phone}</th>
+                    <th className="hidden px-3 py-2.5 text-start font-medium sm:table-cell">{d.columns.group}</th>
+                    <th className="hidden px-3 py-2.5 text-center font-medium sm:table-cell">{d.columns.guests}</th>
                     <th className="px-3 py-2.5 text-start font-medium">{d.columns.status}</th>
                   </tr>
                 </thead>
@@ -219,17 +219,22 @@ export function ImportDialog({
                     const dup = !bad && Boolean(r.duplicate);
                     return (
                       <tr key={r.row} className={cn("border-t border-line", bad && "bg-rosewood-soft/50", dup && "bg-ochre-soft/50")}>
-                        <td className="px-3 py-2 text-ink-faint tabular-nums">{r.row}</td>
-                        <td className="px-3 py-2 text-ink" dir="auto">
-                          {r.name || <span className="text-ink-faint">—</span>}
+                        <td className="hidden px-3 py-2 text-ink-faint tabular-nums sm:table-cell">{r.row}</td>
+                        <td className="px-3 py-2 text-ink">
+                          <span dir="auto">{r.name || <span className="text-ink-faint">—</span>}</span>
+                          <span className="mt-0.5 block text-xs text-ink-faint sm:hidden">
+                            <span dir="ltr" className={cn("tabular-nums", r.error === "invalid_phone" && "text-rosewood line-through")}>
+                              {phoneLabel(r)}
+                            </span>
+                          </span>
                         </td>
-                        <td className="px-3 py-2 tabular-nums text-ink-soft" dir="ltr">
-                          <span className={cn(r.error === "invalid_phone" && "text-rosewood line-through decoration-rosewood/40")}>{r.error ? r.rawPhone || "—" : r.phone}</span>
+                        <td className="hidden px-3 py-2 tabular-nums text-ink-soft sm:table-cell">
+                          <span dir="ltr" className={cn(r.error === "invalid_phone" && "text-rosewood line-through decoration-rosewood/40")}>{phoneLabel(r)}</span>
                         </td>
-                        <td className="px-3 py-2 text-ink-soft" dir="auto">
+                        <td className="hidden px-3 py-2 text-ink-soft sm:table-cell" dir="auto">
                           {r.groupName || <span className="text-ink-faint">—</span>}
                         </td>
-                        <td className="px-3 py-2 text-center tabular-nums text-ink-soft">{r.allowedCount}</td>
+                        <td className="hidden px-3 py-2 text-center tabular-nums text-ink-soft sm:table-cell">{r.allowedCount}</td>
                         <td className="px-3 py-2">
                           {bad ? (
                             <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-rosewood">
@@ -318,6 +323,11 @@ export function ImportDialog({
       </AnimatePresence>
     </Dialog>
   );
+}
+
+function phoneLabel(r: PreviewRow) {
+  if (r.error) return r.rawPhone || "—";
+  return formatPhone(r.phone);
 }
 
 function SummaryChip({ label, tone }: { label: string; tone: "neutral" | "sage" | "rosewood" | "ochre" }) {

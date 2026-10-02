@@ -37,13 +37,17 @@ export function DetailsSummary() {
   const both = (en: ReactNode, ar: ReactNode | null | undefined) => (
     <>
       {langs.includes("en") ? (
-        <span className="block" dir="ltr" lang="en">
-          {en}
+        <span className="block">
+          <bdi dir="ltr" lang="en">
+            {en}
+          </bdi>
         </span>
       ) : null}
       {langs.includes("ar") && ar ? (
-        <span className="block font-arabic" dir="rtl" lang="ar">
-          {ar}
+        <span className="block font-arabic">
+          <bdi dir="rtl" lang="ar">
+            {ar}
+          </bdi>
         </span>
       ) : null}
     </>

@@ -227,6 +227,7 @@ export const marketing = {
         features: [
           "Standard INVTRA designs",
           "Upload your own design",
+          "Music and photo gallery on the invitation",
           "WhatsApp delivery with Accept & Decline",
           "A personal QR code for every guest",
           "RSVP tracking and door check-in",
@@ -235,8 +236,7 @@ export const marketing = {
       PREMIUM: {
         tagline: "For weddings and celebrations where every detail matters.",
         features: [
-          "All premium designs",
-          "Music and photo gallery on the invitation",
+          "All premium designs — Luxury, Traditional & Bilingual",
           "Everything in Basic",
           "Priority support",
         ],
@@ -298,7 +298,7 @@ export const marketing = {
       },
       {
         q: "Which plan do I need?",
-        a: "Basic covers up to 100 guests with our standard designs. Premium covers up to 500 guests and adds every premium design, music and a photo gallery, and priority support. For larger events or bespoke requirements, choose Custom and we'll prepare a quote. Plans are paid once per event.",
+        a: "Basic covers up to 100 guests with our standard designs. Premium covers up to 500 guests and adds every premium design and priority support. Music, a photo gallery and uploading your own design are included in every plan. For larger events or bespoke requirements, choose Custom and we'll prepare a quote. Plans are paid once per event.",
       },
     ],
   },

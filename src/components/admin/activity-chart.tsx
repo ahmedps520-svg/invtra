@@ -100,7 +100,9 @@ export function ActivityChart({ days }: { days: ChartDay[] }) {
             const x0 = M.left + i * band;
             const cx = x0 + band / 2;
             const groupW = barW * 2 + gap;
-            const first = i === 0 || d.date.slice(5, 7) !== days[i - 1].date.slice(5, 7);
+            // Month on the first labelled day and whenever the month changes.
+            const prevLabelled = i - labelEvery;
+            const first = prevLabelled < 0 || d.date.slice(5, 7) !== days[prevLabelled].date.slice(5, 7);
             const label = `${fmtLong(d.date)}: ${n(d.sent)} sent, ${n(d.accepted)} accepted`;
             return (
               <g
@@ -120,9 +122,9 @@ export function ActivityChart({ days }: { days: ChartDay[] }) {
                   const top = y(v);
                   return <path key={s.key} d={barPath(cx - groupW / 2 + k * (barW + gap), top, barW, M.top + plotH - top)} className={s.cls} />;
                 })}
-                {i % labelEvery === 0 || i === days.length - 1 ? (
+                {(days.length - 1 - i) % labelEvery === 0 ? (
                   <text x={cx} y={H - 8} textAnchor="middle" className="fill-ink-faint text-[11px] tabular-nums">
-                    {fmtDay(d.date, first || i === days.length - 1)}
+                    {fmtDay(d.date, first)}
                   </text>
                 ) : null}
               </g>

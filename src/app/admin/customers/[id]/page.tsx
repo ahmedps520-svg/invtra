@@ -143,7 +143,13 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                   align: "end",
                   cell: (e) => {
                     const s = stats.get(e.id);
-                    return s ? `${num(s.total)} · ${num(s.accepted)} ✓` : "0";
+                    return s ? (
+                      <span className="whitespace-nowrap">
+                        {num(s.total)} <span className="text-ink-faint">· {num(s.accepted)} accepted</span>
+                      </span>
+                    ) : (
+                      "0"
+                    );
                   },
                   hideBelow: "md",
                 },

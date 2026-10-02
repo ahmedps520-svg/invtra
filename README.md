@@ -56,6 +56,11 @@ checkout completes instantly) → send → open **/dev/whatsapp** to see each gu
 press Accept/Decline. Mock numbers ending in `9999` are rejected as invalid and `0000` fail
 as "not on WhatsApp".
 
+## Deploy
+
+One-click on **Render** with the included Blueprint (`render.yaml`): web service + Postgres +
+disk + the invtra.store domain — see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Configuration
 
 Every variable is documented in [`.env.example`](.env.example). For production you need:

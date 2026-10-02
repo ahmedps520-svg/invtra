@@ -81,6 +81,11 @@ export function SendPanel({
     }
   }, [eventId, batchId, router]);
 
+  // Each phase is a fresh screen — bring it into view.
+  useEffect(() => {
+    if (phase !== initialPhase) window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+  }, [phase, initialPhase, reduce]);
+
   useEffect(() => {
     if (phase !== "sending" || !batchId) return;
     const t = setInterval(poll, 1000);
