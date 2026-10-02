@@ -37,9 +37,24 @@ page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 page.on("console", (m) => m.type() === "error" && errors.push(`console: ${m.text()}`));
 const login = opt("--login");
 if (login) {
+  // Reuse a cached session cookie per account so repeated runs don't hit the login rate limit.
+  const { readFileSync, writeFileSync, mkdirSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
   const [email, password] = login.split(":");
-  const r = await page.request.post(`${base}/api/auth/login`, { data: { email, password }, headers: { Origin: base } });
-  if (!r.ok()) console.error("login failed", r.status(), await r.text());
+  const cacheDir = `${tmpdir()}/invtra-screenshot`;
+  const cacheFile = `${cacheDir}/${email.replace(/[^a-z0-9]/gi, "_")}.json`;
+  let cookies = null;
+  try {
+    cookies = JSON.parse(readFileSync(cacheFile, "utf8"));
+  } catch {}
+  if (cookies) await context.addCookies(cookies);
+  const me = cookies ? await page.request.get(`${base}/api/events`) : null;
+  if (!me || me.status() === 401) {
+    const r = await page.request.post(`${base}/api/auth/login`, { data: { email, password }, headers: { Origin: base } });
+    if (!r.ok()) console.error("login failed", r.status(), await r.text());
+    mkdirSync(cacheDir, { recursive: true });
+    writeFileSync(cacheFile, JSON.stringify((await context.cookies()).filter((c) => c.name === "invtra_session")));
+  }
 }
 const res = await page.goto(base + path, { waitUntil: "networkidle" });
 if (flag("--full") || flag("--scroll")) {
