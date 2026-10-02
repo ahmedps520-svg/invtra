@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { InvitationDesign } from "@/lib/design/schema";
 import { normalizeDesign } from "@/lib/design/schema";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
+import { copyFor } from "@/lib/invitation-copy";
 import { fmt } from "@/lib/i18n/config";
 import { LogoMark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,18 @@ export function InvitationExperience({ vm: initial, via, checkin }: { vm: Invita
       setVm((cur) => {
         const themeKey = isThemeKey(data.themeKey) ? data.themeKey : cur.themeKey;
         const design = data.design ? normalizeDesign(getTheme(themeKey).defaults, data.design) : cur.design;
-        return { ...cur, themeKey, design, imageMode: data.imageMode ?? cur.imageMode };
+        const t = design.texts;
+        return {
+          ...cur,
+          themeKey,
+          design,
+          imageMode: data.imageMode ?? cur.imageMode,
+          // Wording is edited live in the editor — recompute it here rather than waiting for a reload.
+          copy: {
+            en: copyFor(cur.event.type, "en", { eyebrow: t.eyebrow, intro: t.intro, closing: t.closing }),
+            ar: copyFor(cur.event.type, "ar", { eyebrow: t.eyebrowAr, intro: t.introAr, closing: t.closingAr }),
+          },
+        };
       });
     };
     window.addEventListener("message", onMessage);

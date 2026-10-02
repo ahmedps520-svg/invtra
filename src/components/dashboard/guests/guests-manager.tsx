@@ -329,15 +329,15 @@ export function GuestsManager({
           <p className="mt-2 text-[15px] text-ink-soft">{d.description}</p>
         </div>
         {totalAll > 0 ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <a href={`/api/events/${eventId}/guests/export`} className={buttonClasses("ghost", "md")} download>
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+            <a href={`/api/events/${eventId}/guests/export`} className={buttonClasses("ghost", "md", "order-2 sm:order-none")} download>
               <Download className="size-4" />
               {d.export}
             </a>
-            <Button variant="outline" icon={<FileSpreadsheet className="size-4" />} onClick={openImport}>
+            <Button variant="outline" icon={<FileSpreadsheet className="size-4" />} onClick={openImport} className="order-3 sm:order-none">
               {d.import}
             </Button>
-            <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={openAdd}>
+            <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={openAdd} className="order-1 col-span-2 sm:order-none">
               {d.add}
             </Button>
           </div>

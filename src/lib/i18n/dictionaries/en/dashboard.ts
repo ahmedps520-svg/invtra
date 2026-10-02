@@ -775,6 +775,7 @@ export const dashboard = {
     },
     nothing: {
       title: "Every guest has their invitation",
+      titleSent: "Your invitations have been sent",
       body: "When you add more guests, you can send to them from here.",
       failed: p("{n} guest couldn't be reached.", "{n} guests couldn't be reached."),
       resendFailed: "Resend to them",

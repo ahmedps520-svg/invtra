@@ -328,7 +328,7 @@ export function SendPanel({
               <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-sage-soft text-sage">
                 <CheckCircle2 className="size-7" />
               </div>
-              <h2 className="mt-7 font-display text-4xl text-ink">{d.nothing.title}</h2>
+              <h2 className="mt-7 font-display text-4xl text-ink">{failedCount > 0 ? d.nothing.titleSent : d.nothing.title}</h2>
               <p className="mx-auto mt-3 max-w-md text-[15px] text-ink-soft">{d.nothing.body}</p>
               {failedCount > 0 ? (
                 <div className="mx-auto mt-7 flex max-w-md flex-col items-center gap-3 rounded-2xl border border-rosewood/20 bg-rosewood-soft/60 px-5 py-4 text-sm">
