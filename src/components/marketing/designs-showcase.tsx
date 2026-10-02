@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { CardPreview } from "@/components/invitation/card-preview";
 import { useI18n } from "@/components/i18n/provider";
 import { buttonClasses } from "@/components/ui/button";
+import { localePath } from "@/lib/i18n/routing";
 
 export type ShowcaseItem = {
   key: string;
@@ -17,7 +18,7 @@ export type ShowcaseItem = {
 
 /** Horizontally scrolling gallery of the live-rendered invitation themes. */
 export function DesignsShowcase({ items, premiumLabel }: { items: ShowcaseItem[]; premiumLabel: string }) {
-  const { dict, dir } = useI18n();
+  const { dict, dir, locale } = useI18n();
   const t = dict.marketing.designs;
   const track = useRef<HTMLUListElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
@@ -60,9 +61,9 @@ export function DesignsShowcase({ items, premiumLabel }: { items: ShowcaseItem[]
       >
         {items.map((it) => (
           <li key={it.key} className="w-[72vw] max-w-[290px] shrink-0 snap-start sm:w-[290px]">
-            <Link href={`/designs/${it.key}`} className="group block rounded-lg outline-offset-4">
+            <Link href={localePath(locale, `/designs/${it.key}`)} className="group block rounded-lg outline-offset-4">
               <div className="relative overflow-hidden rounded-[6px] bg-paper shadow-soft ring-1 ring-black/5 transition-all duration-700 ease-luxe group-hover:-translate-y-1.5 group-hover:shadow-lift">
-                <CardPreview themeKey={it.key} language={it.language} title={it.name} />
+                <CardPreview lazy themeKey={it.key} language={it.language} title={it.name} />
               </div>
               <div className="mt-5 flex items-center justify-between gap-3">
                 <span className="font-display text-2xl leading-none text-ink">{it.name}</span>
@@ -79,7 +80,7 @@ export function DesignsShowcase({ items, premiumLabel }: { items: ShowcaseItem[]
       </ul>
 
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
-        <Link href="/designs" className={buttonClasses("outline", "md", "group")}>
+        <Link href={localePath(locale, "/designs")} className={buttonClasses("outline", "md", "group")}>
           {t.cta}
           <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
         </Link>

@@ -55,7 +55,7 @@ export function WhatsAppSection({ dict, locale }: { dict: Dictionary; locale: "e
             <div className="mx-auto max-w-[19rem]">
               <div className="flex gap-3 rounded-xl rounded-ss-sm bg-white p-2.5 shadow-[0_1px_1px_rgb(0_0_0/0.08)]">
                 <div className="w-16 shrink-0 overflow-hidden rounded-md">
-                  <CardPreview
+                  <CardPreview lazy
                     themeKey={ar ? "arabic" : "romantic"}
                     language={ar ? "AR" : "EN"}
                     guest={null}
@@ -98,7 +98,7 @@ export function WhatsAppSection({ dict, locale }: { dict: Dictionary; locale: "e
                 <p className="mb-2.5 text-center text-[11px] font-medium tracking-[0.16em] text-sage uppercase">{il.ifAccept}</p>
                 <div className="rounded-xl rounded-ss-sm bg-white p-1.5 shadow-[0_1px_1px_rgb(0_0_0/0.08)]">
                   <div className="overflow-hidden rounded-md">
-                    <CardPreview themeKey={ar ? "arabic" : "romantic"} language={ar ? "AR" : "EN"} qrPlaceholder title="" />
+                    <CardPreview lazy themeKey={ar ? "arabic" : "romantic"} language={ar ? "AR" : "EN"} qrPlaceholder title="" />
                   </div>
                   <p className="px-1 pb-1 pt-2 text-[11.5px] leading-snug text-[#111b21]">{il.acceptReply}</p>
                   <div className="mt-1 flex items-center justify-center gap-1.5 border-t border-black/[0.06] py-2 text-[11.5px] font-medium text-[#00866e]">

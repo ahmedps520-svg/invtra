@@ -3,12 +3,15 @@ import { ArrowUpRight } from "lucide-react";
 import { LogoMark, LogoWordmark } from "@/components/brand/logo";
 import type { Dictionary } from "@/lib/i18n";
 import { EYEBROW } from "./styles";
+import { localePath } from "@/lib/i18n/routing";
+import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
 
 const CONTACT_EMAIL = "hello@invtra.store";
 
 /** Marketing footer: brand, link columns, contact and legal line. */
-export function SiteFooter({ dict, signedIn }: { dict: Dictionary; signedIn: boolean }) {
+export function SiteFooter({ dict, locale, signedIn }: { dict: Dictionary; locale: "en" | "ar"; signedIn: boolean }) {
   const t = dict.marketing.footer;
+  const lp = (href: string) => localePath(locale, href);
   const nav = dict.common.nav;
   const year = new Date().getFullYear();
 
@@ -16,10 +19,17 @@ export function SiteFooter({ dict, signedIn }: { dict: Dictionary; signedIn: boo
     {
       title: t.explore,
       links: [
-        { href: "/#how-it-works", label: nav.howItWorks },
-        { href: "/designs", label: nav.designs },
-        { href: "/pricing", label: nav.pricing },
-        { href: "/#faq", label: nav.faq },
+        { href: lp("/#how-it-works"), label: nav.howItWorks },
+        { href: lp("/designs"), label: nav.designs },
+        { href: lp("/pricing"), label: nav.pricing },
+        { href: lp("/#faq"), label: nav.faq },
+      ],
+    },
+    {
+      title: t.occasions,
+      links: [
+        ...OCCASION_PAGES.map((o) => ({ href: lp(`/invitations/${o.slug}`), label: o[locale].nav })),
+        { href: lp("/invitations"), label: t.allOccasions },
       ],
     },
     {
@@ -37,8 +47,8 @@ export function SiteFooter({ dict, signedIn }: { dict: Dictionary; signedIn: boo
     {
       title: t.legal,
       links: [
-        { href: "/privacy", label: dict.common.footer.privacy },
-        { href: "/terms", label: dict.common.footer.terms },
+        { href: lp("/privacy"), label: dict.common.footer.privacy },
+        { href: lp("/terms"), label: dict.common.footer.terms },
       ],
     },
   ];
@@ -47,9 +57,9 @@ export function SiteFooter({ dict, signedIn }: { dict: Dictionary; signedIn: boo
     <footer className="relative border-t border-line bg-paper">
       <div className="mx-auto max-w-7xl px-5 pb-10 pt-16 sm:px-8 sm:pt-20">
         <div className="grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-4">
             <Link
-              href="/"
+              href={lp("/")}
               aria-label={dict.marketing.nav.home}
               className="inline-flex items-center gap-3 text-bronze-600"
               dir="ltr"
@@ -74,7 +84,7 @@ export function SiteFooter({ dict, signedIn }: { dict: Dictionary; signedIn: boo
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-6 lg:col-start-7">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:col-span-8 lg:col-start-5">
             {columns.map((col) => (
               <div key={col.title}>
                 <p className={EYEBROW}>{col.title}</p>

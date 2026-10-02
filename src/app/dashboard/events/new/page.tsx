@@ -6,6 +6,7 @@ import { EventForm } from "@/components/dashboard/event-form";
 import { STEP_KEYS } from "@/components/dashboard/steps";
 import { cn } from "@/lib/utils";
 import { isThemeKey } from "@/lib/themes/registry";
+import { EVENT_TYPES } from "@/lib/events/types";
 
 export async function generateMetadata() {
   const { dict } = await getI18n();
@@ -15,7 +16,10 @@ export async function generateMetadata() {
 export default async function NewEventPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const theme = typeof sp.theme === "string" && isThemeKey(sp.theme) ? sp.theme : null;
-  await requireUser(theme ? `/dashboard/events/new?theme=${theme}` : "/dashboard/events/new");
+  // Occasion chosen on a marketing landing page (/invitations/newborn → ?occasion=NEWBORN).
+  const occasion = EVENT_TYPES.find((t) => t === sp.occasion) ?? null;
+  const query = new URLSearchParams({ ...(theme ? { theme } : {}), ...(occasion ? { occasion } : {}) }).toString();
+  await requireUser(`/dashboard/events/new${query ? `?${query}` : ""}`);
   const { dict } = await getI18n();
   const d = dict.dashboard;
   return (
@@ -42,7 +46,7 @@ export default async function NewEventPage({ searchParams }: { searchParams: Pro
           </li>
         ))}
       </ol>
-      <EventForm mode="create" themeKey={theme} />
+      <EventForm mode="create" themeKey={theme} occasion={occasion} />
     </div>
   );
 }

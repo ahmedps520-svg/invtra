@@ -10,6 +10,7 @@ import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/provider";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { localePath, splitLocale } from "@/lib/i18n/routing";
 
 /** Sticky, translucent marketing navigation with an animated mobile sheet. */
 export function SiteHeader({ signedIn }: { signedIn: boolean }) {
@@ -22,10 +23,12 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   const nav = dict.common.nav;
   const links = [
     { href: "/#how-it-works", label: nav.howItWorks },
+    { href: "/invitations", label: nav.occasions },
     { href: "/designs", label: nav.designs },
     { href: "/pricing", label: nav.pricing },
     { href: "/#faq", label: nav.faq },
-  ];
+  ].map((l) => ({ ...l, path: l.href, href: localePath(locale, l.href) }));
+  const current = splitLocale(pathname ?? "/").path;
   const ctaHref = signedIn ? "/dashboard/events/new" : "/signup";
   const accountHref = signedIn ? "/dashboard" : "/login";
   const accountLabel = signedIn ? nav.dashboard : dict.common.actions.signIn;
@@ -61,14 +64,14 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
         )}
       >
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
-          <Link href="/" onClick={close} aria-label={dict.marketing.nav.home} className="-m-1 shrink-0 rounded-lg p-1">
+          <Link href={localePath(locale, "/")} onClick={close} aria-label={dict.marketing.nav.home} className="-m-1 shrink-0 rounded-lg p-1">
             <Logo markClassName="h-8 sm:h-9" />
           </Link>
 
           <nav aria-label={dict.marketing.nav.primary} className="hidden lg:block">
             <ul className="flex items-center gap-1">
               {links.map((l) => {
-                const active = !l.href.includes("#") && pathname === l.href;
+                const active = !l.path.includes("#") && (current === l.path || current.startsWith(`${l.path}/`));
                 return (
                   <li key={l.href}>
                     <Link

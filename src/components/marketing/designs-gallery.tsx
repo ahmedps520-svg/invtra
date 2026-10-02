@@ -10,6 +10,7 @@ import { Segmented } from "@/components/ui/toggle";
 import { fmt } from "@/lib/i18n/config";
 import type { CardLanguage } from "@/lib/card/build";
 import { OCCASION_GROUP_KEYS, type OccasionGroup } from "@/lib/events/types";
+import { localePath } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 
 export type GalleryItem = {
@@ -49,7 +50,7 @@ export function DesignsGallery({
   const choose = (next: Filter) => {
     setOccasion(next);
     // Keep the address shareable without a navigation.
-    window.history.replaceState(null, "", next === "all" ? "/designs" : `/designs?occasion=${next}`);
+    window.history.replaceState(null, "", localePath(locale, next === "all" ? "/designs" : `/designs?occasion=${next}`));
   };
 
   return (
@@ -100,7 +101,7 @@ export function DesignsGallery({
                 key={language}
                 className="relative animate-fade-up overflow-hidden rounded-[4px] shadow-lift ring-1 ring-black/5 transition-transform duration-700 ease-luxe group-hover:-translate-y-1.5"
               >
-                <CardPreview themeKey={it.key} language={language} title={fmt(t.previewOf, { name: it.name })} />
+                <CardPreview lazy themeKey={it.key} language={language} title={fmt(t.previewOf, { name: it.name })} />
               </div>
               {it.premium ? (
                 <span className="absolute end-4 top-4 rounded-full border border-bronze-200 bg-paper/90 px-2.5 py-0.5 text-[11px] font-medium text-bronze-700 backdrop-blur">
@@ -121,7 +122,7 @@ export function DesignsGallery({
                   <ArrowRight className="size-4 transition-transform duration-300 group-hover/btn:translate-x-0.5 rtl:rotate-180 rtl:group-hover/btn:-translate-x-0.5" />
                 </Link>
                 <Link
-                  href={`/designs/${it.key}`}
+                  href={localePath(locale, `/designs/${it.key}`)}
                   className={cn(buttonClasses("outline", "md"))}
                   aria-label={`${t.preview} — ${it.name}`}
                 >

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { preload } from "react-dom";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { pickNamespaces, type Dictionary } from "@/lib/i18n";
@@ -20,6 +21,9 @@ function clientDict(locale: "en" | "ar"): Pick<Dictionary, "marketing"> {
 export default async function MarketingLayout({ children }: { children: ReactNode }) {
   const [{ locale, dict }, user] = await Promise.all([getI18n(), getSessionUser()]);
   const signedIn = Boolean(user);
+  // The faces the first screen is set in, requested with the HTML instead of after the CSS.
+  const firstScreenFonts = locale === "ar" ? ["ibm-plex-sans-arabic-400", "amiri-400"] : ["jost-400", "cormorant-garamond-400"];
+  for (const f of firstScreenFonts) preload(`/fonts/${f}.woff2`, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
 
   return (
     <I18nProvider locale={locale} dict={clientDict(locale)}>
@@ -34,7 +38,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
         <main id="main" className="flex-1">
           {children}
         </main>
-        <SiteFooter dict={dict} signedIn={signedIn} />
+        <SiteFooter dict={dict} locale={locale} signedIn={signedIn} />
       </div>
     </I18nProvider>
   );

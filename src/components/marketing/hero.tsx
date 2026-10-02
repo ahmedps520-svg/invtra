@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { localePath } from "@/lib/i18n/routing";
 import { ArrowRight, Check } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
 import { buttonClasses } from "@/components/ui/button";
@@ -24,7 +25,7 @@ export function Hero({ dict, locale, ctaHref }: { dict: Dictionary; locale: "en"
             <span className="hidden h-px w-8 bg-bronze-400 sm:block" aria-hidden="true" />
             {t.eyebrow}
           </p>
-          <h1 style={{ animationDelay: "80ms" }} className="mt-7 font-display font-normal text-ink animate-fade-up">
+          <h1 className="mt-7 font-display font-normal text-ink motion-safe:animate-rise">
             <span className="block text-[clamp(2.9rem,13.5vw,4.5rem)] leading-[1.02] sm:text-7xl lg:text-[4.5rem] xl:text-[5.5rem]">
               {t.titleLine1}
             </span>
@@ -32,10 +33,7 @@ export function Hero({ dict, locale, ctaHref }: { dict: Dictionary; locale: "en"
               {t.titleLine2}
             </span>
           </h1>
-          <p
-            style={{ animationDelay: "160ms" }}
-            className="mt-8 max-w-xl text-lg leading-relaxed text-pretty text-ink-soft animate-fade-up sm:text-xl sm:leading-relaxed"
-          >
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-pretty text-ink-soft motion-safe:animate-rise sm:text-xl sm:leading-relaxed">
             {t.subtitle}
           </p>
           <div
@@ -46,7 +44,7 @@ export function Hero({ dict, locale, ctaHref }: { dict: Dictionary; locale: "en"
               {t.primary}
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
             </Link>
-            <Link href="/designs" className={buttonClasses("outline", "lg")}>
+            <Link href={localePath(locale, "/designs")} className={buttonClasses("outline", "lg")}>
               {t.secondary}
             </Link>
           </div>

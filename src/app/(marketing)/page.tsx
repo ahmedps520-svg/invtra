@@ -19,20 +19,22 @@ import { CtaBand } from "@/components/marketing/cta-band";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { Reveal } from "@/components/marketing/reveal";
 import { CONTAINER, EYEBROW } from "@/components/marketing/styles";
-import { openGraph } from "@/components/marketing/seo";
+import { CONTACT_EMAIL, faqLd, jsonLdHtml, organizationLd, pageMetadata, siteUrl, websiteLd } from "@/components/marketing/seo";
+import { PLAN_ORDER, planPrice, type Currency } from "@/lib/plans";
+import { localePath } from "@/lib/i18n/routing";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dict, locale } = await getI18n();
   const t = dict.marketing.meta;
-  return {
-    title: { absolute: t.homeTitle },
-    description: t.homeDescription,
-    alternates: { canonical: "/" },
-    openGraph: openGraph(t.homeTitle, t.homeDescription, locale, "/"),
-  };
+  return pageMetadata({ locale, path: "/", title: t.homeTitle, description: t.homeDescription, absoluteTitle: true });
 }
 
-const CONTACT_EMAIL = "hello@invtra.store";
+/** Lowest and highest one-time plan price, in major units, for structured data. */
+function priceRange(currency: Currency) {
+  const minor = ["KWD", "BHD", "OMR"].includes(currency) ? 1000 : 100;
+  const prices = PLAN_ORDER.map((p) => planPrice(p, currency)).filter((n): n is number => n !== null);
+  return { low: Math.min(...prices) / minor, high: Math.max(...prices) / minor };
+}
 
 export default async function HomePage() {
   const [{ dict, locale }, user, nonce] = await Promise.all([
@@ -53,38 +55,33 @@ export default async function HomePage() {
   }));
 
   const [faqBefore, faqAfter] = t.faq.body.split("{email}");
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        name: "INVTRA",
-        url: env().APP_URL,
-        logo: `${env().APP_URL.replace(/\/$/, "")}/brand/icon-512.png`,
-        email: CONTACT_EMAIL,
-      },
-      {
-        "@type": "FAQPage",
-        inLanguage: locale,
-        mainEntity: t.faq.items.map((f) => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      },
-    ],
-  };
+  const range = priceRange(env().PAYMENT_CURRENCY);
+  const jsonLd = jsonLdHtml([
+    organizationLd(),
+    websiteLd(locale),
+    {
+      "@type": "Service",
+      "@id": `${siteUrl()}/#service`,
+      name: locale === "ar" ? "دعوات إلكترونية عبر واتساب" : "Digital invitations on WhatsApp",
+      serviceType: locale === "ar" ? "دعوات إلكترونية للمناسبات" : "Digital event invitations",
+      description: t.meta.homeDescription,
+      provider: { "@id": `${siteUrl()}/#organization` },
+      url: siteUrl(),
+      offers: { "@type": "AggregateOffer", priceCurrency: env().PAYMENT_CURRENCY, lowPrice: range.low, highPrice: range.high, offerCount: 2 },
+    },
+    faqLd(t.faq.items, locale),
+  ]);
 
   return (
     <>
       <script
         type="application/ld+json"
         nonce={nonce}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
       />
 
       <Hero dict={dict} locale={locale} ctaHref={ctaHref} />
-      <Occasions dict={dict} />
+      <Occasions dict={dict} locale={locale} />
       <Journey dict={dict} />
       <HowItWorks dict={dict} ctaHref={ctaHref} />
 
@@ -144,7 +141,7 @@ export default async function HomePage() {
       </section>
 
       <div className="bg-paper pt-4">
-        <CtaBand dict={dict} ctaHref={ctaHref} />
+        <CtaBand dict={dict} ctaHref={ctaHref} secondary={{ href: localePath(locale, "/pricing"), label: dict.marketing.cta.secondary }} />
       </div>
     </>
   );

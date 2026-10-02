@@ -240,7 +240,7 @@ function ModeBanner() {
   return (
     <div className="sticky top-0 z-50 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-[#1e1a16]/90 px-4 py-2 text-center text-xs text-[#faf7f2] backdrop-blur">
       {vm.mode === "demo" ? (
-        <Link href="/designs" className="text-white/60 hover:text-white">
+        <Link href={vm.demoBackHref ?? "/designs"} className="text-white/60 hover:text-white">
           ← INVTRA
         </Link>
       ) : null}

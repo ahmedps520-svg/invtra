@@ -40,6 +40,7 @@ export const common: typeof en = {
   },
   nav: {
     howItWorks: "كيف تعمل",
+    occasions: "المناسبات",
     designs: "التصاميم",
     pricing: "الأسعار",
     faq: "الأسئلة الشائعة",

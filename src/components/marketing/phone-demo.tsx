@@ -156,7 +156,7 @@ export function PhoneDemo({ className }: { className?: string }) {
                   <Bubble>
                     <div className="overflow-hidden rounded-[7px]">
                       <div className="aspect-[1/1] overflow-hidden">
-                        <CardPreview themeKey={theme} language={language} guest={null} qrPlaceholder={false} title="" />
+                        <CardPreview lazy themeKey={theme} language={language} guest={null} qrPlaceholder={false} title="" />
                       </div>
                     </div>
                     <p
@@ -241,7 +241,7 @@ export function PhoneDemo({ className }: { className?: string }) {
                 >
                   <Bubble>
                     <div className="overflow-hidden rounded-[7px]">
-                      <CardPreview themeKey={theme} language={language} qrPlaceholder title="" />
+                      <CardPreview lazy themeKey={theme} language={language} qrPlaceholder title="" />
                     </div>
                     <p className="px-1.5 pb-0.5 pt-1.5 text-[11.5px] leading-[1.42]" style={{ color: WA.text }}>
                       {t.delivery}

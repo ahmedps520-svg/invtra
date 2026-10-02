@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
+import { isLocalizedPath, localePath, splitLocale } from "@/lib/i18n/routing";
 
 /** EN | العربية toggle. Persists the choice in a cookie (and on the account when signed in). */
 export function LanguageSwitcher({ locale, className, compact }: { locale: Locale; className?: string; compact?: boolean }) {
@@ -22,6 +23,12 @@ export function LanguageSwitcher({ locale, className, compact }: { locale: Local
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ locale: next }),
           });
+          // Marketing pages have an address per language (/ar/…): load that page.
+          const { path } = splitLocale(window.location.pathname);
+          if (isLocalizedPath(path)) {
+            window.location.assign(localePath(next, path) + window.location.search + window.location.hash);
+            return;
+          }
           router.refresh();
         })
       }

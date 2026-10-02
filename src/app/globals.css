@@ -11,7 +11,7 @@
   --color-line-strong: #d4c7b5;
   --color-ink: #1e1a16;
   --color-ink-soft: #57504a;
-  --color-ink-faint: #8c847b;
+  --color-ink-faint: #726a61;
 
   /* Accent — the bronze of the INVTRA mark */
   --color-bronze-50: #f8f3ec;
@@ -46,6 +46,8 @@
   --shadow-lift: 0 2px 4px rgb(30 26 22 / 0.04), 0 24px 48px -24px rgb(30 26 22 / 0.25);
 
   --animate-fade-up: fade-up 0.8s var(--ease-luxe) both;
+  /* Movement without fading from invisible — for the hero headline, so it counts as painted immediately (LCP). */
+  --animate-rise: rise 0.9s var(--ease-luxe) both;
   --animate-shimmer: shimmer 2.4s linear infinite;
 
   @keyframes fade-up {
@@ -55,6 +57,14 @@
     }
     to {
       opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(14px);
+    }
+    to {
       transform: none;
     }
   }

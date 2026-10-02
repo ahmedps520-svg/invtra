@@ -191,12 +191,15 @@ export function EventForm({
   eventId,
   initial,
   themeKey,
+  occasion,
 }: {
   mode: "create" | "edit";
   eventId?: string;
   initial?: EventInput | null;
   /** Design preselected on the marketing site (/dashboard/events/new?theme=…). */
   themeKey?: string | null;
+  /** Occasion preselected from a landing page (/dashboard/events/new?occasion=…). */
+  occasion?: EventType | null;
 }) {
   const { dict, locale } = useI18n();
   const d = dict.dashboard.form;
@@ -208,6 +211,7 @@ export function EventForm({
     const f = fromInput(initial);
     // A design chosen on the marketing site suggests its language.
     if (!initial && themeKey && isThemeKey(themeKey)) f.language = getTheme(themeKey).recommendedLanguage;
+    if (!initial && occasion) f.type = occasion;
     return f;
   });
   const [baseline, setBaseline] = useState(() => JSON.stringify(fromInput(initial)));

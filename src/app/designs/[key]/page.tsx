@@ -7,14 +7,23 @@ import { sampleEvent } from "@/server/invitations/sample";
 import { buildInvitationVM } from "@/server/invitations/view-model";
 import { InvitationExperience } from "@/components/invitation/experience";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
+import { pageMetadata } from "@/components/marketing/seo";
+import { localePath } from "@/lib/i18n/routing";
 
 type Props = { params: Promise<{ key: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { key } = await params;
   if (!isThemeKey(key)) return {};
-  const { dict } = await getI18n();
-  return { title: dict.themes[key].name, description: dict.themes[key].description };
+  const { dict, locale } = await getI18n();
+  const theme = getTheme(key);
+  const occasions = theme.occasions
+    .filter((o) => o !== "OTHER")
+    .slice(0, 3)
+    .map((o) => dict.common.eventTypes[o])
+    .join(locale === "ar" ? "، " : ", ");
+  const title = locale === "ar" ? `تصميم دعوة «${dict.themes[key].name}» — ${occasions}` : `${dict.themes[key].name} Invitation Design — ${occasions}`;
+  return pageMetadata({ locale, path: `/designs/${key}`, title, description: dict.themes[key].description, image: key });
 }
 
 /** Public, interactive demo of a theme's guest website with sample content. */
@@ -52,5 +61,5 @@ export default async function DesignDemoPage({ params, searchParams }: Props) {
     mode: "demo",
     qrText: "HTTPS://INVTRA.STORE/Q/SAMPLE0000",
   });
-  return <InvitationExperience vm={vm} />;
+  return <InvitationExperience vm={{ ...vm, demoBackHref: localePath(locale, "/designs") }} />;
 }

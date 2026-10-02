@@ -10,6 +10,8 @@ export type Bi = { en: string; ar: string };
 /** Everything the guest-facing invitation page renders. Serializable (crosses the RSC boundary). */
 export interface InvitationVM {
   mode: "guest" | "host" | "preview" | "demo";
+  /** Demo pages: where "← INVTRA" leads (the gallery in the visitor's language). */
+  demoBackHref?: string;
   token: string | null;
   lang: PageLang;
   themeKey: ThemeKey;

@@ -45,6 +45,28 @@ sending real WhatsApp messages or taking payments. A demo account is seeded
 3. configure email (`EMAIL_PROVIDER=smtp`, `SMTP_URL`);
 4. delete `ALLOW_MOCK_IN_PRODUCTION` and `SEED_DEMO` (and remove the demo account in /admin).
 
+## Search engines (Google & Bing)
+
+The site is built to be indexed: every marketing page has an English URL and an Arabic one
+(`/ar/…`) linked with hreflang, a sitemap at `/sitemap.xml`, canonical URLs, structured data
+(Organization, WebSite, Service, FAQ, breadcrumbs), 1200×630 share images (`/og/…`) and
+landing pages per occasion (`/invitations/wedding`, `/invitations/newborn`, …).
+`invtra.onrender.com` redirects to `invtra.store` so only one address gets indexed.
+
+1. **Google Search Console** (search.google.com/search-console) → *Add property* → **Domain**
+   → `invtra.store` → copy the `google-site-verification=…` TXT record → GoDaddy → DNS → *Add*
+   → Type **TXT**, Name **@**, Value = that text → back in Search Console press *Verify*
+   (DNS can take a few minutes). Then *Sitemaps* → submit `https://invtra.store/sitemap.xml`,
+   and use *URL inspection* → *Request indexing* on the home page and `/ar`.
+   (Alternative: the "HTML tag" method — put the `content` value in the Render env var
+   `GOOGLE_SITE_VERIFICATION`.)
+2. **Bing Webmaster Tools** (bing.com/webmasters) → *Import from Google Search Console*
+   (this also covers DuckDuckGo and Yahoo, and ChatGPT search uses Bing's index).
+3. **Google Business Profile** (business.google.com) if you serve customers in a region —
+   it makes "INVTRA" show as a brand panel.
+4. Optional: set `SOCIAL_PROFILES` (comma-separated Instagram/TikTok/X/LinkedIn URLs) so
+   Google connects your profiles to the site.
+
 For higher volume, switch storage to Cloudflare R2/S3 (`STORAGE_DRIVER=s3`), set
 `INLINE_WORKER=false` and add a Render *Background Worker* from the same repo with start
 command `npm run worker`.

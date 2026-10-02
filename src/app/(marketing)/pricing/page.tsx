@@ -9,18 +9,14 @@ import { Pricing } from "@/components/marketing/pricing";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { Reveal } from "@/components/marketing/reveal";
 import { CtaBand } from "@/components/marketing/cta-band";
-import { openGraph } from "@/components/marketing/seo";
+import { pageMetadata } from "@/components/marketing/seo";
+import { localePath } from "@/lib/i18n/routing";
 import { CONTAINER, EYEBROW } from "@/components/marketing/styles";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dict, locale } = await getI18n();
   const t = dict.marketing.meta;
-  return {
-    title: t.pricingTitle,
-    description: t.pricingDescription,
-    alternates: { canonical: "/pricing" },
-    openGraph: openGraph(t.pricingTitle, t.pricingDescription, locale, "/pricing"),
-  };
+  return pageMetadata({ locale, path: "/pricing", title: t.pricingTitle, description: t.pricingDescription, image: "pricing" });
 }
 
 const INCLUDED_ICONS = [MessageCircle, QrCode, ScrollText, LayoutDashboard, DoorOpen, Globe2];
@@ -78,7 +74,7 @@ export default async function PricingPage() {
             <p className="mt-2 max-w-lg text-[15.5px] leading-relaxed text-ink-soft">{t.questionsBody}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/#faq" className={buttonClasses("outline", "lg", "group")}>
+            <Link href={localePath(locale, "/#faq")} className={buttonClasses("outline", "lg", "group")}>
               {t.readFaq}
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
             </Link>
@@ -89,7 +85,7 @@ export default async function PricingPage() {
         </Reveal>
       </section>
 
-      <CtaBand dict={dict} ctaHref={ctaHref} secondary={{ href: "/designs", label: dict.marketing.hero.secondary }} />
+      <CtaBand dict={dict} ctaHref={ctaHref} secondary={{ href: localePath(locale, "/designs"), label: dict.marketing.hero.secondary }} />
     </>
   );
 }

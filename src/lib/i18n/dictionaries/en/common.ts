@@ -38,6 +38,7 @@ export const common = {
   },
   nav: {
     howItWorks: "How it works",
+    occasions: "Occasions",
     designs: "Designs",
     pricing: "Pricing",
     faq: "FAQ",

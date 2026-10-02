@@ -9,19 +9,30 @@ const appUrl = process.env.APP_URL || "https://invtra.store";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: { default: "INVTRA — Your Invitation. Reimagined.", template: "%s · INVTRA" },
+  title: { default: "INVTRA — Digital Event Invitations & E-Invites on WhatsApp", template: "%s · INVTRA" },
   description:
-    "Create beautiful digital invitations, send them directly through WhatsApp, and let every guest receive their own personalised invitation and QR code.",
+    "Digital event invitations sent on WhatsApp — weddings, newborns, baby showers, birthdays, Ramadan & corporate events. One-tap RSVP and a QR code for every guest.",
   applicationName: "INVTRA",
+  authors: [{ name: "INVTRA", url: appUrl }],
+  creator: "INVTRA",
+  publisher: "INVTRA",
+  category: "events",
+  formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     type: "website",
     siteName: "INVTRA",
     title: "INVTRA — Your Invitation. Reimagined.",
-    description: "Premium digital invitations delivered through WhatsApp, with a personal QR code for every guest.",
+    description: "Digital invitations delivered on WhatsApp, with a personal invitation and QR code for every guest.",
     url: appUrl,
-    images: [{ url: "/brand/icon-512.png", width: 512, height: 512 }],
+    images: [{ url: "/og/home-en.png", width: 1200, height: 630, alt: "INVTRA — digital invitations on WhatsApp" }],
   },
-  robots: { index: true, follow: true },
+  twitter: { card: "summary_large_image", images: ["/og/home-en.png"] },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
+  // Search Console / Bing Webmaster ownership (set the values from their "HTML tag" method).
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+  },
 };
 
 export const viewport: Viewport = {

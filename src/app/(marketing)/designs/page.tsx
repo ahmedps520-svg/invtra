@@ -6,22 +6,18 @@ import { OCCASION_GROUP_KEYS, isOccasionGroup, occasionGroup } from "@/lib/event
 import { DesignsGallery, type GalleryItem } from "@/components/marketing/designs-gallery";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { OwnDesignTile } from "@/components/marketing/own-design-tile";
-import { openGraph } from "@/components/marketing/seo";
+import { breadcrumbLd, jsonLdHtml, pageMetadata } from "@/components/marketing/seo";
+import { localePath } from "@/lib/i18n/routing";
 import { CONTAINER } from "@/components/marketing/styles";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dict, locale } = await getI18n();
   const t = dict.marketing.meta;
-  return {
-    title: t.designsTitle,
-    description: t.designsDescription,
-    alternates: { canonical: "/designs" },
-    openGraph: openGraph(t.designsTitle, t.designsDescription, locale, "/designs"),
-  };
+  return pageMetadata({ locale, path: "/designs", title: t.designsTitle, description: t.designsDescription, image: "designs" });
 }
 
 /** Where "Use this design" leads: straight to a new event, or through sign-up first. */
-function startHref(signedIn: boolean, theme?: string) {
+function startHref(signedIn: boolean, theme?: string): string {
   const target = theme ? `/dashboard/events/new?theme=${theme}` : "/dashboard/events/new";
   return signedIn ? target : `/signup?next=${encodeURIComponent(target)}`;
 }
@@ -45,8 +41,24 @@ export default async function DesignsPage({ searchParams }: { searchParams: Prom
     ),
   }));
 
+  const jsonLd = jsonLdHtml([
+    breadcrumbLd(
+      [
+        { name: "INVTRA", path: "/" },
+        { name: t.title, path: "/designs" },
+      ],
+      locale,
+    ),
+    {
+      "@type": "ItemList",
+      name: t.title,
+      itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, url: localePath(locale, `/designs/${it.key}`) })),
+    },
+  ]);
+
   return (
     <div className="relative">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(60%_100%_at_50%_0%,var(--color-bronze-100),transparent)] opacity-70"

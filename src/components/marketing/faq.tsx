@@ -6,9 +6,9 @@ import { useI18n } from "@/components/i18n/provider";
 import { cn } from "@/lib/utils";
 
 /** Accessible accordion (WAI-ARIA disclosure pattern) for the FAQ. */
-export function FaqList({ className }: { className?: string }) {
+export function FaqList({ className, items: custom }: { className?: string; items?: { q: string; a: string }[] }) {
   const { dict } = useI18n();
-  const items = dict.marketing.faq.items;
+  const items = custom ?? dict.marketing.faq.items;
   const base = useId();
   const [open, setOpen] = useState<Set<number>>(() => new Set());
 

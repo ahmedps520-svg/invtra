@@ -1,10 +1,13 @@
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, dirOf, isLocale, type Locale } from "@/lib/i18n/config";
+import { LOCALE_HEADER } from "@/lib/i18n/routing";
 import { getDictionary } from "@/lib/i18n";
 
-/** Locale for the site UI: explicit cookie → Accept-Language → English. */
+/** Locale for the site UI: the URL (/ar/… marketing pages, set by the proxy) → explicit cookie → Accept-Language → English. */
 export const getLocale = cache(async (): Promise<Locale> => {
+  const fromUrl = (await headers()).get(LOCALE_HEADER);
+  if (isLocale(fromUrl)) return fromUrl;
   const jar = await cookies();
   const fromCookie = jar.get(LOCALE_COOKIE)?.value;
   if (isLocale(fromCookie)) return fromCookie;

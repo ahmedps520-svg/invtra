@@ -214,3 +214,24 @@ describe("plans", () => {
     expect(upgradePrice(null, "CUSTOM", "USD")).toBeNull();
   });
 });
+
+describe("language-specific marketing URLs", async () => {
+  const { isLocalizedPath, localePath, splitLocale } = await import("@/lib/i18n/routing");
+  it("prefixes marketing pages with /ar and leaves app pages alone", () => {
+    expect(localePath("ar", "/")).toBe("/ar");
+    expect(localePath("ar", "/designs?occasion=baby")).toBe("/ar/designs?occasion=baby");
+    expect(localePath("ar", "/#faq")).toBe("/ar#faq");
+    expect(localePath("ar", "/invitations/newborn")).toBe("/ar/invitations/newborn");
+    expect(localePath("ar", "/signup?next=/dashboard")).toBe("/signup?next=/dashboard");
+    expect(localePath("ar", "https://example.com/")).toBe("https://example.com/");
+    expect(localePath("en", "/designs")).toBe("/designs");
+  });
+  it("splits and recognises localized paths", () => {
+    expect(splitLocale("/ar")).toEqual({ locale: "ar", path: "/" });
+    expect(splitLocale("/ar/pricing")).toEqual({ locale: "ar", path: "/pricing" });
+    expect(splitLocale("/arabic")).toEqual({ locale: null, path: "/arabic" });
+    expect(isLocalizedPath("/designs/teddy")).toBe(true);
+    expect(isLocalizedPath("/dashboard")).toBe(false);
+    expect(isLocalizedPath("/i/ABC")).toBe(false);
+  });
+});

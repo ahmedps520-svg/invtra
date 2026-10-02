@@ -3,13 +3,13 @@ export type LegalSection = { id: string; heading: string; body: string[]; list?:
 
 export const marketing = {
   meta: {
-    homeTitle: "INVTRA — Your Invitation. Reimagined.",
+    homeTitle: "INVTRA — Digital Event Invitations & E-Invites on WhatsApp",
     homeDescription:
-      "Beautiful digital invitations for weddings, new babies and hospital visits, baby showers, birthdays, Ramadan gatherings and more — sent through WhatsApp, with a personal invitation and QR code for every guest.",
-    designsTitle: "Invitation designs",
+      "Digital event invitations sent on WhatsApp — weddings, newborns, baby showers, birthdays, Ramadan & corporate events. One-tap RSVP and a QR code for every guest.",
+    designsTitle: "Invitation Designs for Weddings, Babies, Birthdays & Ramadan",
     designsDescription:
-      "Sixteen signature invitation designs for weddings, new babies and hospital visits, baby showers, aqiqah, birthdays, Ramadan & Eid and corporate events — in Arabic, English or both, delivered to every guest on WhatsApp.",
-    pricingTitle: "Pricing",
+      "16 digital invitation designs for weddings, newborns, baby showers, aqiqah, birthdays, Ramadan & corporate events — in Arabic, English or both, sent on WhatsApp.",
+    pricingTitle: "Pricing — Digital Invitations on WhatsApp",
     pricingDescription:
       "Simple, one-time pricing per event. WhatsApp messaging included, a personal QR code for every guest, and three free test sends to your own number.",
     privacyTitle: "Privacy Policy",
@@ -30,6 +30,8 @@ export const marketing = {
   footer: {
     tagline: "Premium digital invitations, delivered personally to every guest through WhatsApp.",
     explore: "Explore",
+    occasions: "Invitations for",
+    allOccasions: "All occasions",
     account: "Account",
     legal: "Legal",
     contact: "Contact",
@@ -332,6 +334,14 @@ export const marketing = {
     },
     more: "…and corporate launches, gala dinners and any gathering worth celebrating.",
     cta: "See the designs",
+    page: {
+      designsTitle: "Designs for this occasion",
+      designsBody: "Each design is shown exactly as your guests will receive it. Open one to see the full invitation page.",
+      faqTitle: "Questions",
+      related: "More occasions",
+      all: "All occasions",
+      preview: "Preview",
+    },
   },
 
   designsPage: {

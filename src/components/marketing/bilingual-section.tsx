@@ -76,7 +76,7 @@ export function BilingualSection({ dict, locale }: { dict: Dictionary; locale: "
                       i === 2 && "rotate-[6deg] rtl:-rotate-[6deg]",
                     )}
                   >
-                    <CardPreview themeKey={c.theme} language={c.language} qrPlaceholder title={c.label} />
+                    <CardPreview lazy themeKey={c.theme} language={c.language} qrPlaceholder title={c.label} />
                   </div>
                   <figcaption className="mt-5 text-center text-[12px] tracking-wide text-[#a99f93]">{c.label}</figcaption>
                 </figure>
