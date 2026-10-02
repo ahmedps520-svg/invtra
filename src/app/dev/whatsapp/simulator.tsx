@@ -97,17 +97,38 @@ export function WhatsAppSimulator({ initialPhone }: { initialPhone: string | nul
     };
   }, [phone, loadList, loadChat]);
 
-  // Stick to the newest message when new ones arrive.
+  // Stay pinned to the newest message unless the user has scrolled up to read.
+  const stick = useRef(true);
+  const chatReady = messages !== null;
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const onScroll = () => {
+      stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [phone, chatReady]);
+
+  const toBottom = useCallback(() => {
+    const el = scroller.current;
+    if (el && stick.current) el.scrollTop = el.scrollHeight;
+  }, []);
+
   useEffect(() => {
     const n = messages?.length ?? 0;
-    if (n !== lastCount.current && scroller.current) scroller.current.scrollTo({ top: scroller.current.scrollHeight, behavior: lastCount.current ? "smooth" : "auto" });
+    if (n !== lastCount.current) {
+      if (lastCount.current === 0) stick.current = true;
+      toBottom();
+    }
     lastCount.current = n;
-  }, [messages]);
+  }, [messages, toBottom]);
 
   function open(p: string) {
     setPhone(p);
     setMessages(null);
     lastCount.current = 0;
+    stick.current = true;
     const url = new URL(window.location.href);
     url.searchParams.set("phone", p);
     window.history.replaceState(window.history.state, "", url);
@@ -251,7 +272,7 @@ export function WhatsAppSimulator({ initialPhone }: { initialPhone: string | nul
                               header={
                                 m.imageUrl ? (
                                   // eslint-disable-next-line @next/next/no-img-element -- dev-only, arbitrary media URL
-                                  <img src={m.imageUrl} alt="Invitation image" className="block w-full rounded-lg" loading="lazy" />
+                                  <img src={m.imageUrl} alt="Invitation image" className="block w-full rounded-lg" onLoad={toBottom} />
                                 ) : undefined
                               }
                               body={m.body || (outbound ? "" : "(reply)")}

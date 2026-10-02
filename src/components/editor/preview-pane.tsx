@@ -32,7 +32,7 @@ export function PreviewPane({ siteMaxHeight, hideTitle, className }: { siteMaxHe
   const [downloading, setDownloading] = useState(false);
   const vh = useViewportHeight();
   // Fit the phone under the app bar with room for the tabs and caption.
-  const phoneMax = siteMaxHeight ?? Math.max(440, Math.min(640, vh - 290));
+  const phoneMax = siteMaxHeight ?? Math.max(420, Math.min(640, vh - 340));
 
   const download = async () => {
     setDownloading(true);
