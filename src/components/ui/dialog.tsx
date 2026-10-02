@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/provider";
 
 /**
  * Accessible modal dialog: focus moves in on open and back on close, Escape and
@@ -30,6 +31,7 @@ export function Dialog({
   className?: string;
 }) {
   const titleId = useId();
+  const { dict } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
 
@@ -115,7 +117,7 @@ export function Dialog({
                   data-dialog-close
                   onClick={onClose}
                   className="-me-2 rounded-full p-2 text-ink-faint transition hover:bg-sand hover:text-ink"
-                  aria-label="Close"
+                  aria-label={dict.common?.actions.close ?? "Close"}
                 >
                   <X className="size-5" />
                 </button>
