@@ -171,9 +171,15 @@ model Event {
   templateVariables Json? // overrides for template variables (e.g. how the couple names read)
 
   // Plan
-  plan        PlanTier?
-  guestLimit  Int       @default(0)
-  testSendsUsed Int     @default(0)
+  plan          PlanTier?
+  guestLimit    Int       @default(0)
+  testSendsUsed Int       @default(0)
+
+  // WhatsApp media cache for the non-personal "teaser" image used as the
+  // header of the Accept / Decline template message.
+  teaserMediaId        String?
+  teaserMediaVersion   String?
+  teaserMediaExpiresAt DateTime?
 
   firstSentAt       DateTime?
   deactivatedAt     DateTime?
@@ -290,40 +296,41 @@ enum RsvpSource {
 }
 
 model Guest {
-  id             String         @id @default(cuid())
+  id             String  @id @default(cuid())
   eventId        String
-  event          Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event          Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   name           String
   phone          String // E.164
   groupName      String?
-  allowedCount   Int            @default(1)
+  allowedCount   Int     @default(1)
   attendingCount Int?
   locale         String? // optional per-guest language override ("en" | "ar")
   notes          String?
+  isTest         Boolean @default(false) // host's own number for "send me a test"; hidden from lists & stats
 
-  status         GuestStatus    @default(PENDING)
-  rsvpStatus     RsvpStatus     @default(PENDING)
-  rsvpAt         DateTime?
-  rsvpSource     RsvpSource?
-  deliveryStatus DeliveryStatus @default(NOT_SENT)
-  deliveryError  String?
+  status            GuestStatus    @default(PENDING)
+  rsvpStatus        RsvpStatus     @default(PENDING)
+  rsvpAt            DateTime?
+  rsvpSource        RsvpSource?
+  deliveryStatus    DeliveryStatus @default(NOT_SENT)
+  deliveryError     String?
   deliveryErrorCode String?
 
-  requestSentAt    DateTime? // template with Accept / Decline was sent
-  invitationSentAt DateTime? // personalised invitation image was sent
+  requestSentAt         DateTime? // template with Accept / Decline was sent
+  invitationSentAt      DateTime? // personalised invitation image was sent
   invitationSentVersion Int? // Event.contentVersion that was delivered
-  lastInboundAt    DateTime? // last message from the guest (opens the 24h service window)
-  viewCount        Int       @default(0)
-  firstViewedAt    DateTime?
-  lastViewedAt     DateTime?
-  scanCount        Int       @default(0)
-  firstScannedAt   DateTime?
-  lastScannedAt    DateTime?
-  checkedInAt      DateTime?
-  checkedInCount   Int?
-  lastActivityAt   DateTime  @default(now())
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  lastInboundAt         DateTime? // last message from the guest (opens the 24h service window)
+  viewCount             Int       @default(0)
+  firstViewedAt         DateTime?
+  lastViewedAt          DateTime?
+  scanCount             Int       @default(0)
+  firstScannedAt        DateTime?
+  lastScannedAt         DateTime?
+  checkedInAt           DateTime?
+  checkedInCount        Int?
+  lastActivityAt        DateTime  @default(now())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   invitation Invitation?
   messages   WhatsAppMessage[]
@@ -510,21 +517,21 @@ enum BatchStatus {
 }
 
 model SendBatch {
-  id         String          @id @default(cuid())
-  eventId    String
-  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind       BatchKind       @default(INITIAL)
-  status     BatchStatus     @default(QUEUED)
-  templateId String?
-  template   MessageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  total      Int
-  sent       Int             @default(0)
-  failed     Int             @default(0)
-  skipped    Int             @default(0)
-  createdAt  DateTime        @default(now())
-  startedAt  DateTime?
+  id          String           @id @default(cuid())
+  eventId     String
+  event       Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        BatchKind        @default(INITIAL)
+  status      BatchStatus      @default(QUEUED)
+  templateId  String?
+  template    MessageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  total       Int
+  sent        Int              @default(0)
+  failed      Int              @default(0)
+  skipped     Int              @default(0)
+  createdAt   DateTime         @default(now())
+  startedAt   DateTime?
   completedAt DateTime?
 
   messages WhatsAppMessage[]
@@ -624,12 +631,14 @@ model Job {
   lastError   String?
   dedupeKey   String?   @unique
   batchId     String?
+  eventId     String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   completedAt DateTime?
 
   @@index([status, runAt, priority])
   @@index([batchId])
+  @@index([eventId, status])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

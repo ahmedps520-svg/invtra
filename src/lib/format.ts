@@ -26,8 +26,13 @@ export function formatDate(
   return new Intl.DateTimeFormat(intlLocale(opts.locale, opts.digits), { ...o, timeZone: opts.timeZone }).format(date);
 }
 
+/** English times use "7:30 PM" (en-US style) — the convention on invitations. */
+function timeLocale(locale: Locale, digits: DigitStyle = "latn") {
+  return locale === "ar" ? intlLocale(locale, digits) : "en-US";
+}
+
 export function formatTime(date: Date, opts: { locale: Locale; timeZone: string; digits?: DigitStyle }): string {
-  return new Intl.DateTimeFormat(intlLocale(opts.locale, opts.digits), {
+  return new Intl.DateTimeFormat(timeLocale(opts.locale, opts.digits), {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
@@ -39,7 +44,7 @@ export function formatTime(date: Date, opts: { locale: Locale; timeZone: string;
 export function formatWallTime(hhmm: string, locale: Locale, digits: DigitStyle = "latn"): string {
   const [h, m] = hhmm.split(":").map(Number);
   const d = new Date(Date.UTC(2000, 0, 1, h, m));
-  return new Intl.DateTimeFormat(intlLocale(locale, digits), {
+  return new Intl.DateTimeFormat(timeLocale(locale, digits), {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
