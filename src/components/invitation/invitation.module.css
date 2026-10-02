@@ -1,0 +1,219 @@
+/* Guest invitation website. Every colour and typeface comes from the event's design
+   through CSS variables set on .root (see experience.tsx). */
+
+.root {
+  --inv-line: color-mix(in srgb, var(--inv-accent) 28%, transparent);
+  --inv-soft: color-mix(in srgb, var(--inv-text) 6%, transparent);
+  position: relative;
+  min-height: 100dvh;
+  background: var(--inv-bg);
+  color: var(--inv-text);
+  font-family: var(--inv-body);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+.root :focus-visible {
+  outline: 2px solid var(--inv-accent);
+  outline-offset: 3px;
+}
+
+.display {
+  font-family: var(--inv-display);
+  font-weight: var(--inv-display-weight, 500);
+  line-height: 1.02;
+}
+
+.body {
+  font-family: var(--inv-body);
+}
+
+.accent {
+  color: var(--inv-accent);
+}
+
+.muted {
+  color: var(--inv-muted);
+}
+
+.eyebrow {
+  font-family: var(--inv-body);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--inv-accent);
+}
+
+.surface {
+  background: var(--inv-surface);
+}
+
+.card {
+  background: var(--inv-surface);
+  border: 1px solid var(--inv-line);
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--inv-text) 5%, transparent),
+    0 24px 48px -32px color-mix(in srgb, var(--inv-text) 35%, transparent);
+}
+
+.panel {
+  background: var(--inv-surface);
+  border-block: 1px solid var(--inv-line);
+}
+
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--inv-line), transparent);
+}
+
+.frame {
+  position: relative;
+  border: 1px solid var(--inv-accent);
+  outline: 1px solid color-mix(in srgb, var(--inv-accent) 55%, transparent);
+  outline-offset: -10px;
+}
+
+.arch {
+  border-radius: 999px 999px 1.25rem 1.25rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.75rem;
+  border-radius: 999px;
+  font-family: var(--inv-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition:
+    transform 0.25s ease,
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.primary {
+  background: var(--inv-accent);
+  color: var(--inv-on-accent);
+}
+
+.primary:hover {
+  background: color-mix(in srgb, var(--inv-accent) 86%, var(--inv-text));
+}
+
+.ghost {
+  border: 1px solid var(--inv-line);
+  color: var(--inv-text);
+  background: transparent;
+}
+
+.ghost:hover {
+  border-color: var(--inv-accent);
+}
+
+.countBox {
+  min-width: 4.4rem;
+  padding: 0.9rem 0.6rem 0.8rem;
+  border: 1px solid var(--inv-line);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--inv-surface) 70%, transparent);
+}
+
+.select {
+  appearance: none;
+  border: 1px solid var(--inv-line);
+  border-radius: 999px;
+  background: var(--inv-surface);
+  color: var(--inv-text);
+  padding-block: 0.6rem;
+  font-family: var(--inv-body);
+}
+
+.qrPlate {
+  background: var(--inv-surface);
+  border: 1px solid var(--inv-line);
+  border-radius: 1.75rem;
+  padding: 1.25rem;
+}
+
+.qrPlate svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.locked {
+  filter: blur(7px);
+  opacity: 0.35;
+  user-select: none;
+}
+
+/* Arabic must never be letter-spaced or upper-cased. */
+.root :lang(ar) {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.scrollCue {
+  animation: cue 2.4s ease-in-out infinite;
+}
+
+@keyframes cue {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+.bars span {
+  display: inline-block;
+  width: 2px;
+  margin: 0 1px;
+  background: currentColor;
+  animation: bar 1s ease-in-out infinite;
+}
+
+.bars span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bars span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bar {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollCue,
+  .bars span {
+    animation: none;
+  }
+}

@@ -42,6 +42,16 @@ if (login) {
   if (!r.ok()) console.error("login failed", r.status(), await r.text());
 }
 const res = await page.goto(base + path, { waitUntil: "networkidle" });
+if (flag("--full") || flag("--scroll")) {
+  // Trigger scroll-based reveals before a full-page capture.
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += Math.round(window.innerHeight * 0.4)) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 220));
+    }
+    window.scrollTo(0, 0);
+  });
+}
 await page.waitForTimeout(Number(opt("--wait", "800")));
 await page.screenshot({ path: out, fullPage: flag("--full") });
 console.log(`${res?.status()} ${page.url()} -> ${out}`);
