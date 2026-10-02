@@ -36,6 +36,18 @@ function isFinder(r: number, c: number, n: number) {
   return (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
 }
 
+/** Alignment-pattern centres for a symbol of `n` modules (ISO/IEC 18004 table E.1). */
+function alignmentCenters(n: number): number[] {
+  const version = (n - 17) / 4;
+  if (version < 2) return [];
+  const count = Math.floor(version / 7) + 2;
+  const last = n - 7;
+  const step = version === 32 ? 26 : Math.ceil((last - 6) / (count - 1) / 2) * 2;
+  const out = [6];
+  for (let i = count - 1; i > 0; i--) out.splice(1, 0, last - (count - 1 - i) * step);
+  return out.sort((a, b) => a - b);
+}
+
 function roundedRect(x: number, y: number, w: number, h: number, r: number) {
   r = Math.min(r, w / 2, h / 2);
   if (r <= 0) return `M${x} ${y}h${w}v${h}h${-w}z`;
@@ -102,14 +114,20 @@ export function qrSvgGroup(opts: QrOptions, x = 0, y = 0): string {
   const hs = Math.floor((n - hole) / 2);
   const inHole = (r: number, c: number) => withLogo && r >= hs - 1 && r < hs + hole + 1 && c >= hs - 1 && c < hs + hole + 1;
 
+  // Alignment patterns are drawn as solid shapes in every style — scanners rely on them.
+  const centers = alignmentCenters(n);
+  const aligns: [number, number][] = [];
+  for (const r of centers) for (const c of centers) if (!isFinder(r, c, n) && !isFinder(r - 2, c - 2, n) && !isFinder(r + 2, c + 2, n)) aligns.push([r, c]);
+  const inAlign = (r: number, c: number) => aligns.some(([ar, ac]) => Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2);
+
   let d = "";
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
-      if (!matrix.get(r, c) || isFinder(r, c, n) || inHole(r, c)) continue;
+      if (!matrix.get(r, c) || isFinder(r, c, n) || inHole(r, c) || inAlign(r, c)) continue;
       const mx = c + quiet;
       const my = r + quiet;
       if (style === "dots") {
-        const rad = 0.43;
+        const rad = 0.48;
         d += `M${mx + 0.5 - rad} ${my + 0.5}a${rad} ${rad} 0 1 0 ${rad * 2} 0a${rad} ${rad} 0 1 0 ${-rad * 2} 0z`;
       } else if (style === "rounded") {
         d += roundedRect(mx + 0.04, my + 0.04, 0.92, 0.92, 0.32);
@@ -118,8 +136,14 @@ export function qrSvgGroup(opts: QrOptions, x = 0, y = 0): string {
       }
     }
   }
-  const finders =
+  let finders =
     finderPath(quiet, quiet, style) + finderPath(quiet + n - 7, quiet, style) + finderPath(quiet, quiet + n - 7, style);
+  const ar = style === "classic" ? 0 : 1.1;
+  for (const [r, c] of aligns) {
+    const x = c - 2 + quiet;
+    const y = r - 2 + quiet;
+    finders += roundedRect(x, y, 5, 5, ar) + roundedRect(x + 1, y + 1, 3, 3, ar * 0.6) + roundedRect(x + 2, y + 2, 1, 1, style === "classic" ? 0 : 0.5);
+  }
 
   let logo = "";
   if (withLogo) {
