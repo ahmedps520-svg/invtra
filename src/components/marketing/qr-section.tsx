@@ -29,13 +29,13 @@ export function QrSection({ dict }: { dict: Dictionary }) {
               <div
                 key={i}
                 className={cn(
-                  "absolute top-0 w-[58%] max-w-[15rem] rounded-2xl border border-line bg-paper p-4 shadow-soft sm:p-5",
-                  i === 1 ? "start-[2%] -rotate-[8deg] rtl:rotate-[8deg]" : "end-[2%] rotate-[7deg] rtl:-rotate-[7deg]",
+                  "absolute top-0 w-[56%] max-w-[15rem] rounded-2xl border border-line bg-[#fbf8f3] p-4 shadow-soft sm:p-5",
+                  i === 1 ? "start-[1%] -rotate-[9deg] rtl:rotate-[9deg]" : "end-[1%] rotate-[8deg] text-end rtl:-rotate-[8deg]",
                 )}
               >
-                <p className="truncate font-display text-lg text-ink">{guests[i]}</p>
+                <p className="truncate font-display text-lg text-ink-soft">{guests[i]}</p>
                 <div
-                  className="mt-3 opacity-90 [&>svg]:h-auto [&>svg]:w-full"
+                  className="mt-3 opacity-[0.28] [&>svg]:h-auto [&>svg]:w-full"
                   dangerouslySetInnerHTML={{ __html: qr(TOKENS[i], 160) }}
                 />
                 <p className="mt-2 text-center font-mono text-[10px] tracking-[0.3em] text-ink-faint" dir="ltr">

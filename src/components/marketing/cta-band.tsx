@@ -27,7 +27,7 @@ export function CtaBand({
             aria-hidden="true"
             viewBox="0 0 400 300"
             preserveAspectRatio="xMidYMax meet"
-            className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-[92%] w-auto text-bronze-300/60"
+            className="pointer-events-none absolute bottom-0 left-1/2 h-[92%] w-auto max-w-none -translate-x-1/2 text-bronze-300/60"
             fill="none"
           >
             <path d="M40 300V180C40 91.6 111.6 20 200 20s160 71.6 160 160v120" stroke="currentColor" strokeWidth="0.8" />

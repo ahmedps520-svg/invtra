@@ -13,6 +13,18 @@ import { cn } from "@/lib/utils";
 const CONTACT_EMAIL = "hello@invtra.store";
 
 /**
+ * In right-to-left text a Latin currency symbol such as "US$" gets split by the bidi
+ * algorithm ("$US"). Isolating it keeps the symbol intact while the amount stays RTL.
+ */
+const LRI = String.fromCodePoint(0x2066);
+const PDI = String.fromCodePoint(0x2069);
+
+function displayPrice(minor: number, currency: Currency, locale: Locale) {
+  const s = formatMoney(minor, currency, locale);
+  return locale === "ar" ? s.replace(/[A-Za-z]+\$|[A-Z]{3}/g, (m) => LRI + m + PDI) : s;
+}
+
+/**
  * Plan cards built from the plan catalogue (src/lib/plans.ts) in the configured
  * payment currency. Used on the landing page and on /pricing.
  */
@@ -80,7 +92,7 @@ export function Pricing({
                           featured ? "text-ivory" : "text-ink",
                         )}
                       >
-                        {formatMoney(price, currency, locale)}
+                        {displayPrice(price, currency, locale)}
                       </p>
                       <p className={cn("mt-3 text-[13px]", featured ? "text-[#a99f93]" : "text-ink-faint")}>
                         {t.perEvent} · {t.oneTime}

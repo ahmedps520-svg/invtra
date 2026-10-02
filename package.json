@@ -2,7 +2,7 @@
   "name": "invtra",
   "version": "1.0.0",
   "private": true,
-  "description": "INVTRA — premium digital QR invitations delivered through WhatsApp.",
+  "description": "INVTRA \u2014 premium digital QR invitations delivered through WhatsApp.",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -20,7 +20,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "admin:create": "tsx scripts/create-admin.ts",
-    "fonts:fetch": "python3 scripts/fetch-fonts.py"
+    "fonts:fetch": "python3 scripts/fetch-fonts.py",
+    "start:prod": "prisma migrate deploy && tsx prisma/seed.ts && next start"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

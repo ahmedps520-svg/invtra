@@ -9,7 +9,7 @@ import { useI18n } from "@/components/i18n/provider";
 import { cn } from "@/lib/utils";
 import { useEditor } from "./editor-context";
 import { SitePreview } from "./site-preview";
-import { useCardProps } from "./use-card-props";
+import { useCardProps, useViewportHeight } from "./use-card-props";
 
 export type PreviewTab = "card" | "site";
 
@@ -24,12 +24,15 @@ export function CardStage({ className, cardClassName }: { className?: string; ca
   );
 }
 
-export function PreviewPane({ siteMaxHeight = 620, className }: { siteMaxHeight?: number; className?: string }) {
+export function PreviewPane({ siteMaxHeight, hideTitle, className }: { siteMaxHeight?: number; hideTitle?: boolean; className?: string }) {
   const { dict } = useI18n();
   const t = dict.editor.preview;
   const { event, draft, saveNow, siteVersion } = useEditor();
   const [tab, setTab] = useState<PreviewTab>("card");
   const [downloading, setDownloading] = useState(false);
+  const vh = useViewportHeight();
+  // Fit the phone under the app bar with room for the tabs and caption.
+  const phoneMax = siteMaxHeight ?? Math.max(440, Math.min(640, vh - 290));
 
   const download = async () => {
     setDownloading(true);
@@ -46,8 +49,8 @@ export function PreviewPane({ siteMaxHeight = 620, className }: { siteMaxHeight?
 
   return (
     <div className={className}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="eyebrow">{t.title}</p>
+      <div className={cn("flex flex-wrap items-center gap-3", hideTitle ? "justify-center" : "justify-between")}>
+        {hideTitle ? null : <p className="eyebrow">{t.title}</p>}
         <Segmented
           size="sm"
           value={tab}
@@ -60,7 +63,7 @@ export function PreviewPane({ siteMaxHeight = 620, className }: { siteMaxHeight?
       </div>
 
       {tab === "card" ? (
-        <div className="mt-5 animate-fade-up">
+        <div className="mt-5 animate-[fade-up_0.6s_var(--ease-luxe)_backwards]">
           <CardStage />
           <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
             <p className="min-w-0 flex-1 text-[12px] leading-relaxed text-ink-faint">
@@ -72,14 +75,14 @@ export function PreviewPane({ siteMaxHeight = 620, className }: { siteMaxHeight?
           </div>
         </div>
       ) : (
-        <div className="mt-5 animate-fade-up">
+        <div className="mt-5 animate-[fade-up_0.6s_var(--ease-luxe)_backwards]">
           <SitePreview
             eventId={event.id}
             themeKey={draft.themeKey}
             design={draft.design}
             imageMode={draft.imageMode}
             version={siteVersion}
-            maxHeight={siteMaxHeight}
+            maxHeight={phoneMax}
           />
           <p className="mt-4 text-center text-[12px] leading-relaxed text-ink-faint">{t.siteCaption}</p>
         </div>

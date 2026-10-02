@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { Check, LayoutGrid } from "lucide-react";
 import { useI18n } from "@/components/i18n/provider";
 import { cn } from "@/lib/utils";
@@ -15,9 +16,20 @@ export function EventStepNav({ eventId, steps }: { eventId: string; steps: StepS
   const base = `/dashboard/events/${eventId}`;
   const current: StepKey | "overview" | null =
     pathname === base ? "overview" : (STEP_KEYS.find((k) => pathname.startsWith(`${base}/${STEP_PATHS[k]}`)) ?? null);
+  const navRef = useRef<HTMLElement>(null);
+
+  // On narrow screens keep the current step visible inside the scrollable stepper.
+  useEffect(() => {
+    const nav = navRef.current;
+    const el = nav?.querySelector<HTMLElement>("[aria-current]");
+    if (!nav || !el || nav.scrollWidth <= nav.clientWidth) return;
+    const navBox = nav.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    nav.scrollBy({ left: box.left + box.width / 2 - (navBox.left + navBox.width / 2), behavior: "smooth" });
+  }, [pathname]);
 
   return (
-    <nav aria-label={d.label} className="scrollbar-none -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+    <nav ref={navRef} aria-label={d.label} className="scrollbar-none relative -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
       <ol className="flex min-w-max items-center gap-2 rounded-full border border-line bg-paper/70 p-1.5 shadow-soft">
         <li>
           <Link

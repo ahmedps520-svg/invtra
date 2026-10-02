@@ -101,7 +101,7 @@ export function BackgroundPanel() {
 
       {selected === "image" ? (
         image?.url && !wantImage ? (
-          <div className="animate-fade-up space-y-5">
+          <div className="animate-[fade-up_0.6s_var(--ease-luxe)_backwards] space-y-5">
             <div>
               <div className="mb-1 flex items-baseline justify-between gap-3">
                 <label htmlFor={overlayId} className="text-[13px] font-medium text-ink-soft">
@@ -134,7 +134,7 @@ export function BackgroundPanel() {
           </div>
         ) : (
           <Dropzone
-            className="animate-fade-up"
+            className="animate-[fade-up_0.6s_var(--ease-luxe)_backwards]"
             accept={IMAGE_ACCEPT}
             onFiles={(files) => void onFile(files[0])}
             title={t.uploadTitle}

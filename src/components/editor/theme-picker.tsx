@@ -71,9 +71,8 @@ export function ThemePicker() {
                   </span>
                 </span>
                 {current ? (
-                  <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-medium text-ivory backdrop-blur">
-                    <Check className="size-3" />
-                    {t.current}
+                  <span className="absolute start-2 top-2 flex size-6 items-center justify-center rounded-full bg-bronze-600 text-white shadow-soft ring-2 ring-paper">
+                    <Check className="size-3.5" strokeWidth={2.5} />
                   </span>
                 ) : null}
                 {th.premium ? (
@@ -87,7 +86,12 @@ export function ThemePicker() {
                 <p className="font-display text-lg leading-tight text-ink">{name}</p>
                 <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-ink-faint">{dict.themes[th.key].description}</p>
                 {th.premium && !premiumIncluded ? <p className="mt-1.5 text-[11px] font-medium text-bronze-700">{t.includedWithPremium}</p> : null}
-                {!current ? (
+                {current ? (
+                  <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium text-bronze-700">
+                    <Check className="size-3.5" />
+                    {t.current}
+                  </p>
+                ) : (
                   <button
                     type="button"
                     onClick={() => setPreviewKey(th.key)}
@@ -95,7 +99,7 @@ export function ThemePicker() {
                   >
                     {t.preview}
                   </button>
-                ) : null}
+                )}
               </div>
             </li>
           );

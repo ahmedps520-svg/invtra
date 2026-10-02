@@ -88,7 +88,7 @@ export function ImagePanel() {
 
       {choice === "custom" ? (
         image ? (
-          <div className="animate-fade-up space-y-5">
+          <div className="animate-[fade-up_0.6s_var(--ease-luxe)_backwards] space-y-5">
             <div>
               <p className="flex items-center gap-2 text-sm font-medium text-ink">
                 <Move className="size-4 text-bronze-600" />
@@ -148,7 +148,7 @@ export function ImagePanel() {
           </div>
         ) : (
           <Dropzone
-            className="animate-fade-up"
+            className="animate-[fade-up_0.6s_var(--ease-luxe)_backwards]"
             accept={IMAGE_ACCEPT}
             onFiles={(files) => void onFile(files[0])}
             title={t.uploadTitle}

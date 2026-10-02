@@ -5,7 +5,7 @@ import { pickNamespaces } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { ToastProvider } from "@/components/ui/toast";
 
-const appUrl = process.env.APP_URL || "http://localhost:3000";
+const appUrl = process.env.APP_URL || "https://invtra.store";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),

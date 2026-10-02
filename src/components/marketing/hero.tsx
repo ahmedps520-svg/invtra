@@ -20,8 +20,8 @@ export function Hero({ dict, locale, ctaHref }: { dict: Dictionary; locale: "en"
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-5 pb-20 pt-12 sm:px-8 sm:pt-16 lg:grid-cols-12 lg:gap-8 lg:pb-28 lg:pt-20">
         <div className="lg:col-span-6 xl:col-span-6">
-          <p className="eyebrow flex animate-fade-up items-center gap-3 rtl:text-[13px]">
-            <span className="h-px w-8 bg-bronze-400" aria-hidden="true" />
+          <p className="eyebrow flex animate-fade-up items-center gap-3 max-sm:tracking-[0.2em] rtl:text-[13px]">
+            <span className="hidden h-px w-8 bg-bronze-400 sm:block" aria-hidden="true" />
             {t.eyebrow}
           </p>
           <h1 style={{ animationDelay: "80ms" }} className="mt-7 font-display font-normal text-ink animate-fade-up">

@@ -55,7 +55,7 @@ export function QrPositioner({
   const plateW = PLATE_W * v.size;
   const plateH = (PLATE_H * v.size) / aspect;
 
-  const begin = (mode: "move" | "resize") => (e: ReactPointerEvent<HTMLElement>) => {
+  const begin = (mode: "move" | "resize", e: ReactPointerEvent<HTMLElement>) => {
     const rect = boxRef.current?.getBoundingClientRect();
     if (!rect) return;
     e.preventDefault();
@@ -107,7 +107,7 @@ export function QrPositioner({
         tabIndex={0}
         aria-label={label}
         aria-describedby={[describedBy, liveId].filter(Boolean).join(" ")}
-        onPointerDown={begin("move")}
+        onPointerDown={(e) => begin("move", e)}
         onPointerMove={move}
         onPointerUp={end}
         onPointerCancel={end}
@@ -123,7 +123,7 @@ export function QrPositioner({
       >
         <span
           aria-hidden="true"
-          onPointerDown={begin("resize")}
+          onPointerDown={(e) => begin("resize", e)}
           onPointerMove={move}
           onPointerUp={end}
           onPointerCancel={end}

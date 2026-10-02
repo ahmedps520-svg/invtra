@@ -5,6 +5,7 @@ import { audit } from "@/server/log";
 import { cancelPendingJobs } from "@/server/queue/queue";
 import { cancelBatch } from "@/server/sending/batch";
 import { grantPlan } from "@/server/payments/service";
+import { THEME_KEYS } from "@/lib/themes/registry";
 import { paging, type SearchParams, oneOf, str } from "./params";
 
 export const EVENT_FILTERS = ["upcoming", "past", "deactivated", "deleted"] as const;
@@ -17,6 +18,7 @@ export async function listEvents(sp: SearchParams) {
   const q = str(sp, "q");
   const filter = oneOf(sp, "filter", EVENT_FILTERS);
   const plan = oneOf(sp, "plan", ["BASIC", "PREMIUM", "CUSTOM", "NONE"] as const);
+  const theme = oneOf(sp, "theme", THEME_KEYS);
   const { page, pageSize, skip, take } = paging(sp);
   const now = new Date();
 
@@ -26,6 +28,7 @@ export async function listEvents(sp: SearchParams) {
     ...(filter === "past" ? { startsAt: { lte: now } } : {}),
     ...(filter === "deactivated" ? { deactivatedAt: { not: null } } : {}),
     ...(plan ? { plan: plan === "NONE" ? null : plan } : {}),
+    ...(theme ? { themeKey: theme } : {}),
     ...(q
       ? {
           OR: [

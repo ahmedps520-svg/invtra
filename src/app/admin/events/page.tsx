@@ -7,7 +7,7 @@ import { DataTable, LinkCell, Muted, PageHeader, Pagination, StatusBadge } from 
 import { EventStateBadge } from "@/components/admin/event-state";
 import { eventDate, num } from "@/components/admin/format";
 import { themes as themeNames } from "@/lib/i18n/dictionaries/en/themes";
-import { isThemeKey } from "@/lib/themes/registry";
+import { isThemeKey, THEME_KEYS } from "@/lib/themes/registry";
 
 export const metadata: Metadata = { title: "Events" };
 
@@ -15,7 +15,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
   await requireAdmin();
   const sp = await searchParams;
   const data = await listEvents(sp);
-  const params = currentParams(sp, ["q", "filter", "plan"]);
+  const params = currentParams(sp, ["q", "filter", "plan", "theme"]);
 
   return (
     <>
@@ -47,6 +47,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
               { value: "NONE", label: "No plan" },
             ],
           },
+          { type: "select", name: "theme", label: "Theme", options: THEME_KEYS.map((k) => ({ value: k, label: themeNames[k].name })) },
         ]}
       />
       <DataTable

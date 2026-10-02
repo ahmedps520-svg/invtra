@@ -41,7 +41,7 @@ export function EditorSection({
           onClick={onToggle}
           className="group flex w-full items-center gap-4 px-5 py-5 text-start transition-colors hover:bg-ivory/70 sm:px-7 sm:py-6"
         >
-          <span aria-hidden="true" className="w-6 shrink-0 font-display text-lg leading-none text-bronze-500 tabular-nums">
+          <span aria-hidden="true" className="w-6 shrink-0 font-sans text-[11px] font-medium leading-none tracking-[0.18em] text-bronze-500 tabular-nums">
             {String(index).padStart(2, "0")}
           </span>
           <span className="min-w-0 flex-1">
@@ -267,7 +267,7 @@ export function Disclosure({ label, defaultOpen = false, children }: { label: Re
         <ChevronDown className={cn("size-3.5 transition-transform duration-300", open && "rotate-180")} />
       </button>
       {open ? (
-        <div id={id} className="mt-4 animate-fade-up">
+        <div id={id} className="mt-4 animate-[fade-up_0.6s_var(--ease-luxe)_backwards]">
           {children}
         </div>
       ) : null}

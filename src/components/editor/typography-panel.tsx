@@ -35,15 +35,15 @@ function FontPicker({
         label={label}
         value={draft.design.fonts[slot]}
         onChange={(k) => setDesign({ fonts: { [slot]: k } })}
-        columns={display ? 3 : 2}
-        tileClassName="min-h-[5.5rem] justify-between"
+        columns={fonts.length % 3 === 0 ? 3 : 2}
+        tileClassName={display ? "min-h-[5.5rem] justify-between" : "justify-between"}
         options={fonts.map((k) => ({
           value: k,
           label: (
             <span
               lang={arabic ? "ar" : "en"}
               dir={arabic ? "rtl" : "ltr"}
-              className="block truncate text-ink"
+              className={display ? "block truncate text-ink" : "block text-ink"}
               style={{
                 fontFamily: fontStack(k),
                 fontSize: display ? (FONTS[k].kind === "script" ? 26 : 21) : 16,

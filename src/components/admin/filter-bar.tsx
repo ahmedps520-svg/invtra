@@ -100,9 +100,10 @@ function FilterBarForm({ fields, values, className }: { fields: FilterField[]; v
           <button
             type="button"
             onClick={() => {
-              const cleared = Object.fromEntries(fields.map((f) => [f.name, ""]));
+              // Clear the visible filters but keep context params (e.g. ?event=) the page was opened with.
+              const cleared = { ...state, ...Object.fromEntries(fields.map((f) => [f.name, ""])) };
               setState(cleared);
-              navigate({});
+              navigate(cleared);
             }}
             className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[13px] text-ink-faint transition hover:bg-sand hover:text-ink"
           >

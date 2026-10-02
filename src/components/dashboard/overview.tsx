@@ -280,7 +280,7 @@ export function EventOverview({
 function MiniStat({ label, value, locale, tone }: { label: string; value: number; locale: "en" | "ar"; tone?: string }) {
   return (
     <div className="min-w-0">
-      <p className="truncate text-[11px] uppercase tracking-[0.12em] text-ink-faint">{label}</p>
+      <p className="min-h-[2.2em] text-[11px] uppercase leading-tight tracking-[0.12em] text-ink-faint">{label}</p>
       <p className={`mt-1 font-display text-2xl leading-none lining-nums tabular-nums ${tone ?? "text-ink"}`}>{formatNumber(value, locale)}</p>
     </div>
   );

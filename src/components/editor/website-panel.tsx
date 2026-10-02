@@ -27,8 +27,8 @@ function MotionDemo({ kind, active }: { kind: Animation; active: boolean }) {
             "block h-1.5 rounded-full",
             i === 0 ? "bg-bronze-400" : "bg-line-strong",
             b.w,
-            active && kind === "subtle" && "animate-fade-up",
-            active && kind === "elegant" && "animate-[fade-up_1.2s_var(--ease-luxe)_both]",
+            active && kind === "subtle" && "animate-[fade-up_0.6s_var(--ease-luxe)_backwards]",
+            active && kind === "elegant" && "animate-[fade-up_1.2s_var(--ease-luxe)_backwards]",
           )}
           style={active && kind !== "none" ? { animationDelay: kind === "elegant" ? `${i * 220}ms` : b.d } : undefined}
         />

@@ -323,6 +323,7 @@ export const marketing = {
     ownTitle: "Prefer your own artwork?",
     ownBody: "Upload the invitation you already have — INVTRA adds each guest's personal QR code and delivers it on WhatsApp.",
     ownCta: "Start with your design",
+    ownSample: { names: "Layla & Omar", line: "are getting married", date: "14 · 02 · 2027", caption: "Scan for your invitation", label: "Example of an uploaded design with a personal QR code added" },
   },
 
   pricingPage: {

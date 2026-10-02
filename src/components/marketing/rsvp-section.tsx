@@ -68,7 +68,7 @@ export function RsvpSection({ dict, locale }: { dict: Dictionary; locale: "en" |
             aria-label={v.label}
             className="relative rounded-[1.75rem] border border-line bg-paper p-2 shadow-lift"
           >
-            <div aria-hidden="true" className="rounded-[1.35rem] border border-line/70 bg-ivory/60">
+            <div aria-hidden="true" className="overflow-hidden rounded-[1.35rem] border border-line/70 bg-ivory/60">
               {/* Header */}
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line/70 px-5 py-5 sm:px-7">
                 <div className="min-w-0">
@@ -92,7 +92,9 @@ export function RsvpSection({ dict, locale }: { dict: Dictionary; locale: "en" |
                       <span className={cn("size-1.5 rounded-full", s.dot)} />
                       {s.label}
                     </p>
-                    <p className="mt-2.5 font-display text-[2.6rem] leading-none text-ink tabular-nums lining-nums">{n(s.value)}</p>
+                    <p className="mt-2.5 font-display text-[2.6rem] leading-none text-ink tabular-nums lining-nums">
+                      {n(s.value)}
+                    </p>
                   </div>
                 ))}
               </div>

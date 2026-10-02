@@ -200,7 +200,7 @@ export const editor = {
   },
 
   qr: {
-    explainer: "Every guest receives their own code. It's always printed dark on a light plate with a clear margin, so it scans reliably — whatever colours you choose.",
+    explainer: "The code is always printed dark on a light plate with a clear margin, so it scans reliably at the door — whatever colours you choose.",
     position: "Position",
     positions: {
       center: "Bottom centre",
@@ -264,7 +264,8 @@ export const editor = {
     logo: "Logo or crest",
     logoHint: "Your monogram, crest or company logo. A PNG with a transparent background looks best.",
     music: "Background music",
-    musicHint: "MP3, M4A or OGG, up to 12 MB. Guests start it themselves — it never plays automatically.",
+    musicHint: "A song for your guest website. Guests start it themselves — it never plays automatically.",
+    audioTypes: "MP3, M4A or OGG, up to 12 MB",
     musicReady: "Your song",
     play: "Play",
     pause: "Pause",

@@ -103,7 +103,7 @@ export default async function AdminOverviewPage() {
                   </div>
                 ),
               },
-              { key: "when", header: "Failed", cell: (j) => <span title={dt(j.completedAt ?? j.updatedAt)}>{rel(j.completedAt ?? j.updatedAt)}</span>, hideBelow: "sm" },
+              { key: "when", header: "Failed", cell: (j) => <span className="whitespace-nowrap" title={dt(j.completedAt ?? j.updatedAt)}>{rel(j.completedAt ?? j.updatedAt)}</span>, hideBelow: "sm" },
               { key: "attempts", header: "Tries", align: "end", cell: (j) => `${j.attempts}/${j.maxAttempts}`, hideBelow: "sm" },
               {
                 key: "actions",

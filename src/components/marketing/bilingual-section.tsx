@@ -62,16 +62,23 @@ export function BilingualSection({ dict, locale }: { dict: Dictionary; locale: "
                 <figure
                   key={c.theme}
                   className={cn(
-                    "relative shrink-0 transition-transform duration-700 ease-luxe",
-                    center ? "z-10 w-[44%] hover:-translate-y-2" : "w-[36%] opacity-95 hover:-translate-y-1.5",
-                    i === 0 && "-me-[8%] mb-6 -rotate-[6deg] rtl:rotate-[6deg]",
-                    i === 2 && "-ms-[8%] mb-6 rotate-[6deg] rtl:-rotate-[6deg]",
+                    "relative shrink-0",
+                    center ? "z-10 w-[44%]" : "w-[36%]",
+                    i === 0 && "-me-[8%] mb-6",
+                    i === 2 && "-ms-[8%] mb-6",
                   )}
                 >
-                  <div className="overflow-hidden rounded-[6px] shadow-[0_30px_60px_-25px_rgb(0_0_0/0.7)] ring-1 ring-white/10">
+                  <div
+                    className={cn(
+                      "overflow-hidden rounded-[6px] shadow-[0_30px_60px_-25px_rgb(0_0_0/0.7)] ring-1 ring-white/10 transition-transform duration-700 ease-luxe",
+                      center ? "hover:-translate-y-2" : "hover:-translate-y-1.5",
+                      i === 0 && "-rotate-[6deg] rtl:rotate-[6deg]",
+                      i === 2 && "rotate-[6deg] rtl:-rotate-[6deg]",
+                    )}
+                  >
                     <CardPreview themeKey={c.theme} language={c.language} qrPlaceholder title={c.label} />
                   </div>
-                  <figcaption className="mt-4 text-center text-[12px] tracking-wide text-[#a99f93]">{c.label}</figcaption>
+                  <figcaption className="mt-5 text-center text-[12px] tracking-wide text-[#a99f93]">{c.label}</figcaption>
                 </figure>
               );
             })}

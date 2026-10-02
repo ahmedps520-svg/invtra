@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { num } from "./format";
@@ -292,8 +292,8 @@ const TONES: Record<string, Tone> = {
 };
 
 export function humanize(s: string): string {
-  const t = s.replace(/_/g, " ").toLowerCase();
-  return t.charAt(0).toUpperCase() + t.slice(1);
+  const t = s.replace(/[_.]/g, " ").toLowerCase();
+  return (t.charAt(0).toUpperCase() + t.slice(1)).replace(/\bqr\b/gi, "QR").replace(/\burl\b/gi, "URL").replace(/\bwhatsapp\b/gi, "WhatsApp");
 }
 
 export function StatusBadge({ status, label, className }: { status: string; label?: ReactNode; className?: string }) {
@@ -329,6 +329,43 @@ export function LinkCell({ href, children, sub }: { href: string; children: Reac
         {children}
       </Link>
       {sub ? <div className="mt-0.5 truncate text-[12.5px] text-ink-faint">{sub}</div> : null}
+    </div>
+  );
+}
+
+/** "Event: The Wedding of …  ×" — shows a context filter that isn't part of the filter bar. */
+export function ContextChip({
+  label,
+  value,
+  href,
+  basePath,
+  params,
+  param,
+}: {
+  label: string;
+  value: ReactNode;
+  href?: string;
+  basePath: string;
+  params: Record<string, string>;
+  param: string;
+}) {
+  const rest = new URLSearchParams(params);
+  rest.delete(param);
+  rest.delete("page");
+  const clear = rest.size ? `${basePath}?${rest}` : basePath;
+  return (
+    <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-bronze-200 bg-bronze-50 py-1 pe-1 ps-3 text-[13px] text-bronze-800">
+      <span className="shrink-0">{label}:</span>
+      {href ? (
+        <Link href={href} className="truncate font-medium underline-offset-4 hover:underline">
+          {value}
+        </Link>
+      ) : (
+        <span className="truncate font-medium">{value}</span>
+      )}
+      <Link href={clear} aria-label={`Remove ${label.toLowerCase()} filter`} className="shrink-0 rounded-full p-1 transition hover:bg-bronze-100">
+        <X className="size-3.5" />
+      </Link>
     </div>
   );
 }

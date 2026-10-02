@@ -28,6 +28,10 @@ function activityText(kind: string, data: Record<string, unknown> | null): strin
       return `Sending started to ${d.total ?? "?"} guests`;
     case "batch.completed":
       return d.cancelled ? `Sending cancelled${d.reason ? ` — ${d.reason}` : ""}` : `Sending finished · ${d.sent ?? 0} sent, ${d.failed ?? 0} failed`;
+    case "event.created":
+      return "Event created";
+    case "event.updated":
+      return "Details updated";
     case "guests.imported":
       return `Guests imported${d.count ? ` (${d.count})` : ""}`;
     case "guest.message_failed":
@@ -117,7 +121,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatTile label="Guests" value={num(stats.total)} hint={`Limit ${num(event.guestLimit)}`} href={`/admin/guests?event=${event.id}`} />
-        <StatTile label="Accepted" tone="sage" value={num(stats.accepted)} hint={`${pct(stats.accepted, stats.sent)} of messaged · ${num(stats.declined)} declined`} />
+        <StatTile label="Accepted" tone="sage" value={num(stats.accepted)} hint={stats.sent ? `${pct(stats.accepted, stats.sent)} of messaged · ${num(stats.declined)} declined` : "No guests messaged yet"} />
         <StatTile label="Messaged" tone="slate" value={num(stats.sent)} hint={`${num(stats.pending)} awaiting a reply · ${num(stats.failed)} failed`} href={`/admin/messages?event=${event.id}`} />
         <StatTile label="Views & scans" tone="bronze" value={num(views)} hint={`${num(scans)} QR scans`} href={`/admin/scans?event=${event.id}`} />
       </div>

@@ -134,7 +134,7 @@ export function WordingPanel() {
                     <button
                       type="button"
                       onClick={() => setDesign({ texts: { [key]: placeholder } })}
-                      className="mt-1.5 text-[12px] font-medium text-bronze-700 underline-offset-4 hover:underline"
+                      className="mt-1.5 text-[12px] text-ink-faint underline decoration-line-strong underline-offset-4 transition-colors hover:text-bronze-700 hover:decoration-bronze-400"
                     >
                       {t.restore}
                     </button>

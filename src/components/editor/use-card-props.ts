@@ -60,6 +60,18 @@ export function useMounted() {
   );
 }
 
+/** window.innerHeight as state (server snapshot: 900). */
+export function useViewportHeight() {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("resize", cb);
+      return () => window.removeEventListener("resize", cb);
+    },
+    () => window.innerHeight,
+    () => 900,
+  );
+}
+
 /** Media query as state (server snapshot: `fallback`). */
 export function useMediaQuery(query: string, fallback = true) {
   return useSyncExternalStore(
