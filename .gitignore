@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+
+# local object storage (development driver)
+storage/
+
+# logs
+npm-debug.log*
+*.log
+
+# misc
+.DS_Store
+coverage/
+assets/fonts/metrics.json

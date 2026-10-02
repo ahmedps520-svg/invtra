@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+@theme {
+  /* Neutrals — warm paper tones */
+  --color-ivory: #faf7f2;
+  --color-paper: #fffdfa;
+  --color-sand: #f3ede4;
+  --color-mist: #ece5da;
+  --color-line: #e6ddd0;
+  --color-line-strong: #d4c7b5;
+  --color-ink: #1e1a16;
+  --color-ink-soft: #57504a;
+  --color-ink-faint: #8c847b;
+
+  /* Accent — the bronze of the INVTRA mark */
+  --color-bronze-50: #f8f3ec;
+  --color-bronze-100: #efe5d8;
+  --color-bronze-200: #e0cfb9;
+  --color-bronze-300: #c9b092;
+  --color-bronze-400: #ae8f6d;
+  --color-bronze-500: #977757;
+  --color-bronze-600: #84664a;
+  --color-bronze-700: #6e533b;
+  --color-bronze-800: #56412f;
+  --color-bronze-900: #3b2c20;
+
+  /* Muted status colours */
+  --color-sage: #56724f;
+  --color-sage-soft: #e7ede3;
+  --color-rosewood: #a2513f;
+  --color-rosewood-soft: #f5e6e1;
+  --color-ochre: #a9832f;
+  --color-ochre-soft: #f5edd9;
+  --color-slate: #4b6075;
+  --color-slate-soft: #e4eaf0;
+
+  --font-display: "Cormorant Garamond", "Amiri", ui-serif, Georgia, serif;
+  --font-sans: "Jost", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Jost", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic-display: "Amiri", "Cormorant Garamond", serif;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --shadow-soft: 0 1px 2px rgb(30 26 22 / 0.04), 0 8px 24px -12px rgb(30 26 22 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(30 26 22 / 0.04), 0 24px 48px -24px rgb(30 26 22 / 0.25);
+
+  --animate-fade-up: fade-up 0.8s var(--ease-luxe) both;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 400;
+  }
+  html[lang="ar"] body {
+    font-family: var(--font-arabic);
+  }
+  ::selection {
+    background: var(--color-bronze-200);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-bronze-500);
+    outline-offset: 2px;
+  }
+  /* Letter-spacing breaks Arabic letter joining — never track Arabic text. */
+  :lang(ar),
+  :lang(ar) * {
+    letter-spacing: 0 !important;
+  }
+  input[type="number"]::-webkit-inner-spin-button {
+    opacity: 0.4;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small-caps eyebrow used above headings */
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-bronze-600);
+  }
+  .hairline {
+    background: linear-gradient(90deg, transparent, var(--color-line-strong), transparent);
+    height: 1px;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-sand) 0%, var(--color-mist) 50%, var(--color-sand) 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  .paper-grain {
+    background-image: radial-gradient(rgb(132 102 74 / 0.05) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

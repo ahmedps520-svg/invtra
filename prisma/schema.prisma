@@ -1,0 +1,730 @@
+// INVTRA data model.
+//
+// Conventions
+// - Public identifiers exposed in URLs are random tokens (Invitation.token), never database ids.
+// - Phone numbers are stored normalised to E.164 (e.g. +971501234567).
+// - Money is stored in minor units (cents / fils) together with an ISO currency code.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Accounts
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  DEACTIVATED
+}
+
+model User {
+  id               String        @id @default(cuid())
+  email            String        @unique
+  name             String
+  passwordHash     String
+  role             Role          @default(CUSTOMER)
+  status           AccountStatus @default(ACTIVE)
+  deactivatedAt    DateTime?
+  deactivationNote String?
+  locale           String        @default("en")
+  phone            String?
+  lastLoginAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  sessions       Session[]
+  passwordResets PasswordResetToken[]
+  events         Event[]
+  orders         Order[]
+  uploads        Upload[]
+  sendBatches    SendBatch[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Events
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EventType {
+  WEDDING
+  ENGAGEMENT
+  BIRTHDAY
+  CORPORATE
+  GRADUATION
+  OTHER
+}
+
+enum EventLanguage {
+  EN
+  AR
+  BILINGUAL
+}
+
+enum ImageMode {
+  GENERATED // INVTRA renders the invitation from the selected theme
+  CUSTOM // the customer uploaded their own finished invitation image
+}
+
+enum PlanTier {
+  BASIC
+  PREMIUM
+  CUSTOM
+}
+
+model Event {
+  id       String        @id @default(cuid())
+  userId   String
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     EventType     @default(WEDDING)
+  language EventLanguage @default(EN)
+
+  // Content (Arabic counterparts are used for AR / BILINGUAL invitations)
+  title       String // "The Wedding of Ahmed & Sara"
+  titleAr     String?
+  hostNames   String // "Ahmed & Sara"
+  hostNamesAr String?
+
+  // When — stored as UTC instant plus the IANA zone it should be displayed in
+  startsAt DateTime
+  endsAt   DateTime?
+  timezone String    @default("Asia/Dubai")
+
+  // Where
+  venueName   String
+  venueNameAr String?
+  address     String
+  addressAr   String?
+  mapsUrl     String?
+  latitude    Float?
+  longitude   Float?
+
+  // Details
+  dressCode           String?
+  dressCodeAr         String?
+  notes               String?
+  notesAr             String?
+  parkingInfo         String?
+  accommodationInfo   String?
+  specialInstructions String?
+  contactName         String?
+  contactPhone        String?
+  contactEmail        String?
+  rsvpDeadline        DateTime?
+  allowWebRsvp        Boolean   @default(true)
+
+  // Design
+  themeKey          String
+  design            Json // see src/lib/design/schema.ts
+  imageMode         ImageMode @default(GENERATED)
+  customImageKey    String?
+  customImageWidth  Int?
+  customImageHeight Int?
+  coverImageKey     String?
+  logoKey           String?
+  musicKey          String?
+  // Bumped whenever something printed on the invitation image changes.
+  contentVersion    Int       @default(1)
+
+  // Messaging
+  messageTemplateId String?
+  messageTemplate   MessageTemplate? @relation(fields: [messageTemplateId], references: [id], onDelete: SetNull)
+  templateVariables Json? // overrides for template variables (e.g. how the couple names read)
+
+  // Plan
+  plan        PlanTier?
+  guestLimit  Int       @default(0)
+  testSendsUsed Int     @default(0)
+
+  firstSentAt       DateTime?
+  deactivatedAt     DateTime?
+  deactivatedReason String?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  scheduleItems ScheduleItem[]
+  galleryImages GalleryImage[]
+  guests        Guest[]
+  invitations   Invitation[]
+  sendBatches   SendBatch[]
+  orders        Order[]
+  messages      WhatsAppMessage[]
+  views         InvitationView[]
+  scans         QRScan[]
+  rsvps         Rsvp[]
+  activities    Activity[]
+
+  @@index([userId, deletedAt])
+  @@index([startsAt])
+}
+
+model ScheduleItem {
+  id          String  @id @default(cuid())
+  eventId     String
+  event       Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  time        String // "19:00" (local to the event timezone)
+  title       String
+  titleAr     String?
+  description String?
+  sortOrder   Int     @default(0)
+
+  @@index([eventId, sortOrder])
+}
+
+model GalleryImage {
+  id         String   @id @default(cuid())
+  eventId    String
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  storageKey String
+  width      Int
+  height     Int
+  caption    String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([eventId, sortOrder])
+}
+
+enum UploadKind {
+  COVER
+  GALLERY
+  LOGO
+  BACKGROUND
+  CUSTOM_INVITATION
+  MUSIC
+}
+
+model Upload {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String?
+  kind      UploadKind
+  key       String     @unique
+  mimeType  String
+  size      Int
+  width     Int?
+  height    Int?
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
+  @@index([eventId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Guests & invitations
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Single, denormalised status shown in the dashboard. Derived from the RSVP and
+// delivery fields below by src/lib/guests/status.ts — never set it directly.
+enum GuestStatus {
+  PENDING
+  MESSAGE_SENT
+  ACCEPTED
+  DECLINED
+  INVITATION_SENT
+  VIEWED
+  QR_SCANNED
+  FAILED
+}
+
+enum RsvpStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum DeliveryStatus {
+  NOT_SENT
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum RsvpSource {
+  WHATSAPP
+  WEB
+  HOST
+}
+
+model Guest {
+  id             String         @id @default(cuid())
+  eventId        String
+  event          Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name           String
+  phone          String // E.164
+  groupName      String?
+  allowedCount   Int            @default(1)
+  attendingCount Int?
+  locale         String? // optional per-guest language override ("en" | "ar")
+  notes          String?
+
+  status         GuestStatus    @default(PENDING)
+  rsvpStatus     RsvpStatus     @default(PENDING)
+  rsvpAt         DateTime?
+  rsvpSource     RsvpSource?
+  deliveryStatus DeliveryStatus @default(NOT_SENT)
+  deliveryError  String?
+  deliveryErrorCode String?
+
+  requestSentAt    DateTime? // template with Accept / Decline was sent
+  invitationSentAt DateTime? // personalised invitation image was sent
+  invitationSentVersion Int? // Event.contentVersion that was delivered
+  lastInboundAt    DateTime? // last message from the guest (opens the 24h service window)
+  viewCount        Int       @default(0)
+  firstViewedAt    DateTime?
+  lastViewedAt     DateTime?
+  scanCount        Int       @default(0)
+  firstScannedAt   DateTime?
+  lastScannedAt    DateTime?
+  checkedInAt      DateTime?
+  checkedInCount   Int?
+  lastActivityAt   DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  invitation Invitation?
+  messages   WhatsAppMessage[]
+  rsvps      Rsvp[]
+
+  @@unique([eventId, phone])
+  @@index([eventId, status])
+  @@index([phone])
+}
+
+enum InvitationStatus {
+  ACTIVE
+  REVOKED
+}
+
+model Invitation {
+  id      String           @id @default(cuid())
+  eventId String
+  event   Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId String           @unique
+  guest   Guest            @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  token   String           @unique // public, random, unguessable (see src/lib/security/tokens.ts)
+  status  InvitationStatus @default(ACTIVE)
+
+  // Rendered personalised image cache
+  imageKey     String?
+  imageVersion String? // hash of everything printed on the image
+
+  // WhatsApp media cache (uploaded media ids are valid for 30 days)
+  waMediaId        String?
+  waMediaVersion   String?
+  waMediaExpiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  views InvitationView[]
+  scans QRScan[]
+
+  @@index([eventId])
+}
+
+enum ViewSource {
+  LINK
+  QR
+}
+
+model InvitationView {
+  id           String     @id @default(cuid())
+  invitationId String
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  eventId      String
+  event        Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId      String
+  source       ViewSource @default(LINK)
+  device       String? // "mobile" | "desktop" — coarse, no fingerprinting
+  createdAt    DateTime   @default(now())
+
+  @@index([eventId, createdAt])
+  @@index([invitationId])
+}
+
+model QRScan {
+  id           String     @id @default(cuid())
+  invitationId String
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  eventId      String
+  event        Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId      String
+  byHost       Boolean    @default(false) // scanned by the signed-in host (door check-in)
+  createdAt    DateTime   @default(now())
+
+  @@index([eventId, createdAt])
+  @@index([invitationId])
+}
+
+model Rsvp {
+  id             String     @id @default(cuid())
+  eventId        String
+  event          Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId        String
+  guest          Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  response       RsvpStatus
+  source         RsvpSource
+  attendingCount Int?
+  createdAt      DateTime   @default(now())
+
+  @@index([guestId, createdAt])
+  @@index([eventId, createdAt])
+}
+
+// Customer-facing activity feed for an event ("Sara accepted", "Batch finished" ...)
+model Activity {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId   String?
+  kind      String // e.g. "guest.accepted", "guest.declined", "batch.completed"
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([eventId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Themes & message templates
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Rendering logic for each theme lives in code (src/lib/themes). This table
+// holds the operational settings admins control.
+model InvitationTheme {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  isActive  Boolean  @default(true)
+  isPremium Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TemplatePurpose {
+  INVITATION // first contact: invitation text + Accept / Decline quick replies
+  UPDATE // event changed: re-sends the invitation link (works outside the 24h window)
+}
+
+enum TemplateStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  PAUSED
+  DISABLED
+}
+
+model MessageTemplate {
+  id             String          @id @default(cuid())
+  key            String          @unique // internal stable key, e.g. "formal_wedding_en"
+  name           String // display name, e.g. "Formal Wedding"
+  nameAr         String?
+  description    String?
+  purpose        TemplatePurpose @default(INVITATION)
+  metaName       String // template name registered in WhatsApp Manager
+  language       String // WhatsApp language code: "en", "en_US", "ar"
+  locale         String // INVTRA locale family this template serves: "en" | "ar" | "bilingual"
+  category       String          @default("UTILITY")
+  headerType     String          @default("IMAGE") // NONE | IMAGE | TEXT
+  headerText     String?
+  body           String // with {{1}}, {{2}} ... placeholders
+  variables      Json // ordered variable names mapped onto {{n}}, e.g. ["guest_name","host_names","event_date"]
+  footer         String?
+  buttons        Json // [{ "type": "QUICK_REPLY", "text": "Accept Invitation", "action": "ACCEPT" }, ...]
+  eventTypes     EventType[]
+  status         TemplateStatus  @default(DRAFT)
+  metaTemplateId String?
+  rejectedReason String?
+  isActive       Boolean         @default(true)
+  sortOrder      Int             @default(0)
+  lastSyncedAt   DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  events  Event[]
+  batches SendBatch[]
+
+  @@unique([metaName, language])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sending & WhatsApp
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BatchKind {
+  INITIAL
+  RESEND
+  UPDATE
+  TEST
+}
+
+enum BatchStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  CANCELLED
+}
+
+model SendBatch {
+  id         String          @id @default(cuid())
+  eventId    String
+  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       BatchKind       @default(INITIAL)
+  status     BatchStatus     @default(QUEUED)
+  templateId String?
+  template   MessageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  total      Int
+  sent       Int             @default(0)
+  failed     Int             @default(0)
+  skipped    Int             @default(0)
+  createdAt  DateTime        @default(now())
+  startedAt  DateTime?
+  completedAt DateTime?
+
+  messages WhatsAppMessage[]
+
+  @@index([eventId, createdAt])
+}
+
+enum MessageDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum MessagePurpose {
+  INVITATION_REQUEST // template with Accept / Decline
+  INVITATION_DELIVERY // personalised image + QR + View Invitation button
+  DECLINE_ACK
+  UPDATE
+  REPLY // inbound button press / text
+  OTHER
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  RECEIVED
+}
+
+model WhatsAppMessage {
+  id           String           @id @default(cuid())
+  eventId      String?
+  event        Event?           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId      String?
+  guest        Guest?           @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  batchId      String?
+  batch        SendBatch?       @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  direction    MessageDirection
+  purpose      MessagePurpose
+  provider     String // "cloud" | "mock"
+  waMessageId  String?          @unique // "wamid...."
+  phone        String // the guest's number (to or from)
+  type         String // template | interactive | image | text | button
+  status       MessageStatus
+  errorCode    String?
+  errorMessage String?
+  content      Json? // rendered preview for the dashboard & simulator (never credentials)
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  failedAt     DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([eventId, createdAt])
+  @@index([guestId, createdAt])
+  @@index([status, createdAt])
+  @@index([phone, createdAt])
+}
+
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String // "whatsapp" | "stripe" ...
+  dedupeKey   String?   @unique
+  payload     Json
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([provider, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Background jobs (Postgres-backed queue, see src/lib/queue)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  type        String
+  payload     Json
+  status      JobStatus @default(PENDING)
+  priority    Int       @default(0)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  runAt       DateTime  @default(now())
+  lockedAt    DateTime?
+  lockedBy    String?
+  lastError   String?
+  dedupeKey   String?   @unique
+  batchId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  @@index([status, runAt, priority])
+  @@index([batchId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Billing
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId     String?
+  event       Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  plan        PlanTier
+  guestLimit  Int
+  amount      Int // minor units
+  currency    String
+  status      OrderStatus @default(PENDING)
+  provider    String // "mock" | "manual" | "stripe"
+  providerRef String? // e.g. Stripe Checkout Session id
+  note        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  paidAt      DateTime?
+
+  payments Payment[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider          String
+  providerPaymentId String?
+  amount            Int
+  currency          String
+  status            PaymentStatus @default(PENDING)
+  raw               Json?
+  createdAt         DateTime      @default(now())
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Operations
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}
+
+model ErrorLog {
+  id         String    @id @default(cuid())
+  level      String    @default("error") // "error" | "warn"
+  source     String // e.g. "worker:invitation.send", "webhook:whatsapp"
+  message    String
+  stack      String?
+  context    Json?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([resolvedAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String // e.g. "admin.user.deactivate"
+  targetType String
+  targetId   String
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
