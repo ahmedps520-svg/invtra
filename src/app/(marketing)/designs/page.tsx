@@ -5,16 +5,17 @@ import { THEME_LIST } from "@/lib/themes/registry";
 import { DesignsGallery, type GalleryItem } from "@/components/marketing/designs-gallery";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { OwnDesignTile } from "@/components/marketing/own-design-tile";
+import { openGraph } from "@/components/marketing/seo";
 import { CONTAINER } from "@/components/marketing/styles";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { dict } = await getI18n();
+  const { dict, locale } = await getI18n();
   const t = dict.marketing.meta;
   return {
     title: t.designsTitle,
     description: t.designsDescription,
     alternates: { canonical: "/designs" },
-    openGraph: { title: t.designsTitle, description: t.designsDescription },
+    openGraph: openGraph(t.designsTitle, t.designsDescription, locale, "/designs"),
   };
 }
 

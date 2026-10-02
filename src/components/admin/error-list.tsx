@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "./actions";
 
 export type ErrorRow = {
   id: string;
@@ -28,6 +29,7 @@ export function ErrorList({ rows, match, matchingUnresolved }: { rows: ErrorRow[
   const toast = useToast();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+  const [confirmAll, setConfirmAll] = useState(false);
   const open = rows.filter((r) => !r.resolvedAt);
   const allSelected = open.length > 0 && open.every((r) => selected.has(r.id));
 
@@ -78,13 +80,22 @@ export function ErrorList({ rows, match, matchingUnresolved }: { rows: ErrorRow[
             size="sm"
             variant="outline"
             loading={busy === "all"}
-            onClick={() => {
-              if (window.confirm(`Mark all ${matchingUnresolved} unresolved errors matching these filters as resolved?`)) void send({ match, resolved: true }, "all");
-            }}
+            onClick={() => setConfirmAll(true)}
           >
             Resolve all {matchingUnresolved} matching
           </Button>
         ) : null}
+        <ConfirmDialog
+          open={confirmAll}
+          onClose={() => setConfirmAll(false)}
+          title="Resolve all matching errors?"
+          description={`Marks all ${matchingUnresolved} unresolved errors that match the current filters as resolved — including ones on other pages.`}
+          confirmLabel="Resolve all"
+          onConfirm={async () => {
+            await send({ match, resolved: true }, "all");
+            setConfirmAll(false);
+          }}
+        />
       </div>
 
       {rows.length === 0 ? (

@@ -289,9 +289,10 @@ function MobilePreviewButton({ onOpen }: { onOpen: () => void }) {
       <button
         type="button"
         onClick={onOpen}
+        aria-label={dict.editor.preview.title}
         className="pointer-events-auto flex h-14 items-center gap-3 rounded-full bg-ink py-2 pe-6 ps-2 text-ivory shadow-lift ring-1 ring-black/10 transition active:scale-[0.98]"
       >
-        <span className="block h-10 w-8 overflow-hidden rounded-[3px] bg-sand ring-1 ring-white/20">
+        <span aria-hidden="true" className="block h-10 w-8 overflow-hidden rounded-[3px] bg-sand ring-1 ring-white/20">
           <CardPreview {...card} title={dict.editor.preview.card} className="h-full w-full [&>svg]:h-full [&>svg]:object-cover" />
         </span>
         <span className="flex items-center gap-2 text-sm font-medium tracking-wide">

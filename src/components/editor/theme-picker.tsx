@@ -95,6 +95,7 @@ export function ThemePicker() {
                   <button
                     type="button"
                     onClick={() => setPreviewKey(th.key)}
+                    aria-label={fmt(t.previewOf, { name })}
                     className="mt-2 text-[12px] font-medium text-bronze-700 underline-offset-4 hover:underline"
                   >
                     {t.preview}
@@ -130,6 +131,13 @@ function ThemePreviewDialog({ themeKey, onClose }: { themeKey: ThemeKey | null; 
   const option = themes.find((th) => th.key === key);
   const current = key === draft.themeKey;
 
+  const note = (
+    <>
+      {option?.premium && !premiumIncluded ? <span className="me-1 font-medium text-bronze-700">{t.premiumNote}</span> : null}
+      {current ? null : t.keepsNote}
+    </>
+  );
+
   const use = async () => {
     setApplying(true);
     const ok = await applyTheme(key);
@@ -149,10 +157,7 @@ function ThemePreviewDialog({ themeKey, onClose }: { themeKey: ThemeKey | null; 
       description={t.dialogDescription}
       footer={
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-xl text-[12px] leading-relaxed text-ink-faint">
-            {option?.premium && !premiumIncluded ? <span className="me-1 font-medium text-bronze-700">{t.premiumNote}</span> : null}
-            {current ? null : t.keepsNote}
-          </p>
+          <p className="hidden max-w-xl text-[12px] leading-relaxed text-ink-faint sm:block">{note}</p>
           <div className="flex shrink-0 justify-end gap-3">
             <Button variant="ghost" onClick={onClose}>
               {dict.common.actions.cancel}
@@ -170,6 +175,7 @@ function ThemePreviewDialog({ themeKey, onClose }: { themeKey: ThemeKey | null; 
         </div>
       }
     >
+      <p className="mb-4 text-[12px] leading-relaxed text-ink-faint sm:hidden">{note}</p>
       <div className="mb-5 flex justify-center lg:hidden">
         <Segmented
           size="sm"

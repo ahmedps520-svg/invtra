@@ -18,6 +18,7 @@ import { CtaBand } from "@/components/marketing/cta-band";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { Reveal } from "@/components/marketing/reveal";
 import { CONTAINER, EYEBROW } from "@/components/marketing/styles";
+import { openGraph } from "@/components/marketing/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dict, locale } = await getI18n();
@@ -26,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { absolute: t.homeTitle },
     description: t.homeDescription,
     alternates: { canonical: "/" },
-    openGraph: { title: t.homeTitle, description: t.homeDescription, locale: locale === "ar" ? "ar_AE" : "en_GB" },
+    openGraph: openGraph(t.homeTitle, t.homeDescription, locale, "/"),
   };
 }
 

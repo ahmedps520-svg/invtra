@@ -9,16 +9,17 @@ import { Pricing } from "@/components/marketing/pricing";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { Reveal } from "@/components/marketing/reveal";
 import { CtaBand } from "@/components/marketing/cta-band";
+import { openGraph } from "@/components/marketing/seo";
 import { CONTAINER, EYEBROW } from "@/components/marketing/styles";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { dict } = await getI18n();
+  const { dict, locale } = await getI18n();
   const t = dict.marketing.meta;
   return {
     title: t.pricingTitle,
     description: t.pricingDescription,
     alternates: { canonical: "/pricing" },
-    openGraph: { title: t.pricingTitle, description: t.pricingDescription },
+    openGraph: openGraph(t.pricingTitle, t.pricingDescription, locale, "/pricing"),
   };
 }
 

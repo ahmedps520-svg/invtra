@@ -60,12 +60,12 @@ export function Hero({ dict, locale, ctaHref }: { dict: Dictionary; locale: "en"
           </ul>
         </div>
 
-        <div className="relative lg:col-span-6 xl:col-span-6">
+        <div className="relative mx-auto w-full max-w-[34rem] lg:col-span-6 lg:max-w-none">
           {/* A thin arch echoes the invitation designs behind the phone */}
           <svg
             aria-hidden="true"
             viewBox="0 0 400 560"
-            className="pointer-events-none absolute start-1/2 top-1/2 h-[112%] w-auto -translate-x-1/2 -translate-y-1/2 text-bronze-300/70 rtl:translate-x-1/2"
+            className="pointer-events-none absolute start-1/2 top-1/2 h-[112%] w-auto -translate-x-1/2 -translate-y-1/2 text-bronze-300/70 [mask-image:linear-gradient(to_bottom,black_55%,transparent_92%)] rtl:translate-x-1/2"
             fill="none"
           >
             <path d="M20 560V200C20 100.6 100.6 20 200 20s180 80.6 180 180v360" stroke="currentColor" strokeWidth="1" />
