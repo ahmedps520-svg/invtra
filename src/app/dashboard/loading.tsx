@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div aria-busy="true" aria-live="polite" className="animate-pulse-none">
+    <div aria-busy="true" aria-live="polite">
       <div className="skeleton h-3 w-40 rounded-full" />
       <div className="skeleton mt-5 h-10 w-72 max-w-full rounded-xl" />
       <div className="skeleton mt-3 h-4 w-96 max-w-full rounded-full" />
