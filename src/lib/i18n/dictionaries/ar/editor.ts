@@ -44,11 +44,9 @@ export const editor: typeof en = {
   summary: {
     generated: "تصميم INVTRA",
     custom: "صورتك الخاصة",
-    customNeedsImage: "بانتظار رفع صورتك",
     defaultWording: "الصياغة المقترحة",
     personalWording: "صياغة خاصة",
     customColours: "ألوان مخصّصة",
-    themeColours: "ألوان التصميم",
     sectionsOn: "{n} من {total} أقسام",
     nothingYet: "لم تُضَف أي ملفات بعد",
     cover: "صورة الغلاف",
@@ -284,15 +282,11 @@ export const editor: typeof en = {
     imageTypes: "JPG أو PNG أو HEIC، حتى ١٥ ميغابايت",
     replace: "استبدال",
     remove: "إزالة",
-    removed: "تمت الإزالة",
   },
 
   upload: {
-    drop: "أفلت الملف هنا أو تصفّح",
-    browse: "اختر ملفًا",
     uploading: "جارٍ الرفع… {n}٪",
     processing: "نجهّز ملفك…",
-    uploaded: "تم الرفع",
     errors: {
       file_too_large: "الملف كبير جدًا. الحد الأقصى للصور ١٥ ميغابايت وللموسيقى ١٢ ميغابايت.",
       unsupported_file: "تعذّر استخدام هذا الملف. ارفع صورة JPG أو PNG أو HEIC، أو أغنية MP3 أو M4A أو OGG.",
@@ -308,7 +302,6 @@ export const editor: typeof en = {
     card: "صورة الدعوة",
     site: "صفحة الضيف",
     open: "معاينة",
-    close: "إغلاق المعاينة",
     cardCaption: "ما يصل إلى كل ضيف عبر واتساب بعد قبوله الدعوة — مع رمز QR الخاص به.",
     sampleNote: "تظهر هنا مع ضيف تجريبي.",
     download: "تنزيل المعاينة",

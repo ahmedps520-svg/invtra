@@ -108,6 +108,7 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
   const [siteVersion, setSiteVersion] = useState(0);
   const uploadsRef = useRef(uploads);
   const retryDelay = useRef(0);
+  const failing = useRef(false);
   const saveNowRef = useRef<() => Promise<boolean>>(() => Promise.resolve(true));
 
   const errorText = dict.editor.save.error;
@@ -129,6 +130,7 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
       setStaleAccepted(res.staleAccepted);
       setErrorMessage(null);
       retryDelay.current = 0;
+      failing.current = false;
       // The guest page renders these on the server (media URLs, wording, numerals, QR art), so the
       // website preview reloads after they are saved; everything else updates live via postMessage.
       const a = snapshot.design;
@@ -145,7 +147,9 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
     } catch (e) {
       const network = e instanceof ApiError && e.code === "network_error";
       const message = network ? networkText : errorText;
-      if (!retryDelay.current) toast(message, "error");
+      // One toast per failure episode (the status pill keeps showing it until a save succeeds).
+      if (!failing.current) toast(message, "error");
+      failing.current = true;
       setErrorMessage(message);
       // Connection hiccups and server errors retry by themselves (4s, 8s … 60s); a rejected change waits for the next edit or Retry.
       const transient = !(e instanceof ApiError) || e.status === 0 || e.status === 429 || e.status >= 500;

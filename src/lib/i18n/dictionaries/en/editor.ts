@@ -42,11 +42,9 @@ export const editor = {
   summary: {
     generated: "INVTRA design",
     custom: "Your own image",
-    customNeedsImage: "Waiting for your image",
     defaultWording: "Our suggested wording",
     personalWording: "Personalised",
     customColours: "Custom colours",
-    themeColours: "Theme colours",
     sectionsOn: "{n} of {total} sections",
     nothingYet: "Nothing added yet",
     cover: "Cover photo",
@@ -282,15 +280,11 @@ export const editor = {
     imageTypes: "JPG, PNG or HEIC, up to 15 MB",
     replace: "Replace",
     remove: "Remove",
-    removed: "Removed",
   },
 
   upload: {
-    drop: "Drop a file here or browse",
-    browse: "Choose a file",
     uploading: "Uploading… {n}%",
     processing: "Preparing your file…",
-    uploaded: "Uploaded",
     errors: {
       file_too_large: "That file is too large. Images can be up to 15 MB and music up to 12 MB.",
       unsupported_file: "We couldn't use that file. Upload a JPG, PNG or HEIC image, or an MP3, M4A or OGG song.",
@@ -306,7 +300,6 @@ export const editor = {
     card: "Invitation image",
     site: "Guest website",
     open: "Preview",
-    close: "Close preview",
     cardCaption: "What each guest receives on WhatsApp once they accept — with their own QR code.",
     sampleNote: "Shown with a sample guest.",
     download: "Download preview",
