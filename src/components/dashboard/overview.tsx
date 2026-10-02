@@ -165,7 +165,7 @@ export function EventOverview({
       {isRunning && batch ? (
         <Card className="px-6 py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="font-display text-xl text-ink" aria-live="polite">
+            <p className="font-display text-xl text-ink lining-nums" aria-live="polite">
               {fmt(d.sending, { done: formatNumber(processed, locale), total: formatNumber(batch.total, locale) })}
             </p>
             <Link href={stepHref(eventId, "send")} className="text-[13px] font-medium text-bronze-700 hover:text-bronze-900">

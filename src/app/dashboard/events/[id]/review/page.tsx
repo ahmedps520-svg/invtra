@@ -67,13 +67,16 @@ export default async function ReviewPage({
     Object.entries((event.templateVariables ?? {}) as Record<string, unknown>).filter(([, v]) => typeof v === "string"),
   ) as Record<string, string>;
   const checkout = sp.checkout === "success" || sp.checkout === "cancelled" ? sp.checkout : null;
+  const { locale } = await getI18n();
+  const nameAr = locale === "ar" ? readiness.template?.nameAr : null;
+  const checks = readiness.checks.map((c) => (c.key === "template" && c.ok && nameAr ? { ...c, detail: { name: nameAr } } : c));
 
   return (
     <ReviewStep
       eventId={event.id}
       readiness={{
         ready: readiness.ready,
-        checks: readiness.checks,
+        checks,
         unsent: readiness.unsent,
         guestCount: readiness.guestCount,
       }}
