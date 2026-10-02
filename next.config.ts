@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
+    // Uploads (photos ≤ 15 MB, music ≤ 12 MB) pass through proxy.ts, which buffers bodies.
+    proxyClientMaxBodySize: "20mb",
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
