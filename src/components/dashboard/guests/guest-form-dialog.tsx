@@ -5,6 +5,7 @@ import { useI18n } from "@/components/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
@@ -34,6 +35,7 @@ export function GuestFormDialog({
   eventLanguage,
   guest,
   onSaved,
+  defaultCountry,
 }: {
   open: boolean;
   onClose: () => void;
@@ -41,6 +43,8 @@ export function GuestFormDialog({
   eventLanguage: "EN" | "AR" | "BILINGUAL";
   guest: GuestRow | null;
   onSaved: () => void;
+  /** The event's country — numbers typed without a code are local to it. */
+  defaultCountry: string;
 }) {
   const { dict } = useI18n();
   const d = dict.dashboard.guestForm;
@@ -143,17 +147,14 @@ export function GuestFormDialog({
           />
         </Field>
         <Field id="g-phone" label={d.phone} hint={d.phoneHint} error={errors.phone}>
-          <Input
+          <PhoneInput
             id="g-phone"
-            type="tel"
-            inputMode="tel"
-            dir="ltr"
-            autoComplete="off"
             value={values.phone}
-            placeholder="+966 50 123 4567"
-            aria-invalid={Boolean(errors.phone)}
-            onChange={(e) => set("phone", e.target.value)}
-            className="text-start rtl:text-end"
+            defaultCountry={defaultCountry}
+            placeholder="50 123 4567"
+            invalid={Boolean(errors.phone)}
+            describedBy={errors.phone ? "g-phone-error" : "g-phone-hint"}
+            onChange={(v) => set("phone", v)}
           />
         </Field>
         <div className="grid gap-5 sm:grid-cols-[1fr_9rem]">

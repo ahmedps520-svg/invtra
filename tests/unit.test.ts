@@ -248,3 +248,21 @@ describe("QR code redirect", () => {
     expect(res.headers.get("location")).toBe(new URL("/i/8F3K92QXHT?via=qr", env().APP_URL).toString());
   });
 });
+
+describe("phone field values", async () => {
+  const { composePhone, splitPhone } = await import("@/lib/phone-value");
+  it("combines the picked country with the typed number", () => {
+    expect(composePhone("SA", "050 123 4567")).toBe("+966501234567");
+    expect(composePhone("SA", "501234567")).toBe("+966501234567");
+    expect(composePhone("AE", "050 123 4567")).toBe("+971501234567");
+    expect(composePhone("SA", "")).toBe("");
+    // A full international number wins over the picked country.
+    expect(composePhone("SA", "+44 7700 900123")).toBe("+447700900123");
+    expect(composePhone("SA", "00971501234567")).toBe("+971501234567");
+  });
+  it("splits a stored number back into country + national number", () => {
+    expect(splitPhone("+966501234567", "AE")).toEqual({ country: "SA", national: "501234567" });
+    expect(splitPhone("+447700900123", "SA")).toEqual({ country: "GB", national: "7700900123" });
+    expect(splitPhone("", "KW")).toEqual({ country: "KW", national: "" });
+  });
+});

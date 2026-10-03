@@ -106,6 +106,11 @@ export const common: typeof en = {
     validation: "يرجى مراجعة الحقول المحددة.",
     required: "مطلوب",
   },
+  phone: {
+    country: "رمز الدولة",
+    search: "ابحث عن الدولة أو الرمز",
+    noResults: "لا توجد دولة مطابقة",
+  },
   footer: {
     rights: "جميع الحقوق محفوظة.",
     privacy: "الخصوصية",

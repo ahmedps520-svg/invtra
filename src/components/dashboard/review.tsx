@@ -52,7 +52,7 @@ export type ReviewData = {
   plan: PlanTier | null;
   guestLimit: number;
   premiumTheme: boolean;
-  test: { phone: string; used: number; limit: number };
+  test: { phone: string; country: string; used: number; limit: number };
   mock: boolean;
   checkout: "success" | "cancelled" | null;
 };
@@ -312,7 +312,7 @@ export function ReviewStep(props: ReviewData) {
 
       {/* Test */}
       <section aria-label={d.test.title}>
-        <TestSend eventId={eventId} defaultPhone={props.test.phone} hasPlan={Boolean(props.plan)} used={props.test.used} limit={props.test.limit} mock={props.mock} />
+        <TestSend eventId={eventId} defaultPhone={props.test.phone} defaultCountry={props.test.country} hasPlan={Boolean(props.plan)} used={props.test.used} limit={props.test.limit} mock={props.mock} />
       </section>
 
       <div className="sticky bottom-0 z-30 -mx-4 border-t border-line bg-ivory/90 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

@@ -2,7 +2,7 @@
   "name": "invtra",
   "version": "1.0.0",
   "private": true,
-  "description": "INVTRA \u2014 premium digital QR invitations delivered through WhatsApp.",
+  "description": "INVTRA — premium digital QR invitations delivered through WhatsApp.",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -55,6 +55,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "country-flag-icons": "^1.6.20",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.8",
     "jsqr": "^1.4.0",

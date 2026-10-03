@@ -6,12 +6,13 @@ import { CheckCircle2, CircleAlert, Download, FileSpreadsheet, Upload } from "lu
 import { useI18n } from "@/components/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Select } from "@/components/ui/input";
+import { Field } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { formatNumber } from "@/lib/format";
-import { formatPhone, PHONE_COUNTRIES } from "@/lib/phone";
+import { formatPhone } from "@/lib/phone";
+import { CountrySelect } from "@/components/ui/phone-input";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural } from "../i18n";
 
@@ -304,13 +305,7 @@ export function ImportDialog({
               ) : null}
             </div>
             <Field id="imp-country" label={d.country} hint={d.countryHint}>
-              <Select id="imp-country" value={country} onChange={(e) => setCountry(e.target.value)}>
-                {PHONE_COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {dict.dashboard.countries[c]}
-                  </option>
-                ))}
-              </Select>
+              <CountrySelect id="imp-country" value={country} onChange={setCountry} />
             </Field>
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sand/70 px-4 py-3.5">
               <p className="text-[13px] text-ink-soft">{d.sampleHint}</p>

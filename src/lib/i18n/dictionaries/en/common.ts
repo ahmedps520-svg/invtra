@@ -104,6 +104,11 @@ export const common = {
     validation: "Please check the highlighted fields.",
     required: "Required",
   },
+  phone: {
+    country: "Country code",
+    search: "Search country or code",
+    noResults: "No country found",
+  },
   footer: {
     rights: "All rights reserved.",
     privacy: "Privacy",

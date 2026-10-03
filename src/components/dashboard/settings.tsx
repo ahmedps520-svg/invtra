@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Segmented } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
@@ -82,18 +83,7 @@ function ProfileForm({ user }: { user: { name: string; email: string; phone: str
           <Input id="s-email" value={user.email} disabled dir="ltr" className="rtl:text-end" />
         </Field>
         <Field id="s-phone" label={d.phone} hint={d.phoneHint} error={errors.phone}>
-          <Input
-            id="s-phone"
-            type="tel"
-            inputMode="tel"
-            dir="ltr"
-            className="rtl:text-end"
-            autoComplete="tel"
-            value={phone}
-            placeholder="+966 50 123 4567"
-            aria-invalid={Boolean(errors.phone)}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <PhoneInput id="s-phone" value={phone} placeholder="50 123 4567" invalid={Boolean(errors.phone)} onChange={setPhone} />
         </Field>
         <div>
           <p className="mb-1.5 text-[13px] font-medium text-ink-soft">{d.language}</p>

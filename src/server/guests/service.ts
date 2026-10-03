@@ -9,28 +9,10 @@ import { MAX_GUESTS_PER_EVENT } from "@/lib/plans";
 import { guestInputSchema, type GuestInput } from "@/lib/validation/guest";
 import { invitationUrl } from "@/server/invitations";
 import { cancelPendingJobs } from "@/server/queue/queue";
+import { countryForTimezone } from "@/lib/timezone-country";
 
-export const TIMEZONE_COUNTRY: Record<string, string> = {
-  "Asia/Dubai": "AE",
-  "Asia/Riyadh": "SA",
-  "Asia/Kuwait": "KW",
-  "Asia/Qatar": "QA",
-  "Asia/Bahrain": "BH",
-  "Asia/Muscat": "OM",
-  "Africa/Cairo": "EG",
-  "Asia/Amman": "JO",
-  "Asia/Beirut": "LB",
-  "Asia/Baghdad": "IQ",
-  "Africa/Casablanca": "MA",
-  "Europe/London": "GB",
-  "America/New_York": "US",
-  "America/Chicago": "US",
-  "America/Los_Angeles": "US",
-};
-
-export function defaultCountryFor(timezone: string) {
-  return TIMEZONE_COUNTRY[timezone] ?? "SA";
-}
+export { TIMEZONE_COUNTRY } from "@/lib/timezone-country";
+export const defaultCountryFor = countryForTimezone;
 
 async function assertCapacity(eventId: string, adding: number) {
   const count = await db.guest.count({ where: { eventId, isTest: false } });

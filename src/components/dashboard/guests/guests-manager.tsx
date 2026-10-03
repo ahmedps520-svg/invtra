@@ -610,6 +610,7 @@ export function GuestsManager({
         eventLanguage={eventLanguage}
         guest={form.guest}
         onSaved={refresh}
+        defaultCountry={defaultCountry}
       />
       <ImportDialog
         key={`import-${importState.key}`}

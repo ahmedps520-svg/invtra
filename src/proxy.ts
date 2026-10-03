@@ -152,7 +152,7 @@ export const config = {
     "/ar",
     "/ar/:path*",
     {
-      source: "/((?!_next/static|_next/image|fonts/|brand/|favicon.ico|robots.txt|sitemap.xml).*)",
+      source: "/((?!_next/static|_next/image|fonts/|brand/|flags/|favicon.ico|robots.txt|sitemap.xml).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

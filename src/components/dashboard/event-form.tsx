@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { countryForTimezone } from "@/lib/timezone-country";
 import { Switch } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
@@ -628,7 +630,14 @@ export function EventForm({
                         {input("contactName", { placeholder: f.contactNamePh, autoComplete: "off" })}
                       </Field>
                       <Field id="ev-contactPhone" label={f.contactPhone} error={err("contactPhone")}>
-                        {input("contactPhone", { type: "tel", dir: "ltr", placeholder: f.contactPhonePh, autoComplete: "off" })}
+                        <PhoneInput
+                          id="ev-contactPhone"
+                          value={form.contactPhone}
+                          defaultCountry={countryForTimezone(tz)}
+                          placeholder="50 123 4567"
+                          invalid={Boolean(err("contactPhone"))}
+                          onChange={(v) => set("contactPhone", v)}
+                        />
                       </Field>
                       <Field id="ev-contactEmail" label={f.contactEmail} error={err("contactEmail")}>
                         {input("contactEmail", { type: "email", dir: "ltr", placeholder: f.contactEmailPh, autoComplete: "off" })}

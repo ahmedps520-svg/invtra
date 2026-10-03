@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { requireUser } from "@/server/auth/guards";
 import { confirmTapReturn } from "@/server/payments/tap-webhook";
+import { countryForTimezone } from "@/lib/timezone-country";
 import { getI18n } from "@/server/i18n";
 import { findOwnedEvent } from "@/server/events/access";
 import { cardPreviewProps } from "@/server/events/preview";
@@ -97,7 +98,7 @@ export default async function ReviewPage({
       plan={event.plan}
       guestLimit={event.guestLimit}
       premiumTheme={themeRow?.isPremium ?? getTheme(event.themeKey).premium}
-      test={{ phone: user.phone ?? "", used: event.testSendsUsed, limit: TEST_SEND_LIMIT }}
+      test={{ phone: user.phone ?? "", country: countryForTimezone(event.timezone), used: event.testSendsUsed, limit: TEST_SEND_LIMIT }}
       mock={env().WHATSAPP_PROVIDER === "mock"}
       checkout={checkout}
     />

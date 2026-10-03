@@ -7,7 +7,8 @@ import { CheckCircle2, Smartphone } from "lucide-react";
 import { useI18n } from "@/components/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Field, Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { formatPhone } from "@/lib/phone";
@@ -17,6 +18,7 @@ import { errorMessage, plural } from "./i18n";
 export function TestSend({
   eventId,
   defaultPhone,
+  defaultCountry = "SA",
   hasPlan,
   used,
   limit,
@@ -24,6 +26,7 @@ export function TestSend({
 }: {
   eventId: string;
   defaultPhone: string;
+  defaultCountry?: string;
   hasPlan: boolean;
   used: number;
   limit: number;
@@ -71,17 +74,14 @@ export function TestSend({
         <form onSubmit={send} noValidate>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <Field id="test-phone" label={d.phone} className="flex-1" error={error}>
-              <Input
+              <PhoneInput
                 id="test-phone"
-                type="tel"
-                inputMode="tel"
-                dir="ltr"
-                className="rtl:text-end"
                 value={phone}
-                placeholder={d.phonePh}
-                aria-invalid={Boolean(error)}
-                onChange={(e) => {
-                  setPhone(e.target.value);
+                defaultCountry={defaultCountry}
+                placeholder="50 123 4567"
+                invalid={Boolean(error)}
+                onChange={(v) => {
+                  setPhone(v);
                   setError(null);
                 }}
                 disabled={exhausted}
