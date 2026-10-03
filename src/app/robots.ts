@@ -21,6 +21,7 @@ export default function robots(): MetadataRoute.Robots {
           "/pay/",
           "/receipt/",
           "/dev/",
+          "/updating-test",
         ],
       },
     ],

@@ -266,3 +266,25 @@ describe("phone field values", async () => {
     expect(splitPhone("", "KW")).toEqual({ country: "KW", national: "" });
   });
 });
+
+describe("update-page test (/updating-test)", () => {
+  it("answers 503 like a server mid-deploy, never cached or indexed, with the page's script allowed", async () => {
+    const { GET } = await import("@/app/updating-test/route");
+    const { NextRequest } = await import("next/server");
+    const res = GET(new NextRequest("https://invtra.store/updating-test", { headers: { "x-nonce": "abc123" } }));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("x-robots-tag")).toBe("noindex");
+    const html = await res.text();
+    expect(html).toContain('<script nonce="abc123">');
+    expect(html).toContain('register("/sw.js"');
+  });
+
+  it("is shown in test mode by the service worker (no reload loop)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const sw = readFileSync("public/sw.js", "utf8");
+    expect(sw).toContain('url.pathname === "/updating-test"');
+    expect(sw).toContain('PAGE.replace("/*PREVIEW*/false", "true")');
+    expect(sw).toContain("if(PREVIEW){done();return}location.reload()");
+  });
+});

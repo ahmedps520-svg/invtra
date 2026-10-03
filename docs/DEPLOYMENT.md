@@ -55,6 +55,9 @@ overlap the two), so a visitor could see Render's own "502 Bad Gateway".
   (`public/sw.js`) that replaces that error with a branded "We're updating INVTRA — this page
   will open by itself in less than 30 seconds" page (English + Arabic), which reopens the page
   automatically as soon as the new version answers.
+- **See it any time:** open `https://invtra.store/updating-test`. That address always answers
+  503, like the server mid-deploy, so the real service-worker path runs. A first visit installs
+  the worker and reloads once; the page then says it was a test instead of reloading.
 - **To remove the downtime completely,** move files off the disk to Cloudflare R2, then delete
   the disk — Render then keeps the old version serving until the new one is ready:
   1. Cloudflare → **R2** → *Create bucket* `invtra` (keep it private) → *Manage R2 API Tokens*
