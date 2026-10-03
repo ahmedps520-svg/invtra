@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { planName } from "@/lib/plans";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, PauseCircle, PlayCircle } from "lucide-react";
@@ -23,7 +24,7 @@ function activityText(kind: string, data: Record<string, unknown> | null): strin
   const name = typeof d.name === "string" ? d.name : "A guest";
   switch (kind) {
     case "plan.purchased":
-      return `${humanize(String(d.plan ?? "Plan"))} plan ${d.granted ? "granted by INVTRA" : "purchased"}`;
+      return `${planName(String(d.plan ?? "")) || "Plan"} plan ${d.granted ? "granted by INVTRA" : "purchased"}`;
     case "batch.started":
       return `Sending started to ${d.total ?? "?"} guests`;
     case "batch.completed":
@@ -166,7 +167,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               rowKey={(o) => o.id}
               empty="No orders for this event."
               columns={[
-                { key: "plan", header: "Plan", cell: (o) => `${humanize(o.plan)} · ${num(o.guestLimit)} guests` },
+                { key: "plan", header: "Plan", cell: (o) => `${planName(o.plan)} · ${num(o.guestLimit)} guests` },
                 { key: "amount", header: "Amount", align: "end", cell: (o) => money(o.amount, o.currency) },
                 { key: "provider", header: "Provider", cell: (o) => humanize(o.provider), hideBelow: "sm" },
                 { key: "when", header: "Created", cell: (o) => dt(o.createdAt), hideBelow: "md" },

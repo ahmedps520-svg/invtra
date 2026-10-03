@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { planName } from "@/lib/plans";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Ban, RotateCcw } from "lucide-react";
@@ -166,7 +167,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
               rowKey={(o) => o.id}
               empty="No orders."
               columns={[
-                { key: "plan", header: "Order", cell: (o) => <div><p className="text-ink">{humanize(o.plan)} · {num(o.guestLimit)} guests</p><p className="text-[12.5px] text-ink-faint">{o.event ? o.event.title : "Event deleted"}</p></div> },
+                { key: "plan", header: "Order", cell: (o) => <div><p className="text-ink">{planName(o.plan)} · {num(o.guestLimit)} guests</p><p className="text-[12.5px] text-ink-faint">{o.event ? o.event.title : "Event deleted"}</p></div> },
                 { key: "amount", header: "Amount", align: "end", cell: (o) => money(o.amount, o.currency) },
                 { key: "provider", header: "Provider", cell: (o) => humanize(o.provider), hideBelow: "md" },
                 { key: "date", header: "Created", cell: (o) => dt(o.createdAt), hideBelow: "sm" },

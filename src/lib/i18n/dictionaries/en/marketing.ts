@@ -239,7 +239,7 @@ export const marketing = {
         tagline: "For weddings, new arrivals and celebrations where every detail matters.",
         features: [
           "Every premium design — Royal, Moonlight, Lullaby, Henna, Lantern, Luxury & Traditional",
-          "Everything in Basic",
+          "Everything in Standard",
           "Priority support",
         ],
       },
@@ -305,7 +305,7 @@ export const marketing = {
       },
       {
         q: "Which plan do I need?",
-        a: "Basic covers up to 100 guests with our standard designs. Premium covers up to 500 guests and adds every premium design and priority support. Music, a photo gallery and uploading your own design are included in every plan. For larger events or bespoke requirements, choose Custom and we'll prepare a quote. Plans are paid once per event.",
+        a: "Standard covers up to 100 guests with our standard designs. Premium covers up to 500 guests and adds every premium design and priority support. Music, a photo gallery and uploading your own design are included in every plan. For larger events or bespoke requirements, choose Custom and we'll prepare a quote. Plans are paid once per event.",
       },
     ],
   },

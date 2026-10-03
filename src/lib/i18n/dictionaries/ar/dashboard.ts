@@ -956,7 +956,7 @@ export const dashboard: typeof en = {
       upTo: "حتى {n} ضيف",
       larger: "قوائم ضيوف أكبر",
       premiumThemes: "جميع التصاميم، بما فيها المميزة",
-      standardThemes: "جميع التصاميم الأساسية",
+      standardThemes: "جميع التصاميم القياسية",
       whatsapp: "دعوات واتساب مع زرّي القبول والاعتذار",
       qr: "رمز QR خاص لكل ضيف",
       live: "متابعة مباشرة للردود والمشاهدات والحضور",

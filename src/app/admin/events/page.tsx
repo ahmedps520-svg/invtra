@@ -41,7 +41,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
             name: "plan",
             label: "Plan",
             options: [
-              { value: "BASIC", label: "Basic" },
+              { value: "BASIC", label: "Standard" },
               { value: "PREMIUM", label: "Premium" },
               { value: "CUSTOM", label: "Custom" },
               { value: "NONE", label: "No plan" },

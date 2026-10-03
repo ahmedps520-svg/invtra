@@ -4,7 +4,7 @@ import { appUrl, env } from "@/server/env";
 import { badRequest, conflict, HttpError, notFound } from "@/server/http";
 import { logError } from "@/server/log";
 import { recordActivity } from "@/server/activity";
-import { PLAN_ORDER, PLANS, upgradePrice, type Currency } from "@/lib/plans";
+import { PLAN_ORDER, PLANS, upgradePrice, type Currency, PLAN_NAMES } from "@/lib/plans";
 import { paymentProvider, providerFor } from "./index";
 import { manualInstructions } from "./manual";
 import type { CheckoutUrls, PaidDetails } from "./types";
@@ -43,8 +43,7 @@ export function higherPlan(a: PlanTier | null | undefined, b: PlanTier): PlanTie
   return planRank(a) > planRank(b) ? (a as PlanTier) : b;
 }
 
-const PLAN_LABEL: Record<PlanTier, string> = { BASIC: "Basic", PREMIUM: "Premium", CUSTOM: "Custom" };
-export const planLabel = (p: PlanTier) => PLAN_LABEL[p];
+export const planLabel = (p: PlanTier) => PLAN_NAMES[p];
 
 function json(v: unknown): Prisma.InputJsonValue | undefined {
   return v === undefined ? undefined : (JSON.parse(JSON.stringify(v)) as Prisma.InputJsonValue);

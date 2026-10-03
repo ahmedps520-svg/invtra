@@ -48,7 +48,7 @@ sending real WhatsApp messages or taking payments. A demo account is seeded
 
 ## Payments (Apple Pay, Google Pay, mada)
 
-Prices are in Saudi riyals (`PAYMENT_CURRENCY=SAR`): Basic 499 SAR, Premium 699 SAR
+Prices are in Saudi riyals (`PAYMENT_CURRENCY=SAR`): Standard 499 SAR, Premium 699 SAR
 (`src/lib/plans.ts`). Checkout uses **Tap Payments** (tap.company), a Saudi-licensed gateway
 whose hosted payment page shows Apple Pay, Google Pay, mada, Visa/Mastercard and STC Pay —
 Apple Pay and Google Pay need no extra setup on the hosted page.

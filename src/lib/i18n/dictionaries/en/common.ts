@@ -90,7 +90,7 @@ export const common = {
     FAILED: "Failed",
   },
   plans: {
-    BASIC: "Basic",
+    BASIC: "Standard",
     PREMIUM: "Premium",
     CUSTOM: "Custom",
   },

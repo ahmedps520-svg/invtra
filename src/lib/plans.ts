@@ -40,6 +40,13 @@ export const PLANS: Record<PlanTier, PlanDefinition> = {
 
 export const PLAN_ORDER: PlanTier[] = ["BASIC", "PREMIUM", "CUSTOM"];
 
+/** Display names (the BASIC tier is sold as "Standard"). Customer-facing pages use the dictionaries. */
+export const PLAN_NAMES: Record<PlanTier, string> = { BASIC: "Standard", PREMIUM: "Premium", CUSTOM: "Custom" };
+
+export function planName(plan: string | null | undefined): string {
+  return plan && plan in PLAN_NAMES ? PLAN_NAMES[plan as PlanTier] : (plan ?? "");
+}
+
 /** Free test sends per event (to the host's own number) before buying a plan. */
 export const TEST_SEND_LIMIT = 3;
 

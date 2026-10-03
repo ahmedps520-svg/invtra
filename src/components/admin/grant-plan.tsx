@@ -82,7 +82,7 @@ export function GrantPlanButton({
                   setLimit(String(Math.max(currentLimit, DEFAULT_LIMIT[e.target.value] ?? 100)));
                 }}
               >
-                <option value="BASIC">Basic</option>
+                <option value="BASIC">Standard</option>
                 <option value="PREMIUM">Premium</option>
                 <option value="CUSTOM">Custom</option>
               </Select>

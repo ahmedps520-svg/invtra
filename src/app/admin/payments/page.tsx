@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { planName } from "@/lib/plans";
 import Link from "next/link";
 import { Ban, CheckCircle2, Undo2 } from "lucide-react";
 import { requireAdmin } from "@/server/auth/guards";
@@ -95,7 +96,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                 cell: (o) => (
                   <div className="min-w-[180px]">
                     <p className="text-ink">
-                      {humanize(o.plan)} <span className="text-ink-faint">· {num(o.guestLimit)} guests</span>
+                      {planName(o.plan)} <span className="text-ink-faint">· {num(o.guestLimit)} guests</span>
                     </p>
                     <Mono className="text-ink-faint">{o.id}</Mono>
                     {o.note ? <p className="mt-0.5 line-clamp-2 max-w-[280px] text-[12px] text-ink-faint" title={o.note}>{truncate(o.note, 120)}</p> : null}
@@ -145,7 +146,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                           title: "Mark this order paid?",
                           description: (
                             <>
-                              Confirms {money(o.amount, o.currency)} was received and activates the {humanize(o.plan)} plan on the event.
+                              Confirms {money(o.amount, o.currency)} was received and activates the {planName(o.plan)} plan on the event.
                               {o.provider !== "manual" ? ` This is a ${PROVIDER_LABEL[o.provider]} order — only do this if the payment was confirmed outside INVTRA.` : ""}
                             </>
                           ),
@@ -229,7 +230,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                 cell: (p) => (
                   <div className="min-w-0">
                     <Link href={`/admin/payments?q=${p.order.id}`} className="text-ink underline-offset-4 hover:underline">
-                      {humanize(p.order.plan)} · {p.order.user.name}
+                      {planName(p.order.plan)} · {p.order.user.name}
                     </Link>
                     <p className="text-[12.5px] text-ink-faint">{p.order.event?.title ?? "Event deleted"}</p>
                   </div>

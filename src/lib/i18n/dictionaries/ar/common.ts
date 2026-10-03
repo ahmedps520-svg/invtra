@@ -92,7 +92,7 @@ export const common: typeof en = {
     FAILED: "فشلت",
   },
   plans: {
-    BASIC: "الأساسية",
+    BASIC: "القياسية",
     PREMIUM: "المميزة",
     CUSTOM: "المخصصة",
   },
