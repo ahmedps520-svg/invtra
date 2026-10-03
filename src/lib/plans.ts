@@ -53,6 +53,15 @@ export const TEST_SEND_LIMIT = 3;
 /** Hard cap on guests per event regardless of plan (Custom orders can raise it). */
 export const MAX_GUESTS_PER_EVENT = 5000;
 
+/** Custom packages can have no guest limit; it is stored as this number. */
+export const UNLIMITED_GUESTS = 1_000_000;
+export const isUnlimited = (limit: number | null | undefined) => (limit ?? 0) >= UNLIMITED_GUESTS;
+
+/** Most guests an event may hold: the cap, or more for a Custom package that allows it. */
+export function guestCapacity(event: { plan: PlanTier | null; guestLimit: number }): number {
+  return event.plan === "CUSTOM" ? Math.max(MAX_GUESTS_PER_EVENT, event.guestLimit) : MAX_GUESTS_PER_EVENT;
+}
+
 export function planPrice(tier: PlanTier, currency: Currency): number | null {
   return PLANS[tier].prices?.[currency] ?? null;
 }

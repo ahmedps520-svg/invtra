@@ -5,6 +5,8 @@ import { badRequest, conflict, HttpError, notFound } from "@/server/http";
 import { logError } from "@/server/log";
 import { recordActivity } from "@/server/activity";
 import { PLAN_ORDER, PLANS, upgradePrice, type Currency, PLAN_NAMES } from "@/lib/plans";
+import { nextReceiptNumber } from "./receipts";
+import { enqueue } from "@/server/queue/queue";
 import { paymentProvider, providerFor } from "./index";
 import { manualInstructions } from "./manual";
 import type { CheckoutUrls, PaidDetails } from "./types";
@@ -195,10 +197,17 @@ export async function applyPaidOrder(orderId: string, details: PaidDetails): Pro
     if (order.status === "REFUNDED") throw conflict("order_refunded", "This order was refunded and can't be marked paid again.");
 
     const now = new Date();
+    const receiptNumber = order.receiptNumber ?? (await nextReceiptNumber(tx, now));
     const paid = await tx.order.update({
       where: { id: orderId },
-      data: { status: "PAID", paidAt: now, note: appendNote(order.note, details.note) },
+      data: { status: "PAID", paidAt: now, receiptNumber, note: appendNote(order.note, details.note) },
     });
+    // The receipt goes out by email (and WhatsApp for payment-link orders) once this commits.
+    await enqueue("payment.receipt", { orderId, channel: "email" }, { tx, eventId: order.eventId ?? undefined });
+    if (order.payToken) {
+      const phone = await tx.user.findUnique({ where: { id: order.userId }, select: { phone: true } });
+      if (phone?.phone) await enqueue("payment.receipt", { orderId, channel: "whatsapp" }, { tx, eventId: order.eventId ?? undefined });
+    }
     await tx.payment.create({
       data: {
         orderId,
@@ -389,6 +398,10 @@ export type CustomerOrder = {
   createdAt: string;
   paidAt: string | null;
   instructions?: string;
+  /** Where to pay (custom packages awaiting payment) or see the receipt (paid orders). */
+  payUrl?: string;
+  receiptUrl?: string;
+  receiptNumber?: string | null;
 };
 
 export function serializeCustomerOrder(order: Order & { event: { title: string } | null }): CustomerOrder {
@@ -405,6 +418,10 @@ export function serializeCustomerOrder(order: Order & { event: { title: string }
     createdAt: order.createdAt.toISOString(),
     paidAt: order.paidAt?.toISOString() ?? null,
     ...(order.provider === "manual" && order.status === "PENDING" ? { instructions: manualInstructions() } : {}),
+    ...(order.payToken && order.status === "PENDING" ? { payUrl: `/pay/${order.payToken}` } : {}),
+    ...(order.status === "PAID" || order.status === "REFUNDED"
+      ? { receiptUrl: order.payToken ? `/pay/${order.payToken}` : `/receipt/${order.id}`, receiptNumber: order.receiptNumber }
+      : {}),
   };
 }
 

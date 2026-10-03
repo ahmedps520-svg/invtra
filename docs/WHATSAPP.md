@@ -75,9 +75,17 @@ The standard set lives in `src/server/whatsapp/catalog.ts` and is loaded by `npm
 | celebration_ar | invtra_celebration_invite_ar | ar | Invitation — baby showers, birthdays, graduations, anniversaries |
 | update_en | invtra_invitation_update | en | Update (URL button `/i/{{1}}`) |
 | update_ar | invtra_invitation_update_ar | ar | Update |
+| payment_request_en | invtra_payment_request | en | Payment link for a custom package (URL button `/pay/{{1}}`) |
+| payment_request_ar | invtra_payment_request_ar | ar | Payment link for a custom package |
+| payment_receipt_en | invtra_payment_receipt | en | Receipt after a custom package is paid (URL button `/pay/{{1}}`) |
+| payment_receipt_ar | invtra_payment_receipt_ar | ar | Receipt after a custom package is paid |
 
-All are **Utility** templates with an **image header** (the event's invitation design without
-any QR) and, for invitations, two **quick-reply** buttons. Variables are mapped by name
+All are **Utility** templates. Invitation and update templates have an **image header** (the
+event's invitation design without any QR) and, for invitations, two **quick-reply** buttons.
+The four payment templates go to the event **host**, not to guests: they have no header and a
+single URL button that opens the host's payment page (which becomes the receipt once paid).
+Until `invtra_payment_request` is approved, Admin → Custom events sends the link by email only
+(and staff can copy it); a missing receipt template just means the receipt goes by email. Variables are mapped by name
 (`guest_name`, `host_names`, `event_date`, …) onto `{{1}}`, `{{2}}`… — see
 `src/lib/whatsapp/templates.ts`.
 

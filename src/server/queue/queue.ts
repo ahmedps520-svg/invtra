@@ -12,7 +12,9 @@ export type JobType =
   | "invitation.deliver"
   | "invitation.decline_ack"
   | "invitation.notice"
-  | "mock.webhook";
+  | "mock.webhook"
+  | "payment.request"
+  | "payment.receipt";
 
 export const PRIORITY = { bulk: 0, normal: 5, interactive: 10 } as const;
 

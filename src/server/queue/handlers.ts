@@ -16,6 +16,7 @@ import type { MessageContent } from "@/server/whatsapp/types";
 import { toWhatsAppId } from "@/lib/phone";
 import { batchProgress, cancelBatch } from "@/server/sending/batch";
 import { enqueue, PermanentJobError, type JobType } from "./queue";
+import { sendPaymentWhatsApp, sendReceipt } from "@/server/custom/messages";
 
 /**
  * Job handlers. A handler either succeeds, throws (→ retried with backoff), or throws
@@ -33,6 +34,8 @@ export const handlers: Record<JobType, (job: Job, payload: Payload) => Promise<v
   "invitation.deliver": (job, p) => deliverInvitation(String(p.guestId), String(p.reason ?? "accepted")),
   "invitation.decline_ack": (_job, p) => sendSystemText(String(p.guestId), "decline"),
   "invitation.notice": (_job, p) => sendSystemText(String(p.guestId), p.key === "deadline" ? "deadline" : "closed"),
+  "payment.request": (_job, p) => sendPaymentWhatsApp(String(p.orderId), "request"),
+  "payment.receipt": (_job, p) => sendReceipt(String(p.orderId), p.channel === "whatsapp" ? "whatsapp" : "email"),
   "mock.webhook": async (_job, p) => {
     const raw = JSON.stringify(p.body);
     const r = await handleWhatsAppWebhook(raw, signWebhookBody(raw, env().WHATSAPP_APP_SECRET ?? ""));

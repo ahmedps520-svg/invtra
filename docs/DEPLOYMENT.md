@@ -92,6 +92,21 @@ Apple Pay and Google Pay need no extra setup on the hosted page.
 
 Refunds are issued in the Tap dashboard, then recorded in *Admin → Payments*.
 
+### Custom events (staff-priced packages)
+
+**Admin → Custom events → New custom event** walks staff through the host, occasion, date and
+venue, then the package: unlimited guests (or a fixed number), your own price in
+`PAYMENT_CURRENCY`, and what's included. INVTRA creates the host's account if needed, the
+event, and a secret payment link (`/pay/<token>`, no sign-in needed) sent by email and — once
+the `invtra_payment_request` template is approved — WhatsApp. The host pays on the same Tap
+checkout (Apple Pay, Google Pay, mada, cards); the plan is activated and a numbered receipt
+(`INVTRA-2026-0001`, sequential per year) is emailed and sent on WhatsApp. The payment page then
+shows the printable receipt. Unpaid packages can be re-sent or withdrawn from the list.
+
+Set `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER` and `LEGAL_ADDRESS` so they appear
+on receipts. INVTRA's receipts are payment confirmations, not ZATCA e-invoices — a
+VAT-registered business in Saudi Arabia still needs a ZATCA-compliant invoicing solution.
+
 ## Search engines (Google & Bing)
 
 The site is built to be indexed: every marketing page has an English URL and an Arabic one

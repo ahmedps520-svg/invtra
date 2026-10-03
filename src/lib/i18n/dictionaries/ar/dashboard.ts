@@ -522,6 +522,7 @@ export const dashboard: typeof en = {
     checkedInWith: "سجّل {name} حضوره · {n} أشخاص",
     planPurchased: "تم تفعيل باقة {plan}",
     planPurchasedGeneric: "تم تفعيل باقتك",
+    customOffered: "باقتك المخصّصة جاهزة للدفع",
     unknown: "تحديث على المناسبة",
   },
   failures: {
@@ -950,6 +951,7 @@ export const dashboard: typeof en = {
       description: "سعر يُدفع مرة واحدة لكل مناسبة، بدون اشتراك.",
       current: "باقة {plan}",
       covers: "حتى {limit} ضيف · {used} في قائمتك",
+      coversUnlimited: "عدد غير محدود من الضيوف · {used} في قائمتك",
       upgradeTitle: "تحتاج إلى عدد أكبر من الضيوف أو تصميم مميز؟",
       choose: "اختيار {plan}",
       upgrade: "الترقية إلى {plan}",
@@ -1111,6 +1113,9 @@ export const dashboard: typeof en = {
     instructions: "طريقة الدفع",
     deletedEvent: "مناسبة محذوفة",
     guestLimit: "حتى {n} ضيف",
+    unlimited: "عدد غير محدود من الضيوف",
+    payNow: "ادفع الآن",
+    receipt: "الإيصال",
     loadError: "تعذّر تحميل تفاصيل المدفوعات حاليًا.",
   },
   settings: {

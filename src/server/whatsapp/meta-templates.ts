@@ -92,6 +92,9 @@ export const SAMPLE_VALUES: Record<TemplateVariable, string> = {
   venue: "The Grand Ballroom, Four Seasons",
   venue_ar: "القاعة الكبرى، فور سيزونز",
   invitation_token: "8F3K92QXHT",
+  customer_name: "Sara",
+  package_amount: "SAR 2,500",
+  receipt_number: "INVTRA-2026-0042",
 };
 
 type Component =

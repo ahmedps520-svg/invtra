@@ -99,6 +99,8 @@ export function describeActivity(a: ActivityItem, dict: Dictionary, locale: Loca
       const label = (dict.common.plans as Record<string, string>)[plan];
       return { text: label ? fmt(d.planPurchased, { plan: label }) : d.planPurchasedGeneric, icon: <CreditCard />, tone: "bronze" };
     }
+    case "plan.custom_offered":
+      return { text: d.customOffered, icon: <CreditCard />, tone: "bronze" };
     default:
       return { text: d.unknown, icon: <Sparkles />, tone: "neutral" };
   }

@@ -19,7 +19,13 @@ export function Switch({
   id?: string;
 }) {
   return (
-    <label className={cn("flex cursor-pointer items-start gap-3", disabled && "cursor-not-allowed opacity-60")} htmlFor={id}>
+    <label
+      className={cn(
+        "flex cursor-pointer items-start gap-3",
+        disabled && "cursor-not-allowed opacity-60",
+      )}
+      htmlFor={id}
+    >
       <button
         id={id}
         type="button"
@@ -35,14 +41,22 @@ export function Switch({
         <span
           className={cn(
             "inline-block size-5 rounded-full bg-white shadow transition-transform duration-300 ease-luxe",
-            checked ? "translate-x-[18px] rtl:-translate-x-[18px]" : "translate-x-0.5 rtl:-translate-x-0.5",
+            checked
+              ? "translate-x-[18px] rtl:-translate-x-[18px]"
+              : "translate-x-0.5 rtl:-translate-x-0.5",
           )}
         />
       </button>
       {label || description ? (
         <span className="min-w-0">
-          {label ? <span className="block text-sm font-medium text-ink">{label}</span> : null}
-          {description ? <span className="mt-0.5 block text-[13px] text-ink-faint">{description}</span> : null}
+          {label ? (
+            <span className="block text-sm font-medium text-ink">{label}</span>
+          ) : null}
+          {description ? (
+            <span className="mt-0.5 block text-[13px] text-ink-faint">
+              {description}
+            </span>
+          ) : null}
         </span>
       ) : null}
     </label>
@@ -55,18 +69,27 @@ export function Checkbox({
   label,
   className,
   ariaLabel,
+  disabled,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label?: ReactNode;
   className?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }) {
   return (
-    <label className={cn("inline-flex cursor-pointer items-center gap-2.5 text-sm", className)}>
+    <label
+      className={cn(
+        "inline-flex cursor-pointer items-center gap-2.5 text-sm",
+        disabled && "cursor-not-allowed opacity-60",
+        className,
+      )}
+    >
       <input
         type="checkbox"
         aria-label={ariaLabel}
+        disabled={disabled}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         className="size-4 cursor-pointer rounded border-line-strong accent-bronze-600"
@@ -91,7 +114,13 @@ export function Segmented<T extends string>({
   size?: "sm" | "md";
 }) {
   return (
-    <div role="radiogroup" className={cn("inline-flex rounded-full border border-line bg-sand/60 p-1", className)}>
+    <div
+      role="radiogroup"
+      className={cn(
+        "inline-flex rounded-full border border-line bg-sand/60 p-1",
+        className,
+      )}
+    >
       {options.map((o) => (
         <button
           key={o.value}
@@ -102,7 +131,9 @@ export function Segmented<T extends string>({
           className={cn(
             "rounded-full font-medium transition-all duration-300 ease-luxe",
             size === "sm" ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-[13px]",
-            value === o.value ? "bg-paper text-ink shadow-soft" : "text-ink-faint hover:text-ink",
+            value === o.value
+              ? "bg-paper text-ink shadow-soft"
+              : "text-ink-faint hover:text-ink",
           )}
         >
           {o.label}

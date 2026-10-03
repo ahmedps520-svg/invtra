@@ -17,6 +17,7 @@ import {
   Palette,
   ScanLine,
   ScrollText,
+  Sparkles,
   UserSearch,
   Users,
   X,
@@ -50,6 +51,7 @@ function sections(b: AdminBadges): { label?: string; items: NavItem[] }[] {
     {
       label: "Business",
       items: [
+        { href: "/admin/custom", label: "Custom events", icon: <Sparkles /> },
         { href: "/admin/payments", label: "Payments", icon: <CreditCard />, badge: b.pendingOrders || undefined },
         { href: "/admin/themes", label: "Themes", icon: <Palette /> },
       ],

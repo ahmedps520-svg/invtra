@@ -25,7 +25,7 @@ export type TemplateFormValues = {
   metaName: string;
   language: string;
   locale: string;
-  purpose: "INVITATION" | "UPDATE";
+  purpose: "INVITATION" | "UPDATE" | "PAYMENT_REQUEST" | "PAYMENT_RECEIPT";
   category: string;
   headerType: string;
   body: string;
@@ -54,6 +54,9 @@ const VARIABLE_LABEL: Record<TemplateVariable, string> = {
   venue: "Venue",
   venue_ar: "Venue (Arabic)",
   invitation_token: "Invitation code",
+  customer_name: "Customer (host) name",
+  package_amount: "Package amount",
+  receipt_number: "Receipt number",
 };
 const PREFERRED: TemplateVariable[] = ["guest_name", "host_names", "event_name", "event_date", "event_time", "venue"];
 
@@ -269,9 +272,11 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
                 </div>
                 <div className="grid gap-4 sm:grid-cols-4">
                   <Field id="t-purpose" label="Purpose">
-                    <Select id="t-purpose" value={f.purpose} onChange={(e) => set("purpose", e.target.value as "INVITATION" | "UPDATE")}>
+                    <Select id="t-purpose" value={f.purpose} onChange={(e) => set("purpose", e.target.value as TemplateFormValues["purpose"])}>
                       <option value="INVITATION">Invitation</option>
                       <option value="UPDATE">Update</option>
+                      <option value="PAYMENT_REQUEST">Payment request</option>
+                      <option value="PAYMENT_RECEIPT">Payment receipt</option>
                     </Select>
                   </Field>
                   <Field id="t-locale" label="Serves">
@@ -382,7 +387,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
                   <Field id="t-urltext" label="Button text" optional={`(${urlText.length}/25)`} error={errors.urlText}>
                     <Input id="t-urltext" dir="auto" maxLength={25} value={urlText} onChange={(e) => setUrlText(e.target.value)} />
                   </Field>
-                  <Field id="t-url" label="Link" error={errors.url ?? errors.buttons} hint="Must end with {{1}} — replaced by the guest's invitation code.">
+                  <Field id="t-url" label="Link" error={errors.url ?? errors.buttons} hint={f.purpose === "UPDATE" ? "Must end with {{1}} — replaced by the guest's invitation code." : "Must end with {{1}} — replaced by the payment-link code (…/pay/{{1}})."}>
                     <Input id="t-url" dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)} className="tabular-nums" />
                   </Field>
                 </div>

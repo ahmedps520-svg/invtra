@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, type Order } from "@prisma/client";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { logError } from "@/server/log";
@@ -118,9 +118,14 @@ export async function confirmTapReturn(eventId: string, userId: string): Promise
     where: { eventId, userId, provider: "tap", providerRef: { not: null }, createdAt: { gte: new Date(Date.now() - 3 * 86_400_000) } },
     orderBy: { updatedAt: "desc" },
   });
-  if (!order?.providerRef) return null;
+  return order ? confirmTapOrder(order) : null;
+}
+
+/** Ask Tap about this order's latest charge (the customer just came back from Tap's page). */
+export async function confirmTapOrder(order: Pick<Order, "id" | "status" | "provider" | "providerRef">): Promise<"success" | "cancelled" | null> {
   if (order.status === "PAID") return "success";
   if (order.status !== "PENDING") return "cancelled";
+  if (order.provider !== "tap" || !order.providerRef) return null;
   try {
     const outcome = await settleTapCharge(await retrieveTapCharge(order.providerRef), "return");
     return outcome === "paid" ? "success" : outcome === "failed" ? "cancelled" : null;

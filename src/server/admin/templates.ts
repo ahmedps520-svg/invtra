@@ -1,4 +1,8 @@
 import { Prisma, type MessageTemplate } from "@prisma/client";
+
+/** What a template is for (see TemplatePurpose in prisma/schema.prisma). */
+export const TEMPLATE_PURPOSES = ["INVITATION", "UPDATE", "PAYMENT_REQUEST", "PAYMENT_RECEIPT"] as const;
+export type TemplatePurposeName = (typeof TEMPLATE_PURPOSES)[number];
 import { z } from "zod";
 import { db } from "@/server/db";
 import { badRequest, conflict, notFound } from "@/server/http";
@@ -28,7 +32,7 @@ const PLACEHOLDER = /\{\{(\d+)\}\}/g;
  * Returns field → message (empty when valid).
  */
 export function templateShapeErrors(t: {
-  purpose: "INVITATION" | "UPDATE";
+  purpose: TemplatePurposeName;
   body: string;
   variables: string[];
   footer?: string | null;
@@ -61,8 +65,11 @@ export function templateShapeErrors(t: {
     }
   } else {
     const b = url[0];
-    if (qr.length || url.length !== 1 || !b || b.type !== "URL") errors.buttons = "Update templates need exactly one URL button.";
-    else if (!/^https?:\/\/[^\s{}]+\{\{1\}\}$/.test(b.url)) errors["buttons.0.url"] = "The URL must be https://… and end with {{1}} (the invitation code).";
+    if (qr.length || url.length !== 1 || !b || b.type !== "URL") errors.buttons = "This kind of template needs exactly one URL button.";
+    else if (!/^https?:\/\/[^\s{}]+\{\{1\}\}$/.test(b.url)) {
+      errors["buttons.0.url"] =
+        t.purpose === "UPDATE" ? "The URL must be https://… and end with {{1}} (the invitation code)." : "The URL must be https://… and end with {{1}} (the payment-link code).";
+    }
   }
   return errors;
 }
@@ -79,7 +86,7 @@ const contentFields = {
     .regex(/^[a-z0-9_]+$/, "Lowercase letters, numbers and underscores only"),
   language: z.enum(TEMPLATE_LANGUAGES),
   locale: z.enum(["en", "ar", "bilingual"]),
-  purpose: z.enum(["INVITATION", "UPDATE"]),
+  purpose: z.enum(TEMPLATE_PURPOSES),
   category: z.enum(["UTILITY", "MARKETING"]),
   headerType: z.enum(["NONE", "IMAGE"]),
   body: z.string().trim().min(10, "Write the message").max(1024, "Max 1,024 characters"),

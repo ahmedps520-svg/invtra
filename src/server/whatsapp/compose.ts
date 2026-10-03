@@ -48,6 +48,9 @@ export function templateValues(event: EventForValues, guest: Pick<Guest, "name">
     venue: pick("venue", event.venueName),
     venue_ar: pick("venue_ar", event.venueNameAr || event.venueName),
     invitation_token: token,
+    customer_name: "",
+    package_amount: "",
+    receipt_number: "",
   };
 }
 

@@ -460,6 +460,8 @@ model InvitationTheme {
 enum TemplatePurpose {
   INVITATION // first contact: invitation text + Accept / Decline quick replies
   UPDATE // event changed: re-sends the invitation link (works outside the 24h window)
+  PAYMENT_REQUEST // custom package: payment link to the host (URL button /pay/{{1}})
+  PAYMENT_RECEIPT // payment confirmation with the receipt (URL button /pay/{{1}})
 }
 
 enum TemplateStatus {
@@ -556,6 +558,8 @@ enum MessagePurpose {
   DECLINE_ACK
   UPDATE
   REPLY // inbound button press / text
+  PAYMENT_REQUEST // to a host: payment link for a custom package
+  PAYMENT_RECEIPT // to a host: payment received + receipt
   OTHER
 }
 
@@ -677,17 +681,32 @@ model Order {
   amount      Int // minor units
   currency    String
   status      OrderStatus @default(PENDING)
-  provider    String // "mock" | "manual" | "stripe"
-  providerRef String? // e.g. Stripe Checkout Session id
+  provider    String // "mock" | "manual" | "stripe" | "tap"
+  providerRef String? // e.g. Stripe Checkout Session id, Tap charge id
   note        String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   paidAt      DateTime?
 
+  // Custom packages prepared by INVTRA staff (Admin → Custom events)
+  payToken      String?   @unique // secret for the public payment link /pay/<token>
+  title         String? // what the package includes, shown on the payment page and receipt
+  dueAt         DateTime?
+  createdById   String? // the admin who prepared it
+  requestSentAt DateTime? // last time the payment link was sent to the host
+
+  receiptNumber String? @unique // e.g. INVTRA-2026-0001, assigned when paid
+
   payments Payment[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+/** Sequential receipt numbers per calendar year (INVTRA-2026-0001, …). */
+model ReceiptCounter {
+  year Int @id
+  last Int @default(0)
 }
 
 model Payment {

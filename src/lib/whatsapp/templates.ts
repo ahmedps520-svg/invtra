@@ -17,6 +17,10 @@ export const TEMPLATE_VARIABLES = [
   "venue",
   "venue_ar",
   "invitation_token",
+  // Payment messages to a host (custom packages)
+  "customer_name",
+  "package_amount",
+  "receipt_number",
 ] as const;
 
 export type TemplateVariable = (typeof TEMPLATE_VARIABLES)[number];

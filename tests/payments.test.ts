@@ -54,6 +54,8 @@ afterAll(async () => {
       OR: [{ message: { contains: run } }, { source: "webhook:stripe", message: { startsWith: "Rejected Stripe webhook" } }, { source: "payments:amount_mismatch" }, { source: { in: ["payments:tap", "webhook:tap"] } }],
     },
   });
+  const orderIds = (await db.order.findMany({ where: { userId: { in: userIds } }, select: { id: true } })).map((o) => o.id);
+  await db.job.deleteMany({ where: { type: { startsWith: "payment." }, OR: orderIds.map((id) => ({ payload: { path: ["orderId"], equals: id } })) } });
   await db.user.deleteMany({ where: { id: { in: userIds } } }); // cascades events, orders, payments
 });
 

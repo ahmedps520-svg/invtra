@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { UNLIMITED_GUESTS } from "@/lib/plans";
 import { useEffect, useState } from "react";
 import { ArrowRight, Receipt } from "lucide-react";
 import { useI18n } from "@/components/i18n/provider";
@@ -28,15 +29,30 @@ type Order = {
   createdAt: string;
   paidAt: string | null;
   instructions?: string;
+  payUrl?: string;
+  receiptUrl?: string;
+  receiptNumber?: string | null;
 };
 
-const STATUS_TONE: Record<Order["status"], Tone> = { PENDING: "ochre", PAID: "sage", CANCELLED: "neutral", REFUNDED: "slate", FAILED: "rosewood" };
+const STATUS_TONE: Record<Order["status"], Tone> = {
+  PENDING: "ochre",
+  PAID: "sage",
+  CANCELLED: "neutral",
+  REFUNDED: "slate",
+  FAILED: "rosewood",
+};
 
 export function BillingPage({
   events,
   highlightOrder,
 }: {
-  events: { id: string; title: string; plan: "BASIC" | "PREMIUM" | "CUSTOM" | null; guestLimit: number; guests: number }[];
+  events: {
+    id: string;
+    title: string;
+    plan: "BASIC" | "PREMIUM" | "CUSTOM" | null;
+    guestLimit: number;
+    guests: number;
+  }[];
   highlightOrder: string | null;
 }) {
   const { dict, locale } = useI18n();
@@ -62,15 +78,24 @@ export function BillingPage({
 
   useEffect(() => {
     if (!highlightOrder || !orders) return;
-    document.getElementById(`order-${highlightOrder}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    document
+      .getElementById(`order-${highlightOrder}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightOrder, orders]);
 
-  const date = (iso: string) => formatDate(new Date(iso), { locale, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, style: "medium" });
+  const date = (iso: string) =>
+    formatDate(new Date(iso), {
+      locale,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      style: "medium",
+    });
 
   return (
     <div className="animate-fade-up space-y-12">
       <div className="max-w-2xl">
-        <h1 className="font-display text-4xl text-ink sm:text-5xl">{d.title}</h1>
+        <h1 className="font-display text-4xl text-ink sm:text-5xl">
+          {d.title}
+        </h1>
         <p className="mt-2 text-[15px] text-ink-soft">{d.intro}</p>
       </div>
 
@@ -105,12 +130,15 @@ export function BillingPage({
           {events.length ? (
             <ul className="divide-y divide-line">
               {events.map((e) => (
-                <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                <li
+                  key={e.id}
+                  className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+                >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-ink">{e.title}</p>
                     <p className="mt-0.5 text-[13px] text-ink-faint">
                       {e.plan
-                        ? `${dict.common.plans[e.plan]} · ${fmt(d.guestLimit, { n: formatNumber(e.guestLimit, locale) })}`
+                        ? `${dict.common.plans[e.plan]} · ${e.guestLimit >= UNLIMITED_GUESTS ? d.unlimited : fmt(d.guestLimit, { n: formatNumber(e.guestLimit, locale) })}`
                         : dict.dashboard.header.noPlan}
                       {" · "}
                       {plural(locale, dict.dashboard.events.guests, e.guests)}
@@ -143,7 +171,11 @@ export function BillingPage({
             ordersError ? (
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-5 text-sm text-ink-soft">
                 {d.loadError}
-                <Button variant="outline" size="sm" onClick={() => setAttempt((a) => a + 1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAttempt((a) => a + 1)}
+                >
                   {dict.common.actions.retry}
                 </Button>
               </div>
@@ -165,37 +197,66 @@ export function BillingPage({
               <table className="hidden w-full text-sm md:table">
                 <thead>
                   <tr className="border-b border-line bg-ivory/70 text-[11px] uppercase tracking-[0.14em] text-ink-faint">
-                    <th className="px-6 py-3 text-start font-medium">{d.columns.date}</th>
-                    <th className="px-3 py-3 text-start font-medium">{d.columns.event}</th>
-                    <th className="px-3 py-3 text-start font-medium">{d.columns.plan}</th>
-                    <th className="px-3 py-3 text-end font-medium">{d.columns.amount}</th>
-                    <th className="px-6 py-3 text-end font-medium">{d.columns.status}</th>
+                    <th className="px-6 py-3 text-start font-medium">
+                      {d.columns.date}
+                    </th>
+                    <th className="px-3 py-3 text-start font-medium">
+                      {d.columns.event}
+                    </th>
+                    <th className="px-3 py-3 text-start font-medium">
+                      {d.columns.plan}
+                    </th>
+                    <th className="px-3 py-3 text-end font-medium">
+                      {d.columns.amount}
+                    </th>
+                    <th className="px-6 py-3 text-end font-medium">
+                      {d.columns.status}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((o) => (
-                    <OrderRows key={o.id} order={o} highlight={o.id === highlightOrder} date={date} />
+                    <OrderRows
+                      key={o.id}
+                      order={o}
+                      highlight={o.id === highlightOrder}
+                      date={date}
+                    />
                   ))}
                 </tbody>
               </table>
               <ul className="divide-y divide-line md:hidden">
                 {orders.map((o) => (
-                  <li key={o.id} id={`order-m-${o.id}`} className={cn("px-5 py-4", o.id === highlightOrder && "bg-bronze-50/70")}>
+                  <li
+                    key={o.id}
+                    id={`order-m-${o.id}`}
+                    className={cn(
+                      "px-5 py-4",
+                      o.id === highlightOrder && "bg-bronze-50/70",
+                    )}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-ink">{o.eventTitle ?? d.deletedEvent}</p>
+                        <p className="truncate font-medium text-ink">
+                          {o.eventTitle ?? d.deletedEvent}
+                        </p>
                         <p className="mt-0.5 text-[13px] text-ink-faint">
                           {date(o.createdAt)} · {dict.common.plans[o.plan]}
                         </p>
                       </div>
                       <div className="text-end">
-                        <p className="font-medium text-ink tabular-nums">{formatMoney(o.amount, o.currency, locale)}</p>
+                        <p className="font-medium text-ink tabular-nums">
+                          {formatMoney(o.amount, o.currency, locale)}
+                        </p>
                         <Badge tone={STATUS_TONE[o.status]} className="mt-1">
                           {d.status[o.status]}
                         </Badge>
+                        <OrderLinks order={o} />
                       </div>
                     </div>
-                    {o.instructions ? <Instructions text={o.instructions} /> : null}
+                    {o.instructions ? (
+                      <Instructions text={o.instructions} />
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -207,28 +268,82 @@ export function BillingPage({
   );
 }
 
-function OrderRows({ order: o, highlight, date }: { order: Order; highlight: boolean; date: (iso: string) => string }) {
+/** "Pay now" for a payment link, "Receipt" once paid. */
+function OrderLinks({ order: o }: { order: Order }) {
+  const { dict } = useI18n();
+  const d = dict.dashboard.billing;
+  if (o.payUrl) {
+    return (
+      <a
+        href={o.payUrl}
+        className="mt-1.5 block text-[12.5px] font-medium text-bronze-700 underline-offset-4 hover:underline"
+      >
+        {d.payNow}
+      </a>
+    );
+  }
+  if (o.receiptUrl) {
+    return (
+      <a
+        href={o.receiptUrl}
+        target="_blank"
+        rel="noopener"
+        className="mt-1.5 block text-[12.5px] font-medium text-bronze-700 underline-offset-4 hover:underline"
+      >
+        {d.receipt}
+      </a>
+    );
+  }
+  return null;
+}
+
+function OrderRows({
+  order: o,
+  highlight,
+  date,
+}: {
+  order: Order;
+  highlight: boolean;
+  date: (iso: string) => string;
+}) {
   const { dict, locale } = useI18n();
   const d = dict.dashboard.billing;
   return (
     <>
-      <tr id={`order-${o.id}`} className={cn("border-t border-line first:border-t-0", highlight && "bg-bronze-50/70")}>
+      <tr
+        id={`order-${o.id}`}
+        className={cn(
+          "border-t border-line first:border-t-0",
+          highlight && "bg-bronze-50/70",
+        )}
+      >
         <td className="px-6 py-3.5 text-ink-soft">{date(o.createdAt)}</td>
         <td className="px-3 py-3.5">
           {o.eventId && o.eventTitle ? (
-            <Link href={stepHref(o.eventId, "overview")} className="font-medium text-ink hover:text-bronze-700">
+            <Link
+              href={stepHref(o.eventId, "overview")}
+              className="font-medium text-ink hover:text-bronze-700"
+            >
               {o.eventTitle}
             </Link>
           ) : (
-            <span className="text-ink-faint">{o.eventTitle ?? d.deletedEvent}</span>
+            <span className="text-ink-faint">
+              {o.eventTitle ?? d.deletedEvent}
+            </span>
           )}
         </td>
         <td className="px-3 py-3.5 text-ink-soft">
-          {dict.common.plans[o.plan]} · {fmt(d.guestLimit, { n: formatNumber(o.guestLimit, locale) })}
+          {dict.common.plans[o.plan]} ·{" "}
+          {o.guestLimit >= UNLIMITED_GUESTS
+            ? d.unlimited
+            : fmt(d.guestLimit, { n: formatNumber(o.guestLimit, locale) })}
         </td>
-        <td className="px-3 py-3.5 text-end font-medium text-ink tabular-nums">{formatMoney(o.amount, o.currency, locale)}</td>
+        <td className="px-3 py-3.5 text-end font-medium text-ink tabular-nums">
+          {formatMoney(o.amount, o.currency, locale)}
+        </td>
         <td className="px-6 py-3.5 text-end">
           <Badge tone={STATUS_TONE[o.status]}>{d.status[o.status]}</Badge>
+          <OrderLinks order={o} />
         </td>
       </tr>
       {o.instructions ? (
@@ -246,7 +361,9 @@ function Instructions({ text }: { text: string }) {
   const { dict } = useI18n();
   return (
     <div className="mt-2 rounded-xl border border-ochre/25 bg-ochre-soft/60 px-4 py-3">
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-ochre">{dict.dashboard.billing.instructions}</p>
+      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-ochre">
+        {dict.dashboard.billing.instructions}
+      </p>
       <p className="mt-1 whitespace-pre-line text-sm text-ink-soft" dir="auto">
         {text}
       </p>

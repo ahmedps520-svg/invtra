@@ -5,7 +5,7 @@ import { db } from "@/server/db";
 import { badRequest, conflict } from "@/server/http";
 import { recordActivity } from "@/server/activity";
 import { normalizePhone } from "@/lib/phone";
-import { MAX_GUESTS_PER_EVENT } from "@/lib/plans";
+import { MAX_GUESTS_PER_EVENT, guestCapacity } from "@/lib/plans";
 import { guestInputSchema, type GuestInput } from "@/lib/validation/guest";
 import { invitationUrl } from "@/server/invitations";
 import { cancelPendingJobs } from "@/server/queue/queue";
@@ -15,9 +15,13 @@ export { TIMEZONE_COUNTRY } from "@/lib/timezone-country";
 export const defaultCountryFor = countryForTimezone;
 
 async function assertCapacity(eventId: string, adding: number) {
-  const count = await db.guest.count({ where: { eventId, isTest: false } });
-  if (count + adding > MAX_GUESTS_PER_EVENT) {
-    throw badRequest("too_many_guests", `An event can have at most ${MAX_GUESTS_PER_EVENT} guests.`);
+  const [count, event] = await Promise.all([
+    db.guest.count({ where: { eventId, isTest: false } }),
+    db.event.findUnique({ where: { id: eventId }, select: { plan: true, guestLimit: true } }),
+  ]);
+  const cap = event ? guestCapacity(event) : MAX_GUESTS_PER_EVENT;
+  if (count + adding > cap) {
+    throw badRequest("too_many_guests", `An event can have at most ${cap} guests.`);
   }
 }
 
@@ -158,7 +162,9 @@ export async function previewImport(eventId: string, file: { name: string; data:
     body = rows;
     firstRowNumber = 1;
   }
-  if (body.length > MAX_GUESTS_PER_EVENT) throw badRequest("too_many_rows", `A file can contain at most ${MAX_GUESTS_PER_EVENT} guests.`);
+  const event = await db.event.findUnique({ where: { id: eventId }, select: { plan: true, guestLimit: true } });
+  const cap = Math.min(event ? guestCapacity(event) : MAX_GUESTS_PER_EVENT, 50_000);
+  if (body.length > cap) throw badRequest("too_many_rows", `A file can contain at most ${cap} guests.`);
 
   const existing = new Set((await db.guest.findMany({ where: { eventId }, select: { phone: true } })).map((g) => g.phone));
   const seen = new Set<string>();

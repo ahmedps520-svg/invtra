@@ -475,6 +475,7 @@ export const dashboard = {
     checkedInWith: "{name} checked in · party of {n}",
     planPurchased: "{plan} plan activated",
     planPurchasedGeneric: "Your plan is active",
+    customOffered: "Your custom package is ready to pay",
     unknown: "Event updated",
   },
   failures: {
@@ -831,6 +832,7 @@ export const dashboard = {
       description: "A one-time price per event. No subscription.",
       current: "{plan} plan",
       covers: "Up to {limit} guests · {used} on your list",
+      coversUnlimited: "Unlimited guests · {used} on your list",
       upgradeTitle: "Need more room or a Premium design?",
       choose: "Choose {plan}",
       upgrade: "Upgrade to {plan}",
@@ -956,6 +958,9 @@ export const dashboard = {
     instructions: "How to pay",
     deletedEvent: "Deleted event",
     guestLimit: "Up to {n} guests",
+    unlimited: "Unlimited guests",
+    payNow: "Pay now",
+    receipt: "Receipt",
     loadError: "We couldn't load your billing details right now.",
   },
   settings: {
