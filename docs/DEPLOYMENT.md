@@ -127,6 +127,10 @@ landing pages per occasion (`/invitations/wedding`, `/invitations/newborn`, …)
    and use *URL inspection* → *Request indexing* on the home page and `/ar`.
    (Alternative: the "HTML tag" method — put the `content` value in the Render env var
    `GOOGLE_SITE_VERIFICATION`.)
+
+**Meta (Facebook) domain verification** — Business Settings → Brand safety → Domains → Add
+invtra.store → choose *Meta-tag verification* → copy the `content` value into
+`META_DOMAIN_VERIFICATION` on Render, wait for the redeploy, then press *Verify*.
 2. **Bing Webmaster Tools** (bing.com/webmasters) → *Import from Google Search Console*
    (this also covers DuckDuckGo and Yahoo, and ChatGPT search uses Bing's index).
 3. **Google Business Profile** (business.google.com) if you serve customers in a region —

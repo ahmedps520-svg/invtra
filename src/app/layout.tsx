@@ -29,10 +29,13 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image", images: ["/og/home-en.png"] },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
-  // Search Console / Bing Webmaster ownership (set the values from their "HTML tag" method).
+  // Search Console / Bing Webmaster / Meta domain ownership (values from their "HTML tag" / "Meta-tag" method).
   verification: {
     ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
-    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+    other: {
+      ...(process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : {}),
+      ...(process.env.META_DOMAIN_VERIFICATION ? { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION } : {}),
+    },
   },
 };
 
