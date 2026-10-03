@@ -161,6 +161,19 @@ name and venue read), which keeps every message inside the approved template.
   guest *Failed* with a plain-language reason; systemic errors stop the batch.
 - Uploaded media ids are cached for 25 days (WhatsApp keeps them 30).
 
+## Sending from the host's own WhatsApp
+
+Until INVTRA's number is live (or whenever a host prefers), the Send step has a second tab,
+**From my own WhatsApp**. Each guest gets a `https://wa.me/<number>?text=…` link that opens the
+host's WhatsApp on that chat with the invitation text and the guest's personal link typed in;
+the host presses send themselves — nothing is automated, so no Meta setup is involved.
+
+- Pressing it records `Guest.manualSentAt` and counts the guest as sent (so INVTRA's own sending
+  never messages them again).
+- Those guests reply on their invitation page — always allowed for them, even when the event
+  only accepts replies through WhatsApp buttons. The link preview shows the invitation design.
+- A paid plan is required, exactly as for sending through INVTRA.
+
 ## Development without WhatsApp
 
 `WHATSAPP_PROVIDER=mock` sends nothing. Open **/dev/whatsapp** (signed in) to see every

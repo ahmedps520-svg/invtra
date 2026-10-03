@@ -323,6 +323,7 @@ model Guest {
   deliveryErrorCode String?
 
   requestSentAt         DateTime? // template with Accept / Decline was sent
+  manualSentAt          DateTime? // the host sent the invitation link from their own WhatsApp (they reply on the website)
   invitationSentAt      DateTime? // personalised invitation image was sent
   invitationSentVersion Int? // Event.contentVersion that was delivered
   lastInboundAt         DateTime? // last message from the guest (opens the 24h service window)

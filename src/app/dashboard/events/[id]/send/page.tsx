@@ -7,6 +7,9 @@ import { cardPreviewProps } from "@/server/events/preview";
 import { sendReadiness } from "@/server/sending/service";
 import { messagePreview } from "@/server/sending/preview";
 import { SendPanel } from "@/components/dashboard/send-panel";
+import { ManualSendPanel, SendModes } from "@/components/dashboard/manual-send";
+import { manualReadiness, manualSendList } from "@/server/sending/manual";
+import { env } from "@/server/env";
 import { themeName } from "@/components/dashboard/i18n";
 
 export async function generateMetadata() {
@@ -21,13 +24,18 @@ export default async function SendPage({ params }: { params: Promise<{ id: strin
   if (!event) notFound();
   const { dict, locale } = await getI18n();
 
-  const [readiness, preview, message, latest, failedCount] = await Promise.all([
+  const [readiness, preview, message, latest, failedCount, manualReady, manualGuests] = await Promise.all([
     sendReadiness(event),
     cardPreviewProps(event),
     messagePreview(event),
     db.sendBatch.findFirst({ where: { eventId: event.id, kind: { in: ["INITIAL", "RESEND"] } }, orderBy: { createdAt: "desc" } }),
     db.guest.count({ where: { eventId: event.id, isTest: false, status: "FAILED" } }),
+    manualReadiness(event),
+    manualSendList(event),
   ]);
+  // Until INVTRA's own WhatsApp number is connected (preview mode), sending from the host's
+  // WhatsApp is the way invitations actually reach guests, so it opens first.
+  const previewMode = env().WHATSAPP_PROVIDER === "mock";
   const template = message.template;
   const templateName = template
     ? locale === "ar"
@@ -35,7 +43,7 @@ export default async function SendPage({ params }: { params: Promise<{ id: strin
       : template.name
     : null;
 
-  return (
+  const invtra = (
     <SendPanel
       eventId={event.id}
       ready={readiness.ready}
@@ -56,6 +64,15 @@ export default async function SendPage({ params }: { params: Promise<{ id: strin
           ? { id: latest.id, total: latest.total, sent: latest.sent, failed: latest.failed, skipped: latest.skipped, status: latest.status, kind: latest.kind }
           : null
       }
+    />
+  );
+
+  return (
+    <SendModes
+      defaultMode={previewMode || manualGuests.some((g) => g.manualSentAt) ? "manual" : "invtra"}
+      previewMode={previewMode}
+      invtra={invtra}
+      manual={<ManualSendPanel eventId={event.id} ready={manualReady.ready} guests={manualGuests} />}
     />
   );
 }

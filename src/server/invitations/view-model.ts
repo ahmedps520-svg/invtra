@@ -30,7 +30,7 @@ export function mapsLinks(event: Pick<Event, "mapsUrl" | "venueName" | "address"
 /** Build the invitation page view model. `guest` null renders a non-personal page. */
 export async function buildInvitationVM(opts: {
   event: FullEvent;
-  guest: (Pick<Guest, "name" | "allowedCount" | "attendingCount" | "rsvpStatus" | "checkedInAt" | "checkedInCount" | "scanCount" | "locale">) | null;
+  guest: (Pick<Guest, "name" | "allowedCount" | "attendingCount" | "rsvpStatus" | "checkedInAt" | "checkedInCount" | "scanCount" | "locale"> & Partial<Pick<Guest, "manualSentAt">>) | null;
   token: string | null;
   mode: InvitationVM["mode"];
   themeKey?: ThemeKey;
@@ -104,7 +104,8 @@ export async function buildInvitationVM(opts: {
           }
         : null,
       rsvpOpen: !rsvpDeadlinePassed(event, now) && (event.endsAt ?? event.startsAt) > now,
-      allowWebRsvp: event.allowWebRsvp,
+      // Guests invited from the host's own WhatsApp have no reply buttons, so they reply here.
+      allowWebRsvp: event.allowWebRsvp || Boolean(guest?.manualSentAt),
       past: (event.endsAt ?? new Date(event.startsAt.getTime() + 6 * 3600_000)) < now,
       schedule: event.scheduleItems.map((s) => ({
         time: { en: formatWallTime(s.time, "en"), ar: formatWallTime(s.time, "ar", digits) },
