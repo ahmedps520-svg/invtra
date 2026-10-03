@@ -34,6 +34,13 @@ export function Dialog({
   const { dict } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
+  // Parents usually pass a new onClose function on every render (e.g. while the user types).
+  // Reading it through a ref keeps the open/focus effect below from re-running — which would
+  // otherwise yank focus back to the first field on every keystroke.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +54,7 @@ export function Dialog({
       (el ?? panelRef.current)?.focus();
     }, 30);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
       if (e.key === "Tab" && panelRef.current) {
         const focusables = panelRef.current.querySelectorAll<HTMLElement>(
           'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -71,7 +78,7 @@ export function Dialog({
       document.removeEventListener("keydown", onKey);
       lastFocus.current?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (typeof document === "undefined") return null;
 
