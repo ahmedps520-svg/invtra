@@ -23,15 +23,47 @@ template. Outside that window (e.g. "send update" weeks later) the approved
 
 ## 1. Meta setup (one time)
 
-1. Create a **Meta Business** account and a **Meta App** (type *Business*) at
-   developers.facebook.com, add the **WhatsApp** product.
-2. In **WhatsApp Manager** add and verify INVTRA's sender phone number and display name
-   (e.g. "INVTRA"). Note the **Phone number ID** and **WhatsApp Business Account ID**.
-3. Create a **System User** (Business Settings → Users → System users), give it the app and
-   the WABA with `whatsapp_business_messaging` + `whatsapp_business_management`, and generate a
-   **permanent access token**.
-4. App → Settings → Basic: copy the **App Secret** (and App ID).
-5. Set the environment:
+Checked against Meta's docs on 3 October 2026 (developers.facebook.com/documentation/business-messaging/whatsapp/).
+
+### Which phone number sends
+
+The sender number must be registered on the **Cloud API**. A number that is in use on the
+**WhatsApp Business app** can't simply be added:
+
+- **Coexistence** (same number on the app *and* the API) is only offered through Embedded
+  Signup by Meta Solution Partners / Tech Providers — not to a business connecting its own app.
+- **Moving the number**: delete the account in the WhatsApp Business app (Settings → Account →
+  Delete account; back up chats first — the history is lost), wait a few minutes, then add the
+  number in Meta. It then works only through the API; INVTRA has no inbox for typing replies.
+- **Recommended:** keep the app number for talking to customers, and give INVTRA a second
+  number (a new SIM or landline that can receive an SMS or call and is not on WhatsApp).
+
+### Steps
+
+1. **developers.facebook.com → Create app** → use case *Connect with customers through
+   WhatsApp* → choose (or create) INVTRA's business portfolio.
+2. App → **WhatsApp → API Setup** → *Add phone number*: display name "INVTRA", category, then the
+   SMS/voice code. Note the **Phone number ID** and the **WhatsApp Business Account ID**
+   (Meta now calls it the *Messaging account ID* — same number, same API).
+3. **Register** the number for the Cloud API (only possible by API) with a 6-digit PIN you
+   choose (it becomes the number's two-step verification PIN):
+
+   ```
+   curl -X POST "https://graph.facebook.com/v23.0/<PHONE_NUMBER_ID>/register" \
+     -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" \
+     -d '{"messaging_product":"whatsapp","pin":"<6 digits>"}'
+   ```
+4. **Business Settings → Users → System users** → add a system user (Admin) → *Assign assets*:
+   the app and the WhatsApp account (full control) → *Generate token* (never expires) with
+   `business_management`, `whatsapp_business_messaging`, `whatsapp_business_management`.
+5. App → **Settings → Basic**: copy the **App ID** and **App secret**.
+6. **WhatsApp Manager → Payment settings**: add a payment method (SAR is supported). Without
+   one, template sends fail (error 131042).
+7. **Business verification** (Business Settings → Security Center, with the Commercial
+   Registration): new portfolios can message **250** different people per 24 hours; verifying
+   raises it to **2,000** at once (it also rises with good-quality volume), then 10K → 100K →
+   unlimited automatically.
+8. Set the environment on the server (Render → invtra → Environment):
 
 ```
 WHATSAPP_PROVIDER=cloud
@@ -43,14 +75,27 @@ WHATSAPP_VERIFY_TOKEN=…        # any random string
 WHATSAPP_APP_ID=…              # only for submitting IMAGE-header templates from the admin
 ```
 
+### Cost (per delivered message, Saudi Arabia, from 1 October 2026)
+
+| Category | SAR | USD |
+| --- | --- | --- |
+| Marketing | 0.2159 | 0.0576 |
+| Utility | 0.0401 | 0.0107 |
+| Service replies (after 1,000 free per month) | 0.0401 | 0.0107 |
+
+INVTRA submits invitations as **Utility**, but Meta may approve them as **Marketing** (its own
+Marketing example is an event invitation) — the category is decided by Meta at approval.
+
 ## 2. Webhook
 
-In the Meta App → WhatsApp → Configuration:
+In the Meta App → WhatsApp → Configuration (Use cases → Customize → Configuration):
 
 - **Callback URL:** `https://invtra.store/api/webhooks/whatsapp`
 - **Verify token:** the value of `WHATSAPP_VERIFY_TOKEN`
 - Subscribe to the **messages** field (delivers incoming button replies *and* outgoing
   message statuses: sent / delivered / read / failed).
+- If no events arrive, subscribe the app to the WhatsApp account once:
+  `curl -X POST "https://graph.facebook.com/v23.0/<WABA_ID>/subscribed_apps" -H "Authorization: Bearer <ACCESS_TOKEN>"`
 
 Every POST is authenticated with `X-Hub-Signature-256` (HMAC-SHA256 of the raw body with the
 App Secret) before it is parsed; invalid signatures get 401. Deliveries are de-duplicated, so
