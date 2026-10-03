@@ -70,6 +70,7 @@ export const dashboard = {
     noPlan: "No plan yet",
     plan: "{plan} plan",
     sent: "Invitations sent",
+    viewGuestPage: "View guest page",
   },
   events: {
     greeting: "Welcome back, {name}",

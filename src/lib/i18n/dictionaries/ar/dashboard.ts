@@ -57,6 +57,7 @@ export const dashboard: typeof en = {
     noPlan: "لم تُختر باقة بعد",
     plan: "باقة {plan}",
     sent: "أُرسلت الدعوات",
+    viewGuestPage: "عرض صفحة الضيف",
   },
   events: {
     greeting: "أهلًا بعودتك، {name}",

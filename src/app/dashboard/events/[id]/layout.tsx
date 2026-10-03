@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
+import { ArrowLeft, CalendarDays, ExternalLink, MapPin } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
 import { findOwnedEvent } from "@/server/events/access";
 import { formatDate, formatTime } from "@/lib/format";
 import { fmt } from "@/lib/i18n/config";
 import { Badge } from "@/components/ui/badge";
+import { buttonClasses } from "@/components/ui/button";
 import { EventStepNav } from "@/components/dashboard/event-steps";
 import { loadSteps } from "../../_lib/progress";
 
@@ -51,6 +52,11 @@ export default async function EventLayout({ children, params }: { children: Reac
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
+            {/* The guest website exactly as an accepted guest sees it (sample guest, full screen). */}
+            <a href={`/preview/${event.id}`} target="_blank" rel="noopener" className={buttonClasses("outline", "sm")}>
+              <ExternalLink className="size-3.5" />
+              {d.header.viewGuestPage}
+            </a>
             {event.firstSentAt ? (
               <Badge tone="sage" dot>
                 {d.header.sent}

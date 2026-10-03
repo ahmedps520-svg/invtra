@@ -8,6 +8,7 @@ import { buildInvitationVM } from "@/server/invitations/view-model";
 import { InvitationExperience } from "@/components/invitation/experience";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
 import { pageMetadata } from "@/components/marketing/seo";
+import { appUrl } from "@/server/env";
 import { localePath } from "@/lib/i18n/routing";
 
 type Props = { params: Promise<{ key: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -59,7 +60,8 @@ export default async function DesignDemoPage({ params, searchParams }: Props) {
     },
     token: null,
     mode: "demo",
-    qrText: "HTTPS://INVTRA.STORE/Q/SAMPLE0000",
+    // Scanning the sample pass opens this demo on the phone.
+    qrText: appUrl(localePath(locale, `/designs/${key}`)),
   });
   return <InvitationExperience vm={{ ...vm, demoBackHref: localePath(locale, "/designs") }} />;
 }

@@ -235,3 +235,16 @@ describe("language-specific marketing URLs", async () => {
     expect(isLocalizedPath("/i/ABC")).toBe(false);
   });
 });
+
+describe("QR code redirect", () => {
+  it("sends guests to the public address, never the server's internal origin", async () => {
+    const { NextRequest } = await import("next/server");
+    const { GET } = await import("@/app/Q/[token]/route");
+    const { env } = await import("@/server/env");
+    // Behind Render's proxy the request URL is the internal origin.
+    const req = new NextRequest("https://localhost:10000/Q/8F3K92QXHT", { headers: { "user-agent": "curl/8" } });
+    const res = await GET(req, { params: Promise.resolve({ token: "8f3k92qxht" }) });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe(new URL("/i/8F3K92QXHT?via=qr", env().APP_URL).toString());
+  });
+});

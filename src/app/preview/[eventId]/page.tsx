@@ -5,6 +5,7 @@ import { findOwnedEvent } from "@/server/events/access";
 import { buildInvitationVM } from "@/server/invitations/view-model";
 import { InvitationExperience } from "@/components/invitation/experience";
 import { isThemeKey } from "@/lib/themes/registry";
+import { appUrl } from "@/server/env";
 
 export const metadata: Metadata = { title: "Preview", robots: { index: false, follow: false } };
 
@@ -41,7 +42,8 @@ export default async function PreviewPage({ params, searchParams }: Props) {
     token: null,
     mode: "preview",
     themeKey: theme,
-    qrText: "HTTPS://INVTRA.STORE/Q/SAMPLE0000",
+    // Scanning the sample pass with a phone opens this same preview there (sign-in required).
+    qrText: appUrl(`/preview/${event.id}`),
   });
   return <InvitationExperience vm={vm} />;
 }

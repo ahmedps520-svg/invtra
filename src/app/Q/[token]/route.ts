@@ -4,6 +4,7 @@ import { clientIp } from "@/server/http";
 import { rateLimit } from "@/server/security/rate-limit";
 import { recordScan } from "@/server/invitations/public";
 import { BOT_UA } from "@/server/invitations/public";
+import { appUrl } from "@/server/env";
 
 /**
  * Target of every guest's QR code (upper-case so the QR stays small and robust).
@@ -20,7 +21,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ token: stri
     const inv = await recordScanForViewer(token, user?.id ?? null, user?.role === "ADMIN");
     checkin = inv?.byHost ?? false;
   }
-  const url = new URL(`/i/${token}`, req.url);
+  // Build the target from the public address: behind Render's proxy req.url is the internal
+  // origin (https://localhost:10000), which a guest's phone cannot open.
+  const url = new URL(appUrl(`/i/${encodeURIComponent(token)}`));
   url.searchParams.set("via", "qr");
   if (checkin) url.searchParams.set("checkin", "1");
   return NextResponse.redirect(url, 302);
