@@ -109,9 +109,14 @@ export const common: typeof en = {
   footer: {
     rights: "جميع الحقوق محفوظة.",
     privacy: "الخصوصية",
-    terms: "الشروط",
+    terms: "الشروط والأحكام",
+    refunds: "سياسة الاسترداد",
     contact: "تواصل معنا",
     madeFor: "صُممت لمناسبات لا تُنسى.",
+    developedBy: "تطوير",
+    operatedBy: "تديرها",
+    cr: "السجل التجاري",
+    vat: "الرقم الضريبي",
   },
   notFound: {
     title: "يبدو أن هذه الصفحة غير موجودة",

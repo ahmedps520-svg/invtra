@@ -14,8 +14,8 @@ export const marketing = {
       "Simple, one-time pricing per event. WhatsApp messaging included, a personal QR code for every guest, and three free test sends to your own number.",
     privacyTitle: "Privacy Policy",
     privacyDescription: "How INVTRA handles your account, your event and your guests' information.",
-    termsTitle: "Terms of Service",
-    termsDescription: "The terms for using INVTRA to create and send digital invitations.",
+    termsTitle: "Terms & Conditions",
+    termsDescription: "The terms for using INVTRA: plans and payments in SAR, refunds and cancellations, acceptable use, and your guests' data.",
   },
 
   nav: {
@@ -254,6 +254,7 @@ export const marketing = {
       },
     },
     included: "Every plan includes WhatsApp messaging, a personal invitation website for each guest, and Arabic & English.",
+    payWith: "Prices in Saudi riyals, VAT included where applicable. Pay securely with Apple Pay, Google Pay, mada, Visa or Mastercard.",
     testSends: "Every event includes {count} free test sends to your own WhatsApp number — see exactly what your guests receive before you choose a plan.",
   },
 
@@ -388,7 +389,7 @@ export const marketing = {
   legal: {
     eyebrow: "Legal",
     updatedLabel: "Last updated",
-    updated: "2 October 2026",
+    updated: "3 October 2026",
     contents: "On this page",
     questions: "Questions about this page? Write to {email}.",
     privacy: {
@@ -488,30 +489,33 @@ export const marketing = {
       ] as LegalSection[],
     },
     terms: {
-      title: "Terms of Service",
+      title: "Terms & Conditions",
       intro: [
-        "These terms govern your use of INVTRA. By creating an account or sending invitations, you agree to them. We have written them to be fair and easy to read.",
+        "These Terms & Conditions (the \"Terms\") govern your use of INVTRA at invtra.store (\"INVTRA\", \"we\", \"us\"). By creating an account, buying a plan or sending invitations, you agree to them. Please read them carefully — we have written them to be fair and easy to understand.",
+        "These Terms are published in Arabic and English. If the two versions ever differ, the Arabic version prevails.",
       ],
       sections: [
         {
           id: "service",
           heading: "The service",
           body: [
-            "INVTRA lets you design digital invitations, send them to your guests through WhatsApp, collect their replies, and welcome them at the door with personal QR codes.",
+            "INVTRA lets you design digital invitations for weddings, new babies, birthdays, Ramadan gatherings, corporate events and other occasions; send them to your guests through the official WhatsApp Business Platform; collect their replies; and welcome them at the door with personal QR codes.",
           ],
         },
         {
-          id: "account",
-          heading: "Your account",
+          id: "eligibility",
+          heading: "Eligibility and your account",
           body: [
-            "You must be at least 18 years old and provide accurate information. Keep your password safe — you are responsible for activity on your account. Tell us straight away if you believe someone else has accessed it.",
+            "You must be at least 18 years old and able to enter into a binding contract. If you use INVTRA for a company or organisation, you confirm that you are authorised to accept these Terms on its behalf.",
+            "Provide accurate information and keep your password safe — you are responsible for all activity on your account. Tell us straight away at contact@invtra.store if you believe someone else has accessed it.",
           ],
         },
         {
-          id: "consent",
-          heading: "Consent to message your guests",
+          id: "guests",
+          heading: "Your guests and their data",
           body: [
-            "You may only send invitations to people you know, whom you are genuinely inviting, and who would expect to hear from you. You are responsible for having the right to share their names and numbers with us for this purpose.",
+            "You may only send invitations to people you are genuinely inviting and who would expect to hear from you. When you add guests, you confirm that you have the right to share their names and phone numbers with us for the purpose of inviting them, in line with applicable law, including the Saudi Personal Data Protection Law.",
+            "We use guest information only to deliver your invitations and replies — never for marketing. Guests can ask you or us to correct or remove their details at any time. How we handle personal data is described in our Privacy Policy.",
           ],
         },
         {
@@ -519,64 +523,110 @@ export const marketing = {
           heading: "Acceptable use",
           body: ["INVTRA is for invitations only. You agree not to:"],
           list: [
-            "send spam, marketing or promotional messages of any kind;",
-            "message people who are not invited to your event;",
-            "send content that is unlawful, hateful, harassing or misleading;",
-            "upload content you do not have the right to use;",
-            "attempt to access other people's data, disrupt the service or probe its security;",
+            "send spam, advertising or promotional messages of any kind;",
+            "message people who are not invited to your event, or keep messaging guests who ask you to stop;",
+            "send content that is unlawful, offensive, hateful, harassing, misleading or that violates public morals in the Kingdom of Saudi Arabia;",
+            "impersonate another person or organisation, or upload content you do not have the right to use;",
+            "attempt to access other people's data, disrupt the service, or probe its security;",
             "break WhatsApp's Business and Commerce policies.",
           ],
-          after: ["We may pause sending or suspend an account that breaks these rules, to protect guests and the service."],
+          after: ["We may pause sending, remove content or suspend an account that breaks these rules, to protect guests and the service."],
         },
         {
           id: "payments",
-          heading: "Plans and payments",
+          heading: "Prices and payment",
           body: [
-            "Plans are bought per event as a one-time payment; the price is always shown before you pay. WhatsApp messaging for your plan's guest allowance is included. Every event includes 3 free test sends to your own number before you buy.",
-            "Because messages go out as soon as you send them, payments are non-refundable once invitations have been sent, except where the law requires otherwise. If something goes wrong on our side, contact us and we will make it right.",
+            "Plans are bought per event as a one-time payment — there are no subscriptions. Prices are shown in Saudi riyals (SAR) and include value-added tax (VAT) where applicable. The price is always shown before you pay, and an upgrade costs only the difference from the plan you already have.",
+            "Payments are processed securely by our licensed payment provider. Depending on your device and bank you can pay with Apple Pay, Google Pay, mada, Visa or Mastercard. INVTRA never sees or stores your full card number. Your plan is activated as soon as the payment provider confirms the payment, and a receipt is sent to your email.",
+            "Every event includes 3 free test sends to your own WhatsApp number, so you can see exactly what your guests will receive before you pay. Prices may change in the future, but a change never affects a plan you have already bought.",
+          ],
+        },
+        {
+          id: "refunds",
+          heading: "Refunds and cancellations",
+          body: ["We want you to be happy with your invitations. Our refund policy is:"],
+          list: [
+            "Before any invitation is sent to your guests (free test sends to your own number don't count), you may cancel and receive a full refund within 14 days of payment.",
+            "Once invitations have been sent to guests, the service has been performed and the payment is non-refundable, because the messages cannot be recalled.",
+            "If INVTRA fails to deliver the service because of a fault on our side, we will fix it or refund you in full or in part, in proportion to the problem.",
+            "If you are charged twice for the same order, the duplicate payment is refunded in full.",
+            "Custom plans follow the terms agreed in your quote.",
+          ],
+          after: [
+            "To request a refund, email contact@invtra.store from your account's email address with your event name or order number. We reply within 3 business days. Approved refunds are returned to the original payment method within 14 business days; your bank may take a few extra days to show them.",
+            "Nothing in this policy limits any right you have under the Saudi E-Commerce Law or consumer protection rules.",
           ],
         },
         {
           id: "delivery",
           heading: "Message delivery",
           body: [
-            "We send messages through the WhatsApp Business Platform. Delivery also depends on Meta and on each guest: a number may not use WhatsApp, a guest may have chosen not to receive business messages, or Meta may limit delivery. We show you the status of every message, but we cannot guarantee that each one is delivered or read.",
+            "We send messages through the WhatsApp Business Platform. Delivery also depends on Meta and on each guest: a number may not use WhatsApp, a guest may have chosen not to receive business messages, or Meta may limit delivery. We show you the status of every message, but we cannot guarantee that each one is delivered or read. Undelivered messages are not refundable individually.",
+          ],
+        },
+        {
+          id: "events",
+          heading: "Your events and invitation pages",
+          body: [
+            "You are responsible for the accuracy of your event details. If they change, you can update the invitation and send the update to guests who accepted. Each guest's invitation page and QR code are personal; keep in mind that anyone a guest forwards their link to can see it.",
+            "You can delete an event at any time: its invitation links stop working immediately and its data is permanently deleted after 30 days.",
           ],
         },
         {
           id: "content",
-          heading: "Your content",
+          heading: "Content and intellectual property",
           body: [
-            "Everything you upload remains yours. You give us permission to store, process and display it only as needed to provide INVTRA to you and your guests. INVTRA's designs remain ours, and you are welcome to use them for your invitations.",
+            "Everything you upload — photos, logos, artwork, music — remains yours. You give us permission to store, process and display it only as needed to provide INVTRA to you and your guests, and you confirm you have the right to use it.",
+            "INVTRA's software, designs, illustrations and brand belong to us. You may use our designs for your own invitations through the service, but not copy, resell or redistribute them.",
+          ],
+        },
+        {
+          id: "third-parties",
+          heading: "Third-party services",
+          body: [
+            "INVTRA relies on third parties, including Meta (WhatsApp), our payment provider, and map services. Their own terms apply to your use of their products, and we are not responsible for their availability or actions.",
           ],
         },
         {
           id: "availability",
-          heading: "Availability and changes",
+          heading: "Availability and changes to the service",
           body: [
-            "We work hard to keep INVTRA available and reliable, but the service is provided as it is, and we cannot promise it will never be interrupted. We may improve or change features over time.",
+            "We work hard to keep INVTRA available and reliable, but the service is provided as it is, and we cannot promise it will never be interrupted. We may improve, change or retire features over time; if we retire a feature you have paid for, we will offer a fair alternative or refund.",
           ],
         },
         {
           id: "liability",
           heading: "Liability",
           body: [
-            "To the extent the law allows, INVTRA is not liable for indirect or consequential losses, and our total liability for any event is limited to the amount you paid for that event. Nothing in these terms limits rights you have under consumer law.",
+            "To the extent permitted by law, INVTRA is not liable for indirect or consequential losses — for example, a guest not attending — and our total liability for any event is limited to the amount you paid for that event.",
+            "You agree to compensate INVTRA for claims brought by others that arise from content you send or from using the service in breach of these Terms. Nothing in these Terms limits liability that cannot be limited by law.",
           ],
         },
         {
           id: "ending",
-          heading: "Ending your use",
+          heading: "Suspension and termination",
           body: [
-            "You can delete your events or your account at any time from your dashboard. We may suspend or close accounts that break these terms, with notice where that is reasonable.",
+            "You can delete your events or close your account at any time. We may suspend or close accounts that break these Terms or the law, with notice where that is reasonable. Sections that by their nature should continue (such as payments owed, liability and governing law) survive termination.",
+          ],
+        },
+        {
+          id: "law",
+          heading: "Governing law and disputes",
+          body: [
+            "These Terms are governed by the laws of the Kingdom of Saudi Arabia. If a dispute arises, please contact us first — most issues are resolved quickly and amicably. Any dispute that cannot be resolved this way falls under the jurisdiction of the competent courts of the Kingdom of Saudi Arabia.",
           ],
         },
         {
           id: "changes",
-          heading: "Changes to these terms",
+          heading: "Changes to these Terms",
           body: [
-            "We may update these terms from time to time. Meaningful changes will be announced on this page and by email to account holders. Continuing to use INVTRA after a change means you accept the updated terms.",
+            "We may update these Terms from time to time. Meaningful changes will be announced on this page, with the date above updated, and by email to account holders. Continuing to use INVTRA after a change means you accept the updated Terms.",
           ],
+        },
+        {
+          id: "contact",
+          heading: "Contact us",
+          body: ["Questions about these Terms, a refund or your account? Email contact@invtra.store and we will help."],
         },
       ] as LegalSection[],
     },

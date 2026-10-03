@@ -37,7 +37,7 @@ export const auth: typeof en = {
     passwordHint: "10 أحرف على الأقل.",
     submit: "إنشاء الحساب",
     agree: "بإنشاء حساب، فإنك توافق على {terms} و{privacy}.",
-    terms: "شروط الاستخدام",
+    terms: "الشروط والأحكام",
     privacy: "سياسة الخصوصية",
     haveAccount: "لديك حساب بالفعل؟",
     signIn: "سجّل الدخول",

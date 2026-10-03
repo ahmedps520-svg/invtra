@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { requireUser } from "@/server/auth/guards";
+import { confirmTapReturn } from "@/server/payments/tap-webhook";
 import { getI18n } from "@/server/i18n";
 import { findOwnedEvent } from "@/server/events/access";
 import { cardPreviewProps } from "@/server/events/preview";
@@ -69,7 +70,9 @@ export default async function ReviewPage({
   const overrides = Object.fromEntries(
     Object.entries((event.templateVariables ?? {}) as Record<string, unknown>).filter(([, v]) => typeof v === "string"),
   ) as Record<string, string>;
-  const checkout = sp.checkout === "success" || sp.checkout === "cancelled" ? sp.checkout : null;
+  // Back from Tap's payment page: ask Tap whether the charge went through before saying so.
+  const checkout =
+    sp.checkout === "success" || sp.checkout === "cancelled" ? sp.checkout : sp.checkout === "return" ? await confirmTapReturn(event.id, user.id) : null;
   const { locale } = await getI18n();
   const nameAr = locale === "ar" ? readiness.template?.nameAr : null;
   const checks = readiness.checks.map((c) => (c.key === "template" && c.ok && nameAr ? { ...c, detail: { name: nameAr } } : c));

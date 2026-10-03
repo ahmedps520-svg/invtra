@@ -1,10 +1,11 @@
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 // Must be set before the env module is first read.
 const WEBHOOK_SECRET = "whsec_test_" + randomBytes(12).toString("hex");
 process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET;
 process.env.STRIPE_SECRET_KEY = "sk_test_invtra";
+process.env.TAP_SECRET_KEY = "sk_test_tap_invtra";
 
 const { db } = await import("@/server/db");
 const { upgradePrice, PLANS } = await import("@/lib/plans");
@@ -12,6 +13,8 @@ const { THEMES } = await import("@/lib/themes/registry");
 const service = await import("@/server/payments/service");
 const { verifyStripeSignature, signStripePayload, toStripeAmount, stripeForm, stripeProvider } = await import("@/server/payments/stripe");
 const { handleStripeWebhook } = await import("@/server/payments/webhook");
+const tap = await import("@/server/payments/tap");
+const { handleTapWebhook, confirmTapReturn } = await import("@/server/payments/tap-webhook");
 
 const run = randomBytes(5).toString("hex");
 const started = new Date();
@@ -44,10 +47,11 @@ async function makeEvent(userId: string, plan: "BASIC" | "PREMIUM" | null = null
 
 afterAll(async () => {
   await db.webhookEvent.deleteMany({ where: { dedupeKey: { startsWith: `stripe:evt_${run}` } } });
+  await db.webhookEvent.deleteMany({ where: { dedupeKey: { contains: run }, provider: "tap" } });
   await db.errorLog.deleteMany({
     where: {
       createdAt: { gte: started },
-      OR: [{ message: { contains: run } }, { source: "webhook:stripe", message: { startsWith: "Rejected Stripe webhook" } }, { source: "payments:amount_mismatch" }],
+      OR: [{ message: { contains: run } }, { source: "webhook:stripe", message: { startsWith: "Rejected Stripe webhook" } }, { source: "payments:amount_mismatch" }, { source: { in: ["payments:tap", "webhook:tap"] } }],
     },
   });
   await db.user.deleteMany({ where: { id: { in: userIds } } }); // cascades events, orders, payments
@@ -58,7 +62,8 @@ describe("upgrade pricing", () => {
     expect(upgradePrice(null, "BASIC", "USD")).toBe(PLANS.BASIC.prices!.USD);
     expect(upgradePrice(null, "PREMIUM", "AED")).toBe(PLANS.PREMIUM.prices!.AED);
     expect(upgradePrice("BASIC", "PREMIUM", "USD")).toBe(PLANS.PREMIUM.prices!.USD - PLANS.BASIC.prices!.USD);
-    expect(upgradePrice("BASIC", "PREMIUM", "KWD")).toBe(24000);
+    expect(upgradePrice("BASIC", "PREMIUM", "SAR")).toBe(20000); // 699 − 499 SAR
+    expect(upgradePrice("BASIC", "PREMIUM", "KWD")).toBe(16000); // three-decimal currency
   });
 
   it("refuses downgrades, same-plan purchases and Custom", () => {
@@ -320,5 +325,131 @@ describe("Stripe Checkout session request", () => {
     await expect(
       stripeProvider.createCheckout({ id: "o", eventId: null, plan: "BASIC", amount: 4900, currency: "USD" } as never, { successUrl: "https://x/ok", cancelUrl: "https://x/no" }),
     ).rejects.toMatchObject({ message: "Invalid currency: xyz", status: 400, code: "parameter_invalid" });
+  });
+});
+
+describe("Tap Payments (Apple Pay, Google Pay, mada)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const charge = (over: Partial<import("@/server/payments/tap").TapCharge> = {}) => ({
+    id: `chg_TS${run}A1`,
+    object: "charge",
+    status: "CAPTURED",
+    amount: 699.0,
+    currency: "SAR",
+    reference: { gateway: "mada_pg123", payment: "4327230736106619650", order: "", transaction: "" },
+    transaction: { created: "1698392202943" },
+    source: { payment_method: "APPLE_PAY" },
+    ...over,
+  });
+
+  /** Tap's API, as seen by INVTRA: GET /v2/charges/:id returns `current`. */
+  function stubTap(current: () => object) {
+    const calls: { url: string; init: RequestInit }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init: RequestInit) => {
+        calls.push({ url, init });
+        if (init.method === "POST") return new Response(JSON.stringify({ id: `chg_TS${run}NEW`, status: "INITIATED", transaction: { url: "https://checkout.tap.company/?mode=page&token=x" } }), { status: 200 });
+        return new Response(JSON.stringify(current()), { status: 200 });
+      }),
+    );
+    return calls;
+  }
+
+  it("converts between order minor units and Tap's decimal amounts", () => {
+    expect(tap.toTapAmount(69900, "SAR")).toBe(699);
+    expect(tap.toTapAmount(49950, "SAR")).toBe(499.5);
+    expect(tap.toTapAmount(41000, "KWD")).toBe(41);
+    expect(tap.fromTapAmount(699.0, "SAR")).toBe(69900);
+    expect(tap.fromTapAmount(1.03, "KWD")).toBe(1030);
+    expect(() => tap.toTapAmount(0, "SAR")).toThrow();
+  });
+
+  it("verifies the webhook hashstring exactly as Tap computes it", () => {
+    const c = charge();
+    const secret = "sk_test_tap_invtra";
+    const expected = createHmac("sha256", secret)
+      .update(`x_id${c.id}x_amount699.00x_currencySARx_gateway_referencemada_pg123x_payment_reference4327230736106619650x_statusCAPTUREDx_created1698392202943`)
+      .digest("hex");
+    expect(tap.tapHashString(c, secret)).toBe(expected);
+    expect(tap.verifyTapSignature(c, expected, secret)).toBe(true);
+    expect(tap.verifyTapSignature({ ...c, amount: 1 }, expected, secret)).toBe(false);
+    expect(tap.verifyTapSignature(c, "nope", secret)).toBe(false);
+  });
+
+  it("opens Tap's hosted page with every payment method and returns to the review page", async () => {
+    const user = await makeUser("tap-create");
+    const event = await makeEvent(user.id);
+    const order = await db.order.create({ data: { userId: user.id, eventId: event.id, plan: "PREMIUM", guestLimit: 500, amount: 69900, currency: "SAR", provider: "tap" } });
+    const calls = stubTap(() => ({}));
+    const result = await tap.tapProvider.createCheckout(order, service.checkoutUrls(event.id), { customerEmail: "sara@example.test", customerName: "Sara Al Hashimi", description: "INVTRA Premium plan" });
+    expect(result).toEqual({ redirectUrl: "https://checkout.tap.company/?mode=page&token=x", providerRef: `chg_TS${run}NEW` });
+    expect(calls[0].url).toBe("https://api.tap.company/v2/charges");
+    expect(new Headers(calls[0].init.headers).get("authorization")).toBe("Bearer sk_test_tap_invtra");
+    const body = JSON.parse(String(calls[0].init.body));
+    expect(body).toMatchObject({
+      amount: 699,
+      currency: "SAR",
+      source: { id: "src_all" },
+      reference: { order: order.id },
+      customer: { first_name: "Sara", last_name: "Al Hashimi", email: "sara@example.test" },
+    });
+    expect(body.redirect.url).toMatch(new RegExp(`/dashboard/events/${event.id}/review\\?checkout=return$`));
+    expect(body.post.url).toMatch(/\/api\/webhooks\/payments\/tap$/);
+  });
+
+  it("activates the plan only after Tap confirms the charge, once", async () => {
+    const user = await makeUser("tap-pay");
+    const event = await makeEvent(user.id);
+    const c = charge({ id: `chg_TS${run}PAY` });
+    const order = await db.order.create({
+      data: { userId: user.id, eventId: event.id, plan: "PREMIUM", guestLimit: 500, amount: 69900, currency: "SAR", provider: "tap", providerRef: c.id },
+    });
+    c.reference.order = order.id;
+    let state: object = { ...c, status: "INITIATED" };
+    stubTap(() => state);
+
+    // A forged "CAPTURED" webhook is not believed: Tap's API still says INITIATED.
+    const forged = JSON.stringify({ ...c, status: "CAPTURED" });
+    const r1 = await handleTapWebhook(forged, null);
+    expect(r1).toMatchObject({ status: 200, body: { outcome: "pending" } });
+    expect((await db.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING");
+
+    // A webhook whose hashstring doesn't match is rejected outright.
+    expect((await handleTapWebhook(forged, "0".repeat(64))).status).toBe(400);
+
+    // The customer returns after paying with Apple Pay → plan applied.
+    state = c;
+    expect(await confirmTapReturn(event.id, user.id)).toBe("success");
+    const paid = await db.order.findUniqueOrThrow({ where: { id: order.id }, include: { payments: true } });
+    expect(paid.status).toBe("PAID");
+    expect(paid.payments).toHaveLength(1);
+    expect((await db.event.findUniqueOrThrow({ where: { id: event.id } })).plan).toBe("PREMIUM");
+
+    // The (signed) webhook arriving afterwards changes nothing.
+    const raw = JSON.stringify(c);
+    const r2 = await handleTapWebhook(raw, tap.tapHashString(c as never, "sk_test_tap_invtra"));
+    expect(r2.status).toBe(200);
+    expect(await db.payment.count({ where: { orderId: order.id } })).toBe(1);
+  });
+
+  it("leaves the order open when the payment is declined, and refuses mismatched amounts", async () => {
+    const user = await makeUser("tap-decline");
+    const event = await makeEvent(user.id);
+    const c = charge({ id: `chg_TS${run}DEC`, status: "DECLINED" });
+    const order = await db.order.create({
+      data: { userId: user.id, eventId: event.id, plan: "BASIC", guestLimit: 100, amount: 49900, currency: "SAR", provider: "tap", providerRef: c.id },
+    });
+    c.reference.order = order.id;
+    let state: object = c;
+    stubTap(() => state);
+    expect(await confirmTapReturn(event.id, user.id)).toBe("cancelled");
+    expect((await db.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING");
+
+    state = { ...c, status: "CAPTURED", amount: 1 };
+    expect(await tap.retrieveTapCharge(c.id).then((ch) => import("@/server/payments/tap-webhook").then((m) => m.settleTapCharge(ch, "webhook")))).toBe("failed");
+    expect((await db.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING");
+    expect((await db.event.findUniqueOrThrow({ where: { id: event.id } })).plan).toBeNull();
   });
 });

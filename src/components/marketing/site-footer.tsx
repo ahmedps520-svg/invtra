@@ -5,11 +5,22 @@ import type { Dictionary } from "@/lib/i18n";
 import { EYEBROW } from "./styles";
 import { localePath } from "@/lib/i18n/routing";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
+import type { CompanyDetails } from "@/server/legal";
 
 const CONTACT_EMAIL = "contact@invtra.store";
 
 /** Marketing footer: brand, link columns, contact and legal line. */
-export function SiteFooter({ dict, locale, signedIn }: { dict: Dictionary; locale: "en" | "ar"; signedIn: boolean }) {
+export function SiteFooter({
+  dict,
+  locale,
+  signedIn,
+  company,
+}: {
+  dict: Dictionary;
+  locale: "en" | "ar";
+  signedIn: boolean;
+  company?: CompanyDetails | null;
+}) {
   const t = dict.marketing.footer;
   const lp = (href: string) => localePath(locale, href);
   const nav = dict.common.nav;
@@ -49,6 +60,7 @@ export function SiteFooter({ dict, locale, signedIn }: { dict: Dictionary; local
       links: [
         { href: lp("/privacy"), label: dict.common.footer.privacy },
         { href: lp("/terms"), label: dict.common.footer.terms },
+        { href: `${lp("/terms")}#refunds`, label: dict.common.footer.refunds },
       ],
     },
   ];
@@ -105,11 +117,39 @@ export function SiteFooter({ dict, locale, signedIn }: { dict: Dictionary; local
         <div className="hairline mt-16" />
 
         <div className="mt-8 flex flex-col gap-4 text-[13px] text-ink-faint md:flex-row md:items-start md:justify-between">
-          <p>
-            © {year} INVTRA. {dict.common.footer.rights} <span className="text-bronze-600">{dict.common.footer.madeFor}</span>
-          </p>
+          <div className="space-y-1.5">
+            <p>
+              © {year} INVTRA. {dict.common.footer.rights} <span className="text-bronze-600">{dict.common.footer.madeFor}</span>
+            </p>
+            {company ? (
+              <p className="text-[12px]">
+                {[
+                  company.name ? `${dict.common.footer.operatedBy} ${company.name}` : null,
+                  company.cr ? `${dict.common.footer.cr} ${company.cr}` : null,
+                  company.vat ? `${dict.common.footer.vat} ${company.vat}` : null,
+                  company.address,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
+          </div>
           <p className="max-w-xl text-pretty md:text-end">{t.trademark}</p>
         </div>
+
+        <p className="mt-8 border-t border-line/70 pt-6 text-center text-[13px] text-ink-faint">
+          {dict.common.footer.developedBy}{" "}
+          <a
+            href="https://mamar.site"
+            target="_blank"
+            rel="noopener"
+            lang="en"
+            dir="ltr"
+            className="font-medium text-ink-soft underline decoration-bronze-300 underline-offset-4 transition-colors hover:text-bronze-700 hover:decoration-bronze-600"
+          >
+            mamar.site
+          </a>
+        </p>
       </div>
     </footer>
   );

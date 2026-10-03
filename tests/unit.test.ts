@@ -208,8 +208,8 @@ describe("time zones", () => {
 
 describe("plans", () => {
   it("charges the difference when upgrading", () => {
-    expect(upgradePrice(null, "BASIC", "USD")).toBe(4900);
-    expect(upgradePrice("BASIC", "PREMIUM", "USD")).toBe(12900 - 4900);
+    expect(upgradePrice(null, "BASIC", "SAR")).toBe(49900);
+    expect(upgradePrice("BASIC", "PREMIUM", "SAR")).toBe(69900 - 49900);
     expect(upgradePrice("PREMIUM", "BASIC", "USD")).toBeNull();
     expect(upgradePrice(null, "CUSTOM", "USD")).toBeNull();
   });

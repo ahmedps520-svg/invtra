@@ -177,9 +177,9 @@ function useBrowserTimeZone(): string | null {
     () => {
       try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        return COMMON_TIME_ZONES.includes(tz) ? tz : "Asia/Dubai";
+        return COMMON_TIME_ZONES.includes(tz) ? tz : "Asia/Riyadh";
       } catch {
-        return "Asia/Dubai";
+        return "Asia/Riyadh";
       }
     },
     () => null,
@@ -222,7 +222,7 @@ export function EventForm({
   const [sendingUpdate, setSendingUpdate] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
-  const tz = form.timezone || browserTz || "Asia/Dubai";
+  const tz = form.timezone || browserTz || "Asia/Riyadh";
   const dirty = useMemo(() => JSON.stringify(form) !== baseline, [form, baseline]);
   const lang = form.language;
   const showAr = lang === "AR" || lang === "BILINGUAL";

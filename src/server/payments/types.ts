@@ -7,7 +7,7 @@ import type { Order } from "@prisma/client";
  * (cents for USD/AED/SAR/QAR, fils/baisa — three decimals — for KWD/BHD/OMR).
  */
 
-export type PaymentProviderName = "mock" | "manual" | "stripe";
+export type PaymentProviderName = "mock" | "manual" | "stripe" | "tap";
 
 export interface CheckoutUrls {
   successUrl: string;
@@ -17,6 +17,7 @@ export interface CheckoutUrls {
 /** Optional context that improves the hosted checkout page (never required). */
 export interface CheckoutContext {
   customerEmail?: string;
+  customerName?: string;
   /** Line-item name, e.g. "INVTRA Premium — The Wedding of Ahmed & Sara". */
   description?: string;
 }

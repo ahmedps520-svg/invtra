@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, FlaskConical, MessageCircle } from "lucide-react";
+import { ArrowRight, Check, CreditCard, FlaskConical, MessageCircle } from "lucide-react";
 import type { PlanTier } from "@prisma/client";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
@@ -158,6 +158,10 @@ export function Pricing({
         <p className="flex gap-4 rounded-2xl border border-line bg-paper/70 px-6 py-5 text-[14px] leading-relaxed text-ink-soft">
           <MessageCircle className="mt-0.5 size-5 shrink-0 text-bronze-600" strokeWidth={1.25} />
           {t.included}
+        </p>
+        <p className="flex gap-4 rounded-2xl border border-line bg-paper/70 px-6 py-5 text-[14px] leading-relaxed text-ink-soft sm:col-span-2">
+          <CreditCard className="mt-0.5 size-5 shrink-0 text-bronze-600" strokeWidth={1.25} />
+          {t.payWith}
         </p>
       </Reveal>
     </div>

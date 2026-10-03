@@ -18,14 +18,16 @@ export const PLANS: Record<PlanTier, PlanDefinition> = {
     guestLimit: 100,
     premiumThemes: false,
     contactSales: false,
-    prices: { USD: 4900, AED: 17900, SAR: 18900, KWD: 15000, QAR: 17900, BHD: 18500, OMR: 19000 },
+    // 499 SAR (the site's currency); other currencies are rounded equivalents.
+    prices: { SAR: 49900, USD: 13500, AED: 48900, QAR: 48900, KWD: 41000, BHD: 50000, OMR: 51000 },
   },
   PREMIUM: {
     tier: "PREMIUM",
     guestLimit: 500,
     premiumThemes: true,
     contactSales: false,
-    prices: { USD: 12900, AED: 47900, SAR: 48900, KWD: 39000, QAR: 47900, BHD: 49000, OMR: 50000 },
+    // 699 SAR.
+    prices: { SAR: 69900, USD: 18900, AED: 68900, QAR: 68900, KWD: 57000, BHD: 70000, OMR: 72000 },
   },
   CUSTOM: {
     tier: "CUSTOM",

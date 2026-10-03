@@ -120,7 +120,7 @@ export async function createOrderForEvent(
 
 /** Create/reuse the order and hand the customer to the payment provider. */
 export async function startCheckout(
-  user: { id: string; email: string },
+  user: { id: string; email: string; name?: string | null },
   event: Pick<Event, "id" | "userId" | "plan" | "title" | "deletedAt" | "deactivatedAt">,
   plan: PlanTier,
 ): Promise<{ redirectUrl: string; orderId: string }> {
@@ -144,6 +144,7 @@ export async function startCheckout(
   try {
     result = await provider.createCheckout(order, checkoutUrls(event.id), {
       customerEmail: user.email,
+      customerName: user.name ?? undefined,
       description: `INVTRA ${planLabel(plan)} plan — ${event.title}`.slice(0, 250),
     });
   } catch (e) {

@@ -47,6 +47,8 @@ services:
         value: mock
       - key: PAYMENT_PROVIDER
         value: mock
+      - key: PAYMENT_CURRENCY # prices shown and charged in Saudi riyals
+        value: SAR
       - key: ALLOW_MOCK_IN_PRODUCTION
         value: "true"
       - key: SEED_DEMO

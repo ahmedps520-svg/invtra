@@ -107,9 +107,14 @@ export const common = {
   footer: {
     rights: "All rights reserved.",
     privacy: "Privacy",
-    terms: "Terms",
+    terms: "Terms & Conditions",
+    refunds: "Refund Policy",
     contact: "Contact",
     madeFor: "Crafted for unforgettable occasions.",
+    developedBy: "Developed by",
+    operatedBy: "Operated by",
+    cr: "CR No.",
+    vat: "VAT No.",
   },
   notFound: {
     title: "This page has slipped away",

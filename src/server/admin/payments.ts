@@ -7,7 +7,7 @@ import { paging, type SearchParams, oneOf, str } from "./params";
 
 export const ORDER_STATUSES: OrderStatus[] = ["PENDING", "PAID", "CANCELLED", "REFUNDED", "FAILED"];
 export const PAYMENT_STATUSES: PaymentStatus[] = ["PENDING", "SUCCEEDED", "FAILED", "REFUNDED"];
-export const PAYMENT_PROVIDERS = ["mock", "manual", "stripe"] as const;
+export const PAYMENT_PROVIDERS = ["mock", "manual", "stripe", "tap"] as const;
 
 function searchWhere(q: string): Prisma.OrderWhereInput | undefined {
   if (!q) return undefined;

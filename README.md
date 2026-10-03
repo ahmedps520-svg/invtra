@@ -75,7 +75,8 @@ Every variable is documented in [`.env.example`](.env.example). For production y
 | WhatsApp Cloud API | `WHATSAPP_PROVIDER=cloud`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` (+ `WHATSAPP_APP_ID` to submit image templates) |
 | Storage | `STORAGE_DRIVER=s3`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (+ `S3_ENDPOINT` for R2 etc.) |
 | Email | `EMAIL_PROVIDER=smtp`, `SMTP_URL`, `EMAIL_FROM` |
-| Payments | `PAYMENT_PROVIDER=stripe` + `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — or `manual` + `PAYMENT_MANUAL_INSTRUCTIONS` |
+| Payments | `PAYMENT_PROVIDER=tap` + `TAP_SECRET_KEY` (Saudi Arabia: Apple Pay, Google Pay, mada, cards) — or `stripe` + `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — or `manual` + `PAYMENT_MANUAL_INSTRUCTIONS`. Prices in `PAYMENT_CURRENCY` (default SAR). |
+| Business details | `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER`, `LEGAL_ADDRESS` (footer + Terms) |
 
 ## Scripts
 

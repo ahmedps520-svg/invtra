@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { preload } from "react-dom";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
+import { companyDetails } from "@/server/legal";
 import { pickNamespaces, type Dictionary } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { SiteHeader } from "@/components/marketing/site-header";
@@ -38,7 +39,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
         <main id="main" className="flex-1">
           {children}
         </main>
-        <SiteFooter dict={dict} locale={locale} signedIn={signedIn} />
+        <SiteFooter dict={dict} locale={locale} signedIn={signedIn} company={companyDetails()} />
       </div>
     </I18nProvider>
   );

@@ -2,12 +2,14 @@ import { env } from "@/server/env";
 import { manualProvider } from "./manual";
 import { mockProvider } from "./mock";
 import { stripeProvider } from "./stripe";
+import { tapProvider } from "./tap";
 import type { PaymentProvider, PaymentProviderName } from "./types";
 
 const PROVIDERS: Record<PaymentProviderName, PaymentProvider> = {
   mock: mockProvider,
   manual: manualProvider,
   stripe: stripeProvider,
+  tap: tapProvider,
 };
 
 /** The provider new checkouts use (PAYMENT_PROVIDER). */

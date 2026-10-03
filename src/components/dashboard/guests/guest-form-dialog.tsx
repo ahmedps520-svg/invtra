@@ -150,7 +150,7 @@ export function GuestFormDialog({
             dir="ltr"
             autoComplete="off"
             value={values.phone}
-            placeholder="+971 50 123 4567"
+            placeholder="+966 50 123 4567"
             aria-invalid={Boolean(errors.phone)}
             onChange={(e) => set("phone", e.target.value)}
             className="text-start rtl:text-end"

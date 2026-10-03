@@ -41,9 +41,34 @@ sending real WhatsApp messages or taking payments. A demo account is seeded
 1. connect WhatsApp ([WHATSAPP.md](WHATSAPP.md)): set `WHATSAPP_PROVIDER=cloud` and the
    `WHATSAPP_*` credentials (replace the generated `WHATSAPP_APP_SECRET` with your Meta App
    Secret), then point Meta's webhook to `https://invtra.store/api/webhooks/whatsapp`;
-2. set `PAYMENT_PROVIDER=stripe` (+ keys) or `manual` (+ `PAYMENT_MANUAL_INSTRUCTIONS`);
+2. connect payments — see **Payments (Apple Pay, Google Pay, mada)** below — or use `manual`
+   (+ `PAYMENT_MANUAL_INSTRUCTIONS`) for bank transfers;
 3. configure email (`EMAIL_PROVIDER=smtp`, `SMTP_URL`);
 4. delete `ALLOW_MOCK_IN_PRODUCTION` and `SEED_DEMO` (and remove the demo account in /admin).
+
+## Payments (Apple Pay, Google Pay, mada)
+
+Prices are in Saudi riyals (`PAYMENT_CURRENCY=SAR`): Basic 499 SAR, Premium 699 SAR
+(`src/lib/plans.ts`). Checkout uses **Tap Payments** (tap.company), a Saudi-licensed gateway
+whose hosted payment page shows Apple Pay, Google Pay, mada, Visa/Mastercard and STC Pay —
+Apple Pay and Google Pay need no extra setup on the hosted page.
+
+1. Open a Tap merchant account (business documents: Commercial Registration, owner ID,
+   IBAN). Ask Tap to enable mada, Apple Pay and Google Pay on the account.
+2. Tap dashboard → *goSell → API Credentials* → copy the **secret key** (`sk_live_…`; use
+   `sk_test_…` first to try test cards).
+3. Render → invtra → Environment: `PAYMENT_PROVIDER=tap`, `TAP_SECRET_KEY=sk_…`, and remove
+   `ALLOW_MOCK_IN_PRODUCTION` once WhatsApp is connected too. Save — the service redeploys.
+4. Nothing to configure for webhooks: every charge tells Tap to notify
+   `https://invtra.store/api/webhooks/payments/tap`. INVTRA verifies the `hashstring`
+   signature **and** re-fetches the charge from Tap before activating a plan, and also
+   checks the charge when the customer returns from the payment page.
+5. Fill in `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER`, `LEGAL_ADDRESS` so your
+   business details appear in the footer and Terms (required for Saudi e-commerce, and
+   payment gateways check for them along with the Terms and Refund Policy at
+   `/terms#refunds`).
+
+Refunds are issued in the Tap dashboard, then recorded in *Admin → Payments*.
 
 ## Search engines (Google & Bing)
 

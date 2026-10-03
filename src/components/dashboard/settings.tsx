@@ -90,7 +90,7 @@ function ProfileForm({ user }: { user: { name: string; email: string; phone: str
             className="rtl:text-end"
             autoComplete="tel"
             value={phone}
-            placeholder="+971 50 123 4567"
+            placeholder="+966 50 123 4567"
             aria-invalid={Boolean(errors.phone)}
             onChange={(e) => setPhone(e.target.value)}
           />

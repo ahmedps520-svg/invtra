@@ -9,6 +9,7 @@ import { useI18n } from "@/components/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Field, Label } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { localePath } from "@/lib/i18n/routing";
 import { FieldInput, FormAlert, PasswordInput, interpolate } from "./form-parts";
 import { EMAIL_RE, PASSWORD_MIN } from "./next-path";
 
@@ -17,7 +18,7 @@ type Errors = { name?: string; email?: string; password?: string };
 const legalLink = "text-ink-soft underline decoration-line-strong underline-offset-4 hover:text-ink";
 
 export function SignupForm({ next, loginHref }: { next: string; loginHref: string }) {
-  const { dict } = useI18n();
+  const { dict, locale } = useI18n();
   const t = dict.auth;
   const router = useRouter();
   const nameRef = useRef<HTMLInputElement>(null);
@@ -168,12 +169,12 @@ export function SignupForm({ next, loginHref }: { next: string; loginHref: strin
       <p className="text-center text-[12.5px] leading-relaxed text-ink-faint">
         {interpolate(t.signup.agree, {
           terms: (
-            <Link href="/terms" target="_blank" className={legalLink}>
+            <Link href={localePath(locale, "/terms")} target="_blank" className={legalLink}>
               {t.signup.terms}
             </Link>
           ),
           privacy: (
-            <Link href="/privacy" target="_blank" className={legalLink}>
+            <Link href={localePath(locale, "/privacy")} target="_blank" className={legalLink}>
               {t.signup.privacy}
             </Link>
           ),

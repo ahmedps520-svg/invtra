@@ -13,7 +13,7 @@ import { cn, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Payments & orders" };
 
-const PROVIDER_LABEL: Record<string, string> = { mock: "Mock (test)", manual: "Manual", stripe: "Stripe" };
+const PROVIDER_LABEL: Record<string, string> = { mock: "Mock (test)", manual: "Manual", stripe: "Stripe", tap: "Tap Payments" };
 
 export default async function PaymentsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await requireAdmin();
@@ -172,7 +172,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                               }
                             : {
                                 title: "Mark this order refunded?",
-                                description: `Records that ${money(o.amount, o.currency)} was returned. Issue the refund itself in ${o.provider === "stripe" ? "the Stripe dashboard" : "your bank"} first.`,
+                                description: `Records that ${money(o.amount, o.currency)} was returned. Issue the refund itself in ${o.provider === "stripe" ? "the Stripe dashboard" : o.provider === "tap" ? "the Tap dashboard" : "your bank"} first.`,
                                 confirmLabel: "Mark refunded",
                                 tone: "danger",
                                 reason: { label: "Reason", placeholder: "Why was this refunded?", required: true },

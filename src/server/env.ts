@@ -47,12 +47,21 @@ const schema = z
     EMAIL_FROM: z.string().default("INVTRA <contact@invtra.store>"),
 
     // Payments
-    PAYMENT_PROVIDER: z.enum(["mock", "manual", "stripe"]).default("mock"),
-    PAYMENT_CURRENCY: z.enum(["USD", "AED", "SAR", "KWD", "QAR", "BHD", "OMR"]).default("USD"),
+    PAYMENT_PROVIDER: z.enum(["mock", "manual", "stripe", "tap"]).default("mock"),
+    PAYMENT_CURRENCY: z.enum(["USD", "AED", "SAR", "KWD", "QAR", "BHD", "OMR"]).default("SAR"),
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    // Tap Payments (Saudi Arabia / GCC): Apple Pay, Google Pay, mada, cards, STC Pay on Tap's hosted page.
+    TAP_SECRET_KEY: z.string().optional(),
+    TAP_MERCHANT_ID: z.string().optional(),
     // Shown to customers for PAYMENT_PROVIDER=manual (bank transfer details etc.).
     PAYMENT_MANUAL_INSTRUCTIONS: z.string().optional(),
+
+    // Business identity shown in the footer and Terms (Saudi e-commerce rules require the CR number).
+    LEGAL_ENTITY_NAME: z.string().optional(),
+    LEGAL_CR_NUMBER: z.string().optional(),
+    LEGAL_VAT_NUMBER: z.string().optional(),
+    LEGAL_ADDRESS: z.string().optional(),
 
     // Background jobs
     INLINE_WORKER: bool,
@@ -86,6 +95,9 @@ const schema = z
       for (const key of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] as const) {
         if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: `${key} is required when PAYMENT_PROVIDER=stripe` });
       }
+    }
+    if (env.PAYMENT_PROVIDER === "tap" && !env.TAP_SECRET_KEY) {
+      ctx.addIssue({ code: "custom", path: ["TAP_SECRET_KEY"], message: "TAP_SECRET_KEY is required when PAYMENT_PROVIDER=tap" });
     }
     if (env.NODE_ENV === "production") {
       if (env.WHATSAPP_PROVIDER === "mock" && process.env.ALLOW_MOCK_IN_PRODUCTION !== "true") {

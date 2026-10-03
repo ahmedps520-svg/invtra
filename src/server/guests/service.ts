@@ -29,7 +29,7 @@ export const TIMEZONE_COUNTRY: Record<string, string> = {
 };
 
 export function defaultCountryFor(timezone: string) {
-  return TIMEZONE_COUNTRY[timezone] ?? "AE";
+  return TIMEZONE_COUNTRY[timezone] ?? "SA";
 }
 
 async function assertCapacity(eventId: string, adding: number) {
@@ -41,7 +41,7 @@ async function assertCapacity(eventId: string, adding: number) {
 
 export async function addGuest(eventId: string, input: GuestInput, defaultCountry: string): Promise<Guest> {
   const phone = normalizePhone(input.phone, defaultCountry);
-  if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number with country code.", { phone: "Enter a valid number, e.g. +971 50 123 4567" });
+  if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number with country code.", { phone: "Enter a valid number, e.g. +966 50 123 4567" });
   await assertCapacity(eventId, 1);
   try {
     return await db.guest.create({
@@ -65,7 +65,7 @@ export async function addGuest(eventId: string, input: GuestInput, defaultCountr
 
 export async function editGuest(guest: Guest, input: GuestInput, defaultCountry: string): Promise<Guest> {
   const phone = normalizePhone(input.phone, defaultCountry);
-  if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number with country code.", { phone: "Enter a valid number, e.g. +971 50 123 4567" });
+  if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number with country code.", { phone: "Enter a valid number, e.g. +966 50 123 4567" });
   const phoneChanged = phone.e164 !== guest.phone;
   try {
     return await db.guest.update({

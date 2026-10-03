@@ -2,6 +2,7 @@ import type { Dictionary } from "@/lib/i18n";
 import type { LegalSection } from "@/lib/i18n/dictionaries/en/marketing";
 import { CONTAINER, EYEBROW } from "./styles";
 import { cn } from "@/lib/utils";
+import type { CompanyDetails } from "@/server/legal";
 
 const CONTACT_EMAIL = "contact@invtra.store";
 
@@ -29,9 +30,12 @@ function withEmailLinks(text: string) {
 export function LegalDocument({
   dict,
   doc,
+  company,
 }: {
   dict: Dictionary;
   doc: { title: string; intro: string[]; sections: LegalSection[] };
+  /** The registered business (LEGAL_* settings), shown under the introduction when set. */
+  company?: CompanyDetails | null;
 }) {
   const l = dict.marketing.legal;
   const [before, after] = l.questions.split("{email}");
@@ -80,6 +84,35 @@ export function LegalDocument({
                 {p}
               </p>
             ))}
+
+            {company ? (
+              <dl className="mb-4 grid gap-x-6 gap-y-2 rounded-2xl border border-line bg-paper px-6 py-5 text-[14.5px] sm:grid-cols-[auto_1fr]">
+                {company.name ? (
+                  <>
+                    <dt className="text-ink-faint">{dict.common.footer.operatedBy}</dt>
+                    <dd className="text-ink">{company.name}</dd>
+                  </>
+                ) : null}
+                {company.cr ? (
+                  <>
+                    <dt className="text-ink-faint">{dict.common.footer.cr}</dt>
+                    <dd className="text-ink tabular-nums">{company.cr}</dd>
+                  </>
+                ) : null}
+                {company.vat ? (
+                  <>
+                    <dt className="text-ink-faint">{dict.common.footer.vat}</dt>
+                    <dd className="text-ink tabular-nums">{company.vat}</dd>
+                  </>
+                ) : null}
+                {company.address ? (
+                  <>
+                    <dt className="sr-only">Address</dt>
+                    <dd className="text-ink-soft sm:col-span-2">{company.address}</dd>
+                  </>
+                ) : null}
+              </dl>
+            ) : null}
 
             {doc.sections.map((s, i) => (
               <section

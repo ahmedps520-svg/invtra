@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Crown } from "lucide-react";
+import { Check, Crown, Lock } from "lucide-react";
+import Link from "next/link";
 import { useI18n } from "@/components/i18n/provider";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { formatMoney, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { localePath } from "@/lib/i18n/routing";
 import { errorMessage } from "./i18n";
 
 export type PlanTier = "BASIC" | "PREMIUM" | "CUSTOM";
@@ -81,6 +83,7 @@ export function PlanCards({
   }
 
   return (
+    <div>
     <div className={cn("grid gap-4", sorted.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2")}>
       {sorted.map((p) => {
         const isCurrent = currentPlan === p.tier;
@@ -158,6 +161,42 @@ export function PlanCards({
           </div>
         );
       })}
+    </div>
+      {eventId ? <CheckoutNote /> : null}
+    </div>
+  );
+}
+
+/** The ways to pay on the hosted checkout, and the terms that apply. */
+const PAYMENT_METHODS = ["Apple Pay", "Google Pay", "mada", "Visa", "Mastercard"];
+
+function CheckoutNote() {
+  const { dict, locale } = useI18n();
+  const d = dict.dashboard.review.plan;
+  return (
+    <div className="mt-5 flex flex-col items-center gap-3 text-center">
+      <div className="flex flex-wrap items-center justify-center gap-2" aria-label={d.secure}>
+        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-soft">
+          <Lock className="size-3.5 text-bronze-600" aria-hidden="true" />
+          {d.secure}
+        </span>
+        {PAYMENT_METHODS.map((m) => (
+          <span key={m} lang="en" className="rounded-md border border-line bg-paper px-2 py-0.5 text-[11.5px] font-medium text-ink-soft">
+            {m}
+          </span>
+        ))}
+      </div>
+      <p className="text-[12px] text-ink-faint">
+        {d.agreeBefore}{" "}
+        <Link href={localePath(locale, "/terms")} target="_blank" className="underline underline-offset-2 hover:text-ink">
+          {d.terms}
+        </Link>{" "}
+        {d.and}{" "}
+        <Link href={`${localePath(locale, "/terms")}#refunds`} target="_blank" className="underline underline-offset-2 hover:text-ink">
+          {d.refunds}
+        </Link>
+        .
+      </p>
     </div>
   );
 }

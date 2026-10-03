@@ -35,7 +35,7 @@ export const auth = {
     passwordHint: "At least 10 characters.",
     submit: "Create account",
     agree: "By creating an account, you agree to our {terms} and {privacy}.",
-    terms: "Terms of Service",
+    terms: "Terms & Conditions",
     privacy: "Privacy Policy",
     haveAccount: "Already have an account?",
     signIn: "Sign in",
