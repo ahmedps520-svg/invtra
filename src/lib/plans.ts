@@ -67,15 +67,16 @@ export function planPrice(tier: PlanTier, currency: Currency): number | null {
 }
 
 /**
- * Price to move an event from its current plan to `target`. Upgrading from Basic to
- * Premium charges the difference.
+ * Price to move an event from its current plan to `target`. Upgrading from Standard to
+ * Premium charges the difference. `credit` is what the current plan counts for when it
+ * wasn't bought at list price (e.g. a limited-time offer); it defaults to the list price.
  */
-export function upgradePrice(current: PlanTier | null, target: PlanTier, currency: Currency): number | null {
+export function upgradePrice(current: PlanTier | null, target: PlanTier, currency: Currency, credit?: number | null): number | null {
   const t = planPrice(target, currency);
   if (t === null) return null;
   if (!current) return t;
   if (PLAN_ORDER.indexOf(current) >= PLAN_ORDER.indexOf(target)) return null;
-  const c = planPrice(current, currency) ?? 0;
+  const c = credit ?? planPrice(current, currency) ?? 0;
   return Math.max(0, t - c);
 }
 

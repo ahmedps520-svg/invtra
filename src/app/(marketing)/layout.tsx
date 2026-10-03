@@ -7,6 +7,9 @@ import { pickNamespaces, type Dictionary } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { OfferBanner } from "@/components/offers/national-day";
+import { activeOffer, offerInfo } from "@/lib/offers";
+import { env } from "@/server/env";
 
 /**
  * The long-form legal copy is only rendered by server components, so it is left out of
@@ -35,6 +38,11 @@ export default async function MarketingLayout({ children }: { children: ReactNod
         >
           {dict.marketing.nav.skip}
         </a>
+        <OfferBanner
+          offer={offerInfo(activeOffer(), env().PAYMENT_CURRENCY)}
+          currency={env().PAYMENT_CURRENCY}
+          href={signedIn ? "/dashboard/events/new" : "/signup?next=%2Fdashboard%2Fevents%2Fnew"}
+        />
         <SiteHeader signedIn={signedIn} />
         <main id="main" className="flex-1">
           {children}

@@ -5,6 +5,7 @@ import { badRequest, conflict, HttpError, notFound } from "@/server/http";
 import { logError } from "@/server/log";
 import { recordActivity } from "@/server/activity";
 import { PLAN_ORDER, PLANS, upgradePrice, type Currency, PLAN_NAMES } from "@/lib/plans";
+import { activeOffer, findOffer, isOfferActive, offerInfo, offerName } from "@/lib/offers";
 import { nextReceiptNumber } from "./receipts";
 import { enqueue } from "@/server/queue/queue";
 import { paymentProvider, providerFor } from "./index";
@@ -77,10 +78,22 @@ async function expireCheckouts(orders: Pick<Order, "provider" | "providerRef">[]
  * Create (or reuse) a PENDING order to move `event` to `plan`. Only Basic and Premium
  * are self-serve; Custom is arranged with sales and granted by an admin.
  */
+/**
+ * What the event's current plan counts for towards an upgrade, when it was bought with an
+ * offer (null = its list price). Without this, 96 riyals + the Standard→Premium difference
+ * would buy Premium far below its price.
+ */
+export async function planCredit(event: Pick<Event, "id" | "plan">): Promise<number | null> {
+  if (!event.plan) return null;
+  const last = await db.order.findFirst({ where: { eventId: event.id, status: "PAID", plan: event.plan }, orderBy: { paidAt: "desc" } });
+  return last?.promo ? last.amount : null;
+}
+
 export async function createOrderForEvent(
   user: { id: string },
   event: Pick<Event, "id" | "userId" | "plan" | "deletedAt" | "deactivatedAt">,
   plan: PlanTier,
+  opts: { offer?: string | null } = {},
 ): Promise<{ order: Order; reused: boolean }> {
   if (plan !== "BASIC" && plan !== "PREMIUM") {
     throw badRequest("plan_not_self_serve", "The Custom plan is arranged with our team — please contact us.");
@@ -88,14 +101,26 @@ export async function createOrderForEvent(
   if (event.userId !== user.id) throw notFound("Event");
   if (event.deletedAt || event.deactivatedAt) throw badRequest("event_inactive", "This event is not active.");
   const currency = paymentCurrency();
-  const amount = upgradePrice(event.plan, plan, currency);
+  let amount: number | null;
+  let guestLimit = PLANS[plan].guestLimit ?? 0;
+  let promo: string | null = null;
+  if (opts.offer) {
+    const offer = findOffer(opts.offer);
+    if (!offer || !isOfferActive(offer)) throw badRequest("offer_ended", "This offer has ended.");
+    if (plan !== offer.tier) throw badRequest("invalid_offer", "This offer is for a different plan.");
+    if (event.plan) throw badRequest("offer_first_plan", "The offer is for events that don't have a plan yet.");
+    amount = offer.prices[currency];
+    guestLimit = offer.guestLimit;
+    promo = offer.key;
+  } else {
+    amount = upgradePrice(event.plan, plan, currency, await planCredit(event));
+  }
   if (amount === null || amount <= 0) {
     throw badRequest(
       "not_an_upgrade",
       event.plan === plan ? "This event already has this plan." : "This event already has a higher plan.",
     );
   }
-  const guestLimit = PLANS[plan].guestLimit ?? 0;
   const provider = paymentProvider().name;
 
   const existing = await db.order.findFirst({
@@ -107,6 +132,8 @@ export async function createOrderForEvent(
       provider,
       amount,
       currency,
+      guestLimit,
+      promo,
       createdAt: { gte: new Date(Date.now() - ORDER_REUSE_MS) },
     },
     orderBy: { createdAt: "desc" },
@@ -114,7 +141,7 @@ export async function createOrderForEvent(
   if (existing) return { order: existing, reused: true };
 
   const order = await db.order.create({
-    data: { userId: user.id, eventId: event.id, plan, guestLimit, amount, currency, provider, status: "PENDING" },
+    data: { userId: user.id, eventId: event.id, plan, guestLimit, amount, currency, provider, status: "PENDING", promo },
   });
   return { order, reused: false };
 }
@@ -124,8 +151,9 @@ export async function startCheckout(
   user: { id: string; email: string; name?: string | null },
   event: Pick<Event, "id" | "userId" | "plan" | "title" | "deletedAt" | "deactivatedAt">,
   plan: PlanTier,
+  opts: { offer?: string | null } = {},
 ): Promise<{ redirectUrl: string; orderId: string }> {
-  const { order, reused } = await createOrderForEvent(user, event, plan);
+  const { order, reused } = await createOrderForEvent(user, event, plan, opts);
   const provider = paymentProvider();
 
   // One open checkout per event: older pending orders (other plan) are withdrawn so a
@@ -146,7 +174,7 @@ export async function startCheckout(
     result = await provider.createCheckout(order, checkoutUrls(event.id), {
       customerEmail: user.email,
       customerName: user.name ?? undefined,
-      description: `INVTRA ${planLabel(plan)} plan — ${event.title}`.slice(0, 250),
+      description: `INVTRA ${offerName(order.promo) ?? `${planLabel(plan)} plan`} — ${event.title}`.slice(0, 250),
     });
   } catch (e) {
     await logError("payments:checkout", e, { orderId: order.id, provider: provider.name });
@@ -402,6 +430,8 @@ export type CustomerOrder = {
   payUrl?: string;
   receiptUrl?: string;
   receiptNumber?: string | null;
+  /** Bought with a limited-time offer (src/lib/offers.ts). */
+  promo: string | null;
 };
 
 export function serializeCustomerOrder(order: Order & { event: { title: string } | null }): CustomerOrder {
@@ -417,6 +447,7 @@ export function serializeCustomerOrder(order: Order & { event: { title: string }
     provider: order.provider,
     createdAt: order.createdAt.toISOString(),
     paidAt: order.paidAt?.toISOString() ?? null,
+    promo: order.promo,
     ...(order.provider === "manual" && order.status === "PENDING" ? { instructions: manualInstructions() } : {}),
     ...(order.payToken && order.status === "PENDING" ? { payUrl: `/pay/${order.payToken}` } : {}),
     ...(order.status === "PAID" || order.status === "REFUNDED"
@@ -430,6 +461,8 @@ export function planCatalogue() {
   return {
     currency,
     provider: env().PAYMENT_PROVIDER,
+    /** A limited-time offer on sale right now (first plan for an event), or null. */
+    offer: offerInfo(activeOffer(), currency),
     plans: PLAN_ORDER.map((tier) => {
       const p = PLANS[tier];
       return {

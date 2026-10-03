@@ -7,6 +7,8 @@ import { fmt } from "@/lib/i18n/config";
 import { formatMoney, formatNumber } from "@/lib/format";
 import { PLANS, PLAN_ORDER, TEST_SEND_LIMIT, planPrice, type Currency } from "@/lib/plans";
 import { buttonClasses } from "@/components/ui/button";
+import { OfferCard, offerCtaClass } from "@/components/offers/national-day";
+import { activeOffer, offerInfo } from "@/lib/offers";
 import { Reveal } from "./reveal";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +49,17 @@ export function Pricing({
 
   return (
     <div className={className}>
+      <OfferCard
+        offer={offerInfo(activeOffer(), currency)}
+        currency={currency}
+        className="mb-12 sm:mb-16"
+        action={
+          <Link href={startHref} className={offerCtaClass}>
+            {dict.common.offer.claim}
+            <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+          </Link>
+        }
+      />
       <ul className="grid items-stretch gap-6 lg:grid-cols-3 lg:gap-5 xl:gap-7">
         {PLAN_ORDER.map((tier: PlanTier, i) => {
           const plan = PLANS[tier];

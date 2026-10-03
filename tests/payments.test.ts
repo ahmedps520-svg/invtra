@@ -455,3 +455,61 @@ describe("Tap Payments (Apple Pay, Google Pay, mada)", () => {
     expect((await db.event.findUniqueOrThrow({ where: { id: event.id } })).plan).toBeNull();
   });
 });
+
+describe("National Day offer (96 SAR for up to 96 guests)", async () => {
+  const { NATIONAL_DAY_OFFER: offer, activeOffer, isOfferActive } = await import("@/lib/offers");
+  const during = new Date(Date.parse(offer.startsAt) + 3_600_000);
+  const after = new Date(offer.endsAt);
+
+  afterEach(() => vi.useRealTimers());
+
+  it("is on sale only between its start and end (5 days)", () => {
+    expect(Date.parse(offer.endsAt) - Date.parse(offer.startsAt)).toBeLessThanOrEqual(6 * 86_400_000);
+    expect(isOfferActive(offer, new Date(Date.parse(offer.startsAt) - 1))).toBe(false);
+    expect(activeOffer(during)?.key).toBe("national-day-96");
+    expect(activeOffer(new Date(Date.parse(offer.endsAt) - 1))?.key).toBe("national-day-96");
+    expect(activeOffer(after)).toBeNull();
+    expect(offer.prices.SAR).toBe(9600);
+    expect(offer.guestLimit).toBe(96);
+  });
+
+  it("sells a 96-guest Standard plan for 96 riyals, first plan only, and only while it runs", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(during);
+    expect(service.planCatalogue().offer).toMatchObject({ key: "national-day-96", guestLimit: 96 });
+    const user = await makeUser("offer");
+    const event = await makeEvent(user.id);
+    const { order } = await service.createOrderForEvent(user, event, "BASIC", { offer: offer.key });
+    const currency = service.paymentCurrency();
+    expect(order).toMatchObject({ plan: "BASIC", guestLimit: 96, amount: offer.prices[currency], promo: "national-day-96" });
+    expect(service.serializeCustomerOrder({ ...order, event: null }).promo).toBe("national-day-96");
+
+    await service.applyPaidOrder(order.id, { provider: "mock", providerPaymentId: `offer_${run}` });
+    const paid = await db.event.findUniqueOrThrow({ where: { id: event.id } });
+    expect(paid).toMatchObject({ plan: "BASIC", guestLimit: 96 });
+
+    // Upgrading counts only what was paid: Premium costs 699 − 96, not the 200 Standard→Premium difference.
+    expect(await service.planCredit(paid)).toBe(offer.prices[currency]);
+    const { order: upgrade } = await service.createOrderForEvent(user, paid, "PREMIUM");
+    expect(upgrade.amount).toBe(PLANS.PREMIUM.prices![currency] - offer.prices[currency]);
+    expect(upgrade.promo).toBeNull();
+
+    // An event that already has a plan can't take the offer.
+    await expect(service.createOrderForEvent(user, paid, "BASIC", { offer: offer.key })).rejects.toMatchObject({ code: "offer_first_plan" });
+
+    // Once it ends it's gone: not listed, not sold.
+    vi.setSystemTime(after);
+    expect(service.planCatalogue().offer).toBeNull();
+    const late = await makeEvent(user.id);
+    await expect(service.createOrderForEvent(user, late, "BASIC", { offer: offer.key })).rejects.toMatchObject({ code: "offer_ended" });
+    await expect(service.createOrderForEvent(user, late, "PREMIUM", { offer: offer.key })).rejects.toMatchObject({ code: "offer_ended" });
+  });
+
+  it("keeps list-price upgrades for plans bought normally", async () => {
+    expect(upgradePrice("BASIC", "PREMIUM", "SAR")).toBe(20000);
+    expect(upgradePrice("BASIC", "PREMIUM", "SAR", 9600)).toBe(60300);
+    const user = await makeUser("noOffer");
+    const event = await makeEvent(user.id, "BASIC", 100);
+    expect(await service.planCredit(event)).toBeNull();
+  });
+});

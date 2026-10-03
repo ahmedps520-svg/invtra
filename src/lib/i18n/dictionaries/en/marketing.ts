@@ -539,6 +539,7 @@ export const marketing = {
             "Plans are bought per event as a one-time payment — there are no subscriptions. Prices are shown in Saudi riyals (SAR) and include value-added tax (VAT) where applicable. The price is always shown before you pay, and an upgrade costs only the difference from the plan you already have.",
             "Payments are processed securely by our licensed payment provider. Depending on your device and bank you can pay with Apple Pay, Google Pay, mada, Visa or Mastercard. INVTRA never sees or stores your full card number. Your plan is activated as soon as the payment provider confirms the payment, and a receipt is sent to your email.",
             "Every event includes 3 free test sends to your own WhatsApp number, so you can see exactly what your guests will receive before you pay. Prices may change in the future, but a change never affects a plan you have already bought.",
+            "Limited-time offers (such as the National Day offer) are sold only during the period shown with the offer, apply to the first plan bought for an event, and include the guest allowance and designs stated in the offer. They can't be combined with other offers. When you upgrade from an offer, only the amount you actually paid counts towards the new plan.",
           ],
         },
         {

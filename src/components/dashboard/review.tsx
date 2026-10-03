@@ -681,7 +681,7 @@ function PlanSection({
 }) {
   const { dict, locale } = useI18n();
   const d = dict.dashboard.review.plan;
-  const { data, error, reload } = usePlans();
+  const { data, error, reload } = usePlans(eventId);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const canUpgrade = plan === "BASIC";
 
@@ -722,6 +722,7 @@ function PlanSection({
                   currentPlan={plan}
                   guestCount={guestCount}
                   premiumTheme={premiumTheme}
+                  credit={data.credit}
                   compact
                 />
               ) : error ? (
@@ -740,6 +741,8 @@ function PlanSection({
           currentPlan={plan}
           guestCount={guestCount}
           premiumTheme={premiumTheme}
+          offer={data.offer}
+          credit={data.credit}
         />
       ) : error ? (
         <Card className="px-6 py-6">

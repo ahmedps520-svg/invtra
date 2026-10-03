@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { planName } from "@/lib/plans";
+import { offerName } from "@/lib/offers";
 import Link from "next/link";
 import { Ban, CheckCircle2, Undo2 } from "lucide-react";
 import { requireAdmin } from "@/server/auth/guards";
@@ -188,6 +189,7 @@ export default async function PaymentsPage({
                   <div className="min-w-[180px]">
                     <p className="text-ink">
                       {planName(o.plan)}{" "}
+                      {o.promo ? <span className="me-1 rounded-full bg-[#e7f3ec] px-2 py-0.5 text-[11px] font-medium text-[#00502A]">{offerName(o.promo)}</span> : null}
                       <span className="text-ink-faint">
                         · {guestLimit(o.guestLimit)} guests
                       </span>

@@ -1,6 +1,7 @@
 import { Logo } from "@/components/brand/logo";
 import { formatDate, formatMoney } from "@/lib/format";
 import { planName } from "@/lib/plans";
+import { offerName } from "@/lib/offers";
 import { guestsLabel } from "@/server/payments/receipts";
 import type { CompanyDetails } from "@/server/legal";
 import type { PayCopy } from "@/lib/i18n/pay-copy";
@@ -12,6 +13,8 @@ export type ReceiptData = {
   paidAt: Date;
   plan: string;
   guestLimit: number;
+  /** Bought with a limited-time offer (its name is shown instead of the plan). */
+  promo?: string | null;
   amount: number;
   currency: string;
   title: string | null;
@@ -45,7 +48,7 @@ export function Receipt({ data, t, ar, company }: { data: ReceiptData; t: PayCop
   const locale = ar ? "ar" : "en";
   const tz = data.event?.timezone ?? "Asia/Riyadh";
   const eventTitle = (ar ? data.event?.titleAr || data.event?.title : data.event?.title) ?? "";
-  const plan = data.plan === "CUSTOM" ? t.customPlan : `${planName(data.plan)}${ar ? "" : " plan"}`;
+  const plan = offerName(data.promo, ar ? "ar" : "en") ?? (data.plan === "CUSTOM" ? t.customPlan : `${planName(data.plan)}${ar ? "" : " plan"}`);
   return (
     <article className="receipt rounded-[1.75rem] border border-line bg-paper px-6 py-8 shadow-soft sm:px-10 sm:py-10 print:rounded-none print:border-0 print:px-0 print:py-0 print:shadow-none">
       <header className="flex flex-wrap items-start justify-between gap-6 border-b border-line pb-6">

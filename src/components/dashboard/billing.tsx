@@ -14,6 +14,7 @@ import { formatDate, formatMoney, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { plural } from "./i18n";
 import { PlanCards, usePlans } from "./plan-picker";
+import { offerName } from "@/lib/offers";
 import { stepHref } from "./steps";
 
 type Order = {
@@ -32,6 +33,7 @@ type Order = {
   payUrl?: string;
   receiptUrl?: string;
   receiptNumber?: string | null;
+  promo?: string | null;
 };
 
 const STATUS_TONE: Record<Order["status"], Tone> = {
@@ -107,7 +109,7 @@ export function BillingPage({
           <p className="text-[13px] text-ink-faint">{d.plansNote}</p>
         </div>
         {plans.data ? (
-          <PlanCards plans={plans.data.plans} currency={plans.data.currency} />
+          <PlanCards plans={plans.data.plans} currency={plans.data.currency} offer={plans.data.offer} />
         ) : plans.error ? (
           <Card className="flex flex-wrap items-center justify-between gap-3 px-6 py-5 text-sm text-ink-soft">
             {d.loadError}
@@ -241,7 +243,7 @@ export function BillingPage({
                           {o.eventTitle ?? d.deletedEvent}
                         </p>
                         <p className="mt-0.5 text-[13px] text-ink-faint">
-                          {date(o.createdAt)} · {dict.common.plans[o.plan]}
+                          {date(o.createdAt)} · {offerName(o.promo, locale) ?? dict.common.plans[o.plan]}
                         </p>
                       </div>
                       <div className="text-end">
@@ -333,7 +335,7 @@ function OrderRows({
           )}
         </td>
         <td className="px-3 py-3.5 text-ink-soft">
-          {dict.common.plans[o.plan]} ·{" "}
+          {offerName(o.promo, locale) ?? dict.common.plans[o.plan]} ·{" "}
           {o.guestLimit >= UNLIMITED_GUESTS
             ? d.unlimited
             : fmt(d.guestLimit, { n: formatNumber(o.guestLimit, locale) })}
