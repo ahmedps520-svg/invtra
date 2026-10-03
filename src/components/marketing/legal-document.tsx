@@ -3,7 +3,7 @@ import type { LegalSection } from "@/lib/i18n/dictionaries/en/marketing";
 import { CONTAINER, EYEBROW } from "./styles";
 import { cn } from "@/lib/utils";
 
-const CONTACT_EMAIL = "hello@invtra.store";
+const CONTACT_EMAIL = "contact@invtra.store";
 
 /** Turns plain-text mentions of the contact address into mail links. */
 function withEmailLinks(text: string) {

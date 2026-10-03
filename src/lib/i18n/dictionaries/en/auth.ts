@@ -63,7 +63,7 @@ export const auth = {
   },
   errors: {
     invalidCredentials: "That email and password don't match. Please try again.",
-    deactivated: "This account has been deactivated. Contact support@invtra.store for help.",
+    deactivated: "This account has been deactivated. Email contact@invtra.store for help.",
     rateLimited: "Too many attempts. Please wait a few minutes and try again.",
     emailTaken: "An account with this email already exists.",
     emailTakenAction: "Sign in instead",

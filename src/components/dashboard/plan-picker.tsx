@@ -132,7 +132,7 @@ export function PlanCards({
             {eventId ? (
               <div className="mt-6 pt-1">
                 {p.contactSales || price === null ? (
-                  <a href="mailto:hello@invtra.store?subject=INVTRA%20Custom%20plan" className={buttonClasses("outline", "md", "w-full")}>
+                  <a href="mailto:contact@invtra.store?subject=INVTRA%20Custom%20plan" className={buttonClasses("outline", "md", "w-full")}>
                     {d.contact}
                   </a>
                 ) : isCurrent || lower ? null : (

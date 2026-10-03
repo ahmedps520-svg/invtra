@@ -387,7 +387,7 @@ function CheckRow({ check, eventId, index }: { check: ReadinessCheck; eventId: s
       break;
     case "whatsapp":
       text = check.ok ? items.whatsapp.ok : items.whatsapp.todo;
-      fix = { href: "mailto:hello@invtra.store", external: true };
+      fix = { href: "mailto:contact@invtra.store", external: true };
       break;
     case "design":
       text = check.ok ? items.design.ok : items.design.todo;

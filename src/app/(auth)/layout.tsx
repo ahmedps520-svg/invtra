@@ -41,8 +41,8 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
             <Link href="/terms" className="transition-colors hover:text-ink">
               {dict.common.footer.terms}
             </Link>
-            <a href="mailto:hello@invtra.store" className="transition-colors hover:text-ink">
-              hello@invtra.store
+            <a href="mailto:contact@invtra.store" className="transition-colors hover:text-ink">
+              contact@invtra.store
             </a>
           </footer>
         </div>

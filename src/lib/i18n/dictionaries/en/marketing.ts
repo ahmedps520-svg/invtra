@@ -468,7 +468,7 @@ export const marketing = {
           id: "guests",
           heading: "If you received an invitation",
           body: [
-            "Your name and number were added by the host who invited you. If you would like your details corrected or removed, ask the host or write to us at hello@invtra.store and we will help.",
+            "Your name and number were added by the host who invited you. If you would like your details corrected or removed, ask the host or write to us at contact@invtra.store and we will help.",
           ],
         },
         {

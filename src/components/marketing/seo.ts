@@ -4,7 +4,7 @@ import { localePath } from "@/lib/i18n/routing";
 
 export const SITE_NAME = "INVTRA";
 export const SITE_NAME_AR = "إنفترا";
-export const CONTACT_EMAIL = "hello@invtra.store";
+export const CONTACT_EMAIL = "contact@invtra.store";
 
 /** Absolute site origin (no trailing slash). */
 export function siteUrl(path = ""): string {

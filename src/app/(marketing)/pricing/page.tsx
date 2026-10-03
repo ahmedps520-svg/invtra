@@ -78,8 +78,8 @@ export default async function PricingPage() {
               {t.readFaq}
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
             </Link>
-            <a href="mailto:hello@invtra.store" className={buttonClasses("ghost", "lg")}>
-              hello@invtra.store
+            <a href="mailto:contact@invtra.store" className={buttonClasses("ghost", "lg")}>
+              contact@invtra.store
             </a>
           </div>
         </Reveal>

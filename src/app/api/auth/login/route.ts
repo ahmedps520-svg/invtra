@@ -15,7 +15,7 @@ export const POST = route("auth.login", async (req: NextRequest) => {
   // Always run the hash so response time doesn't reveal whether the email exists.
   const valid = await verifyPassword(input.password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
   if (!user || !valid) throw new HttpError(401, "invalid_credentials", "That email and password don't match.");
-  if (user.status !== "ACTIVE") throw new HttpError(403, "account_deactivated", "This account has been deactivated. Contact support@invtra.store.");
+  if (user.status !== "ACTIVE") throw new HttpError(403, "account_deactivated", "This account has been deactivated. Please email contact@invtra.store.");
   await clearRateLimit(`login:email:${input.email}`);
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession(user.id, req.headers.get("user-agent"));

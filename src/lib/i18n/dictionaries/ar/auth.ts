@@ -65,7 +65,7 @@ export const auth: typeof en = {
   },
   errors: {
     invalidCredentials: "البريد الإلكتروني وكلمة المرور غير متطابقين. حاول مجددًا.",
-    deactivated: "تم إيقاف هذا الحساب. تواصل مع support@invtra.store للمساعدة.",
+    deactivated: "تم إيقاف هذا الحساب. تواصل مع contact@invtra.store للمساعدة.",
     rateLimited: "محاولات كثيرة. يُرجى الانتظار بضع دقائق ثم المحاولة مجددًا.",
     emailTaken: "يوجد حساب مسجّل بهذا البريد الإلكتروني بالفعل.",
     emailTakenAction: "سجّل الدخول بدلًا من ذلك",

@@ -10,7 +10,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Reveal } from "./reveal";
 import { cn } from "@/lib/utils";
 
-const CONTACT_EMAIL = "hello@invtra.store";
+const CONTACT_EMAIL = "contact@invtra.store";
 
 /**
  * In right-to-left text a Latin currency symbol such as "US$" gets split by the bidi

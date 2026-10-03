@@ -6,7 +6,7 @@ import { EYEBROW } from "./styles";
 import { localePath } from "@/lib/i18n/routing";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
 
-const CONTACT_EMAIL = "hello@invtra.store";
+const CONTACT_EMAIL = "contact@invtra.store";
 
 /** Marketing footer: brand, link columns, contact and legal line. */
 export function SiteFooter({ dict, locale, signedIn }: { dict: Dictionary; locale: "en" | "ar"; signedIn: boolean }) {

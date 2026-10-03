@@ -44,7 +44,7 @@ const schema = z
     // Email (password resets)
     EMAIL_PROVIDER: z.enum(["console", "smtp"]).default("console"),
     SMTP_URL: z.string().optional(),
-    EMAIL_FROM: z.string().default("INVTRA <hello@invtra.store>"),
+    EMAIL_FROM: z.string().default("INVTRA <contact@invtra.store>"),
 
     // Payments
     PAYMENT_PROVIDER: z.enum(["mock", "manual", "stripe"]).default("mock"),
