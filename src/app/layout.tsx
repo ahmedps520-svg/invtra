@@ -4,6 +4,7 @@ import { getI18n } from "@/server/i18n";
 import { pickNamespaces } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { ToastProvider } from "@/components/ui/toast";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 
 const appUrl = process.env.APP_URL || "https://invtra.store";
 
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-dvh">
         <I18nProvider locale={locale} dict={pickNamespaces(locale, ["common"])}>
           <ToastProvider>{children}</ToastProvider>
+          <ServiceWorkerRegister />
         </I18nProvider>
       </body>
     </html>

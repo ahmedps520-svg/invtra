@@ -32,6 +32,8 @@ function csp(nonce: string): string {
     `connect-src 'self'${media}`,
     "frame-src 'self' https://www.google.com https://maps.google.com https://checkout.stripe.com",
     "frame-ancestors 'self'",
+    "worker-src 'self'",
+    "manifest-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

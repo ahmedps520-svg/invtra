@@ -46,6 +46,28 @@ sending real WhatsApp messages or taking payments. A demo account is seeded
 3. configure email (`EMAIL_PROVIDER=smtp`, `SMTP_URL`);
 4. delete `ALLOW_MOCK_IN_PRODUCTION` and `SEED_DEMO` (and remove the demo account in /admin).
 
+## No downtime during deploys
+
+While Render deploys a new version it briefly stops the old one (a service with a disk can't
+overlap the two), so a visitor could see Render's own "502 Bad Gateway".
+
+- **Already handled for returning visitors:** INVTRA installs a small service worker
+  (`public/sw.js`) that replaces that error with a branded "We're updating INVTRA — this page
+  will open by itself in less than 30 seconds" page (English + Arabic), which reopens the page
+  automatically as soon as the new version answers.
+- **To remove the downtime completely,** move files off the disk to Cloudflare R2, then delete
+  the disk — Render then keeps the old version serving until the new one is ready:
+  1. Cloudflare → **R2** → *Create bucket* `invtra` (keep it private) → *Manage R2 API Tokens*
+     → *Create API token* with *Object Read & Write* on that bucket. Note the Access Key ID,
+     Secret Access Key and the S3 endpoint `https://<account-id>.r2.cloudflarestorage.com`.
+  2. Render → invtra → **Environment**: add `S3_BUCKET=invtra`, `S3_ACCESS_KEY_ID`,
+     `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_REGION=auto` (leave `STORAGE_DRIVER=local`).
+  3. Render → invtra → **Shell**: `npx tsx scripts/migrate-storage-to-s3.ts` (copies existing
+     uploads and invitation images; safe to repeat).
+  4. Set `STORAGE_DRIVER=s3` and save. Check an invitation image and an uploaded photo load.
+  5. Remove the `disk:` block from `render.yaml` (and the disk in Render → Settings → Disks).
+     From then on every deploy is zero-downtime.
+
 ## Payments (Apple Pay, Google Pay, mada)
 
 Prices are in Saudi riyals (`PAYMENT_CURRENCY=SAR`): Standard 499 SAR, Premium 699 SAR
