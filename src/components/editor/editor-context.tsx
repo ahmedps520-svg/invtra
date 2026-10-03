@@ -22,6 +22,7 @@ interface EditorContextValue {
   contentByDigits: EditorProps["contentByDigits"];
   themes: EditorThemeOption[];
   premiumIncluded: boolean;
+  nav: EditorProps["nav"];
   /** Uploads by storage key (signed URL + dimensions). */
   uploads: Record<string, EditorUpload>;
   addUpload: (u: EditorUpload) => void;
@@ -294,6 +295,7 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
       contentByDigits: props.contentByDigits,
       themes: props.themes,
       premiumIncluded: props.premiumIncluded,
+      nav: props.nav,
       uploads,
       addUpload,
       gallery,

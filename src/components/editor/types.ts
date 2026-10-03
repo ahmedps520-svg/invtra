@@ -69,6 +69,8 @@ export interface EditorProps {
   themes: EditorThemeOption[];
   premiumIncluded: boolean;
   staleAccepted: number;
+  /** Where the footer's Back / Continue go (default: the host's Details and Guests steps). */
+  nav?: { back: { href: string; label: string }; next: { href: string; label: string } };
 }
 
 export interface DesignSaveResponse {

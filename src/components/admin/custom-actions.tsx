@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Ban, Check, Copy, ExternalLink, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Ban, Check, Copy, ExternalLink, Palette, Send } from "lucide-react";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
@@ -89,6 +90,14 @@ export function CustomPackageActions({
 
   return (
     <div className="flex flex-wrap justify-end gap-1.5">
+      <Link
+        href={`/admin/custom/${id}/design`}
+        className={buttonClasses("outline", "sm")}
+        title="Choose the design and wording"
+      >
+        <Palette className="size-3.5" />
+        Design
+      </Link>
       <CopyLinkButton url={payUrl} label="Copy" />
       <a
         href={payUrl}

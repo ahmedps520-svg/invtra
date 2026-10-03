@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { badRequest, ok, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getEditableEvent } from "@/server/events/access";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 import { saveUpload, uploadView } from "@/server/uploads";
 
@@ -10,7 +10,7 @@ const KINDS = ["COVER", "GALLERY", "LOGO", "BACKGROUND", "CUSTOM_INVITATION", "M
 export const POST = route<Ctx>("events.upload", async (req: NextRequest, ctx) => {
   const user = await requireApiUser();
   const { id } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
+  const event = await getEditableEvent(user, id);
   await enforceRateLimit(`upload:${user.id}`, 120, 3600);
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
@@ -18,6 +18,7 @@ export const POST = route<Ctx>("events.upload", async (req: NextRequest, ctx) =>
   if (!(file instanceof File)) throw badRequest("missing_file", "Choose a file to upload.");
   if (!(KINDS as readonly string[]).includes(kind)) throw badRequest("invalid_kind", "Unknown upload type.");
   const data = Buffer.from(await file.arrayBuffer());
-  const upload = await saveUpload({ userId: user.id, eventId: event.id, kind: kind as (typeof KINDS)[number], data });
+  // Files belong to the event's host, also when INVTRA staff upload them while designing a custom event.
+  const upload = await saveUpload({ userId: event.userId, eventId: event.id, kind: kind as (typeof KINDS)[number], data });
   return ok({ upload: await uploadView(upload) }, { status: 201 });
 });

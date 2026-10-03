@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { Search, X } from "lucide-react";
 import { Input, Select } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ function FilterBarForm({ fields, values, className }: { fields: FilterField[]; v
             <label htmlFor={id} className="mb-1 block text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint">
               {f.label}
             </label>
-            <Input id={id} type="date" value={state[f.name] ?? ""} onChange={(e) => set(f.name, e.target.value, true)} className="h-10 w-[160px] text-sm" />
+            <DateInput id={id} value={state[f.name] ?? ""} onChange={(v) => set(f.name, v, true)} className="w-[160px]" inputClassName="h-10 text-sm" />
           </div>
         );
       })}

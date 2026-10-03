@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/server/db";
 import { requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getEditableEvent } from "@/server/events/access";
 import { buildEventCardSvg, renderPersonalInvitation } from "@/server/invitations/render";
 import { ensureInvitation } from "@/server/invitations";
 import { renderSvgToPng } from "@/server/render/card";
@@ -15,7 +15,7 @@ type Ctx = { params: Promise<{ id: string }> };
 export const GET = route<Ctx>("events.card", async (req: NextRequest, ctx) => {
   const user = await requireApiUser();
   const { id } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
+  const event = await getEditableEvent(user, id);
   const guestId = req.nextUrl.searchParams.get("guestId");
   let png: Buffer;
   let filename = "invitation-sample.png";

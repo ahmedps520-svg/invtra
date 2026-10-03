@@ -269,15 +269,15 @@ function StaleBanner() {
 function EditorFooter() {
   const { dict } = useI18n();
   const t = dict.editor.footer;
-  const { event } = useEditor();
+  const { event, nav } = useEditor();
   return (
     <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <Link href={`/dashboard/events/${event.id}/details`} className={buttonClasses("ghost", "md", "self-start")}>
+      <Link href={nav?.back.href ?? `/dashboard/events/${event.id}/details`} className={buttonClasses("ghost", "md", "self-start")}>
         <ArrowLeft className="size-4 rtl:rotate-180" />
-        {t.back}
+        {nav?.back.label ?? t.back}
       </Link>
-      <Link href={`/dashboard/events/${event.id}/guests`} className={buttonClasses("primary", "lg")}>
-        {t.continue}
+      <Link href={nav?.next.href ?? `/dashboard/events/${event.id}/guests`} className={buttonClasses("primary", "lg")}>
+        {nav?.next.label ?? t.continue}
         <ArrowRight className="size-4 rtl:rotate-180" />
       </Link>
     </div>

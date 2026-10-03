@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { DateInput } from "@/components/ui/date-input";
 import { countryForTimezone } from "@/lib/timezone-country";
 import { Switch } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
@@ -513,7 +514,7 @@ export function EventForm({
         <Section title={d.sections.when.title} description={d.sections.when.description}>
           <div className="grid gap-5 sm:grid-cols-3">
             <Field id="ev-date" label={f.date} error={err("date")}>
-              {input("date", { type: "date", dir: "ltr" })}
+              <DateInput id="ev-date" value={form.date} onChange={(v) => set("date", v)} invalid={Boolean(err("date"))} describedBy={err("date") ? "ev-date-error" : undefined} />
             </Field>
             <Field id="ev-time" label={f.time} error={err("time")}>
               {input("time", { type: "time", dir: "ltr" })}
@@ -566,7 +567,15 @@ export function EventForm({
             <Switch id="ev-allowWebRsvp" checked={form.allowWebRsvp} onChange={(v) => set("allowWebRsvp", v)} label={f.allowWebRsvp} description={f.allowWebRsvpHint} />
           </div>
           <Field id="ev-rsvpDeadline" label={f.rsvpDeadline} optional={d.optional} hint={f.rsvpDeadlineHint} error={err("rsvpDeadline")}>
-            {input("rsvpDeadline", { type: "date", dir: "ltr", className: "sm:max-w-xs" })}
+            <DateInput
+              id="ev-rsvpDeadline"
+              value={form.rsvpDeadline}
+              onChange={(v) => set("rsvpDeadline", v)}
+              max={form.date || undefined}
+              invalid={Boolean(err("rsvpDeadline"))}
+              describedBy={err("rsvpDeadline") ? "ev-rsvpDeadline-error" : f.rsvpDeadlineHint ? "ev-rsvpDeadline-hint" : undefined}
+              className="sm:max-w-xs"
+            />
           </Field>
         </Section>
 

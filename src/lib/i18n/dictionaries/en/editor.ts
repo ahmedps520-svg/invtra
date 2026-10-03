@@ -28,7 +28,7 @@ export const editor = {
   },
 
   sections: {
-    theme: { title: "Choose a design", description: "Seven designs, each made by hand. Your wording and photos come with you if you switch." },
+    theme: { title: "Choose a design", description: "Every design is made by hand. Your wording and photos come with you if you switch." },
     image: { title: "Invitation image", description: "The personal image each guest receives on WhatsApp after they accept." },
     wording: { title: "Wording", description: "The lines around your names. Leave a line empty to keep our suggestion." },
     colours: { title: "Colours", description: "Start from a curated colourway, then fine-tune any colour." },

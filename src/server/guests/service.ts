@@ -5,6 +5,7 @@ import { db } from "@/server/db";
 import { badRequest, conflict } from "@/server/http";
 import { recordActivity } from "@/server/activity";
 import { normalizePhone } from "@/lib/phone";
+import { formatNumericDateTime } from "@/lib/format";
 import { MAX_GUESTS_PER_EVENT, guestCapacity } from "@/lib/plans";
 import { guestInputSchema, type GuestInput } from "@/lib/validation/guest";
 import { invitationUrl } from "@/server/invitations";
@@ -240,6 +241,8 @@ export async function importGuests(eventId: string, rows: GuestInput[], defaultC
 // ── Export ──────────────────────────────────────────────────────────────────
 
 export async function exportGuestsCsv(eventId: string): Promise<string> {
+  const event = await db.event.findUnique({ where: { id: eventId }, select: { timezone: true } });
+  const when = (d: Date) => formatNumericDateTime(d, event?.timezone ?? "Asia/Riyadh"); // dd/mm/yyyy HH:mm, event time
   const guests = await db.guest.findMany({
     where: { eventId, isTest: false },
     include: { invitation: { select: { token: true } } },
@@ -275,8 +278,8 @@ export async function exportGuestsCsv(eventId: string): Promise<string> {
       g.invitation ? invitationUrl(g.invitation.token) : "",
       g.viewCount,
       g.scanCount,
-      g.checkedInAt ? g.checkedInAt.toISOString() : "",
-      g.lastActivityAt.toISOString(),
+      g.checkedInAt ? when(g.checkedInAt) : "",
+      when(g.lastActivityAt),
     ]),
   });
   return "﻿" + csv; // BOM so Excel opens Arabic names correctly

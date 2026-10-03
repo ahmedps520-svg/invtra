@@ -10,6 +10,10 @@ import { handlers } from "@/server/queue/handlers";
 import { templateCatalog } from "@/server/whatsapp/catalog";
 import { guestCapacity, isUnlimited, UNLIMITED_GUESTS } from "@/lib/plans";
 import { HttpError } from "@/server/http";
+import { getCustomPackage } from "@/server/custom/service";
+import { getEditableEvent } from "@/server/events/access";
+import { editorProps } from "@/server/events/editor";
+import { assertEventUpload } from "@/server/uploads";
 
 const run = randomBytes(5).toString("hex");
 const started = new Date();
@@ -188,5 +192,46 @@ describe("custom packages", () => {
     expect(guestsLabel(UNLIMITED_GUESTS, false)).toBe("Unlimited guests");
     expect(guestsLabel(UNLIMITED_GUESTS, true)).toBe("عدد غير محدود من الضيوف");
     expect(guestsLabel(1500, false)).toBe("Up to 1,500 guests");
+  });
+});
+
+describe("designing a custom event", () => {
+  it("lets staff open the host's design, but no other customer", async () => {
+    const r = await createCustomPackage(adminId, input("design", { send: { whatsapp: false, email: false } }));
+    const stranger = await db.user.create({ data: { email: emails("stranger"), name: "Stranger", passwordHash: "x" } });
+
+    await expect(getEditableEvent({ id: adminId, role: "ADMIN" }, r.event.id)).resolves.toMatchObject({ id: r.event.id });
+    await expect(getEditableEvent({ id: r.user.id, role: "CUSTOMER" }, r.event.id)).resolves.toMatchObject({ id: r.event.id });
+    await expect(getEditableEvent({ id: stranger.id, role: "CUSTOMER" }, r.event.id)).rejects.toMatchObject({ status: 404 });
+
+    const pkg = await getCustomPackage(r.order.id);
+    expect(pkg).toMatchObject({ id: r.order.id, payUrl: r.payUrl, event: { id: r.event.id }, user: { id: r.user.id } });
+    expect(await getCustomPackage("not-an-order")).toBeNull();
+
+    // Every design is offered (premium included) before the host has paid.
+    const props = await editorProps(pkg!.event, { premiumIncluded: true });
+    expect(props.premiumIncluded).toBe(true);
+    expect(props.event.plan).toBeNull();
+    expect(props.themes.length).toBeGreaterThan(5);
+  });
+
+  it("accepts any file uploaded to the event, whoever uploaded it, and nothing from other events", async () => {
+    const r = await createCustomPackage(adminId, input("uploads", { send: { whatsapp: false, email: false } }));
+    const other = await createCustomPackage(adminId, input("uploads2", { send: { whatsapp: false, email: false } }));
+    const mk = (eventId: string, userId: string, kind: "CUSTOM_INVITATION" | "LOGO") =>
+      db.upload.create({ data: { userId, eventId, kind, key: `test/${run}/${randomBytes(4).toString("hex")}.png`, mimeType: "image/png", size: 10 } });
+    const byStaff = await mk(r.event.id, adminId, "CUSTOM_INVITATION");
+    const byHost = await mk(r.event.id, r.user.id, "CUSTOM_INVITATION");
+    const elsewhere = await mk(other.event.id, other.user.id, "CUSTOM_INVITATION");
+    const logo = await mk(r.event.id, r.user.id, "LOGO");
+
+    await expect(assertEventUpload(r.event.id, byStaff.key, ["CUSTOM_INVITATION"])).resolves.toMatchObject({ id: byStaff.id });
+    await expect(assertEventUpload(r.event.id, byHost.key, ["CUSTOM_INVITATION"])).resolves.toMatchObject({ id: byHost.id });
+    await expect(assertEventUpload(r.event.id, elsewhere.key, ["CUSTOM_INVITATION"])).rejects.toMatchObject({ code: "invalid_upload" });
+    await expect(assertEventUpload(r.event.id, logo.key, ["CUSTOM_INVITATION"])).rejects.toMatchObject({ code: "invalid_upload" });
+    // The editor lists every file of the event, not just the viewer's own.
+    const props = await editorProps(r.event);
+    expect(props.uploads.map((u) => u.key).sort()).toEqual([byStaff.key, byHost.key, logo.key].sort());
+    await db.upload.deleteMany({ where: { key: { startsWith: `test/${run}/` } } });
   });
 });

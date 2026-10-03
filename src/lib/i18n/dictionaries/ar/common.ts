@@ -111,6 +111,14 @@ export const common: typeof en = {
     search: "ابحث عن الدولة أو الرمز",
     noResults: "لا توجد دولة مطابقة",
   },
+  date: {
+    placeholder: "dd/mm/yyyy",
+    open: "اختر التاريخ",
+    previous: "الشهر السابق",
+    next: "الشهر التالي",
+    today: "اليوم",
+    clear: "مسح",
+  },
   footer: {
     rights: "جميع الحقوق محفوظة.",
     privacy: "الخصوصية",

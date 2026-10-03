@@ -9,8 +9,6 @@ import {
   Baby,
   Briefcase,
   Cake,
-  CheckCircle2,
-  ExternalLink,
   Flower2,
   Gem,
   Gift,
@@ -18,11 +16,9 @@ import {
   Heart,
   HeartHandshake,
   Infinity as InfinityIcon,
-  Mail,
-  MessageCircle,
   MoonStar,
+  Palette,
   PartyPopper,
-  Send,
   Sparkles,
   UserCheck,
 } from "lucide-react";
@@ -30,7 +26,8 @@ import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { Checkbox, Switch } from "@/components/ui/toggle";
+import { DateInput } from "@/components/ui/date-input";
+import { Switch } from "@/components/ui/toggle";
 import { api, ApiError } from "@/lib/api-client";
 import { common } from "@/lib/i18n/dictionaries/en/common";
 import { EVENT_TYPES } from "@/lib/events/types";
@@ -38,7 +35,7 @@ import { formatMoney } from "@/lib/format";
 import { COMMON_TIME_ZONES, zoneOffsetMs } from "@/lib/time";
 import { customPackageSchema } from "@/lib/validation/custom-package";
 import { cn } from "@/lib/utils";
-import { CopyLinkButton } from "./custom-actions";
+import { CUSTOM_STEPS, CustomSteps } from "./custom-steps";
 
 type EventType = (typeof EVENT_TYPES)[number];
 type Lang = "EN" | "AR" | "BILINGUAL";
@@ -70,13 +67,8 @@ const TZ_OPTIONS = COMMON_TIME_ZONES.map((tz) => {
   };
 });
 
-const STEPS = [
-  { key: "host", label: "Host" },
-  { key: "occasion", label: "Occasion" },
-  { key: "details", label: "Date & venue" },
-  { key: "package", label: "Package & price" },
-  { key: "review", label: "Review & send" },
-] as const;
+/** The wizard covers the first five steps; Design and Send link follow once the event exists. */
+const WIZARD_STEPS = 5;
 
 type State = {
   host: { email: string; name: string; phone: string; locale: "en" | "ar" };
@@ -102,7 +94,6 @@ type State = {
     dueDate: string;
     note: string;
   };
-  send: { whatsapp: boolean; email: boolean };
 };
 
 type Customer = {
@@ -112,14 +103,7 @@ type Customer = {
   active: boolean;
   events: number;
 };
-type Created = {
-  orderId: string;
-  eventId: string;
-  payUrl: string;
-  newCustomer: boolean;
-  sent: { whatsapp: boolean; email: boolean };
-  customer: { name: string; email: string };
-};
+type Created = { orderId: string };
 
 /** Starting text for "What's included", in the host's language (the guest allowance is shown separately). */
 const INCLUDED_EXAMPLE = {
@@ -161,14 +145,10 @@ function toPayload(s: State) {
       dueDate: s.package.dueDate || null,
       note: t(s.package.note),
     },
-    send: {
-      whatsapp: s.send.whatsapp && hasWhatsApp(s.host.phone),
-      email: s.send.email,
-    },
+    // Nothing goes out yet: the invitation is designed first, then the link is sent.
+    send: { whatsapp: false, email: false },
   };
 }
-
-const hasWhatsApp = (phone: string) => phone.replace(/\D/g, "").length > 4;
 
 /** zod issues → { "event.title": "…" } */
 function issuesToFields(
@@ -203,18 +183,12 @@ export function CustomEventWizard({
   initialEmail = "",
   initialCustomer = null,
   currency,
-  testPayments,
-  whatsappReady,
   planPrices,
 }: {
   /** Prefilled from a customer's page (/admin/custom/new?email=…). */
   initialEmail?: string;
   initialCustomer?: Customer | null;
   currency: string;
-  /** Payments run on the mock provider — the link "pays" without charging. */
-  testPayments: boolean;
-  /** An approved WhatsApp payment-request template exists. */
-  whatsappReady: boolean;
   planPrices: { standard: number | null; premium: number | null };
 }) {
   const router = useRouter();
@@ -249,14 +223,12 @@ export function CustomEventWizard({
       dueDate: "",
       note: "",
     },
-    send: { whatsapp: whatsappReady, email: true },
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(initialCustomer);
   const [lookedUp, setLookedUp] = useState(initialEmail.trim().toLowerCase());
   const [busy, setBusy] = useState(false);
-  const [created, setCreated] = useState<Created | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const set = <K extends keyof State>(section: K, patch: Partial<State[K]>) => {
@@ -380,9 +352,8 @@ export function CustomEventWizard({
       const res = await api<Created>("/api/admin/custom", {
         body: toPayload(s),
       });
-      setCreated(res);
-      router.refresh();
-      requestAnimationFrame(() => headingRef.current?.focus());
+      router.push(`/admin/custom/${res.orderId}/design`);
+      return; // stay busy while the design step opens
     } catch (e) {
       if (e instanceof ApiError && e.fields && Object.keys(e.fields).length) {
         setErrors(e.fields);
@@ -409,121 +380,14 @@ export function CustomEventWizard({
   const guests = s.package.unlimited
     ? "Unlimited guests"
     : `Up to ${Number(s.package.guestLimit || 0).toLocaleString("en")} guests`;
-  const hasPhone = hasWhatsApp(s.host.phone);
-  const canWhatsApp = hasPhone && whatsappReady;
-
-  if (created) {
-    return (
-      <Card className="mx-auto max-w-2xl px-6 py-10 text-center sm:px-10">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-sage-soft text-sage">
-          <CheckCircle2 className="size-7" />
-        </span>
-        <h2
-          ref={headingRef}
-          tabIndex={-1}
-          className="mt-5 font-display text-3xl text-ink outline-none"
-        >
-          Custom event created
-        </h2>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-faint">
-          {created.customer.name} can pay {total} with the link below.{" "}
-          {created.sent.whatsapp && created.sent.email
-            ? "It's on its way by WhatsApp and email."
-            : created.sent.whatsapp
-              ? "It's on its way by WhatsApp."
-              : created.sent.email
-                ? "It was sent by email."
-                : "Nothing was sent — copy the link and share it yourself."}
-          {created.newCustomer
-            ? " A new account was created; the email includes a link to choose a password."
-            : ""}
-        </p>
-        <div className="mx-auto mt-6 flex max-w-lg items-center gap-2 rounded-full border border-line bg-sand/50 py-1.5 pe-1.5 ps-4">
-          <span
-            className="min-w-0 flex-1 truncate text-start text-[13px] text-ink-soft"
-            dir="ltr"
-          >
-            {created.payUrl}
-          </span>
-          <CopyLinkButton url={created.payUrl} />
-        </div>
-        {testPayments ? (
-          <p className="mt-3 text-[12.5px] text-ochre">
-            Test mode: the link completes a test payment — no money is taken.
-          </p>
-        ) : null}
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <a
-            href={created.payUrl}
-            target="_blank"
-            rel="noopener"
-            className={buttonClasses("outline", "md")}
-          >
-            <ExternalLink className="size-4" />
-            Open payment page
-          </a>
-          <Link
-            href={`/admin/events/${created.eventId}`}
-            className={buttonClasses("outline", "md")}
-          >
-            View event
-          </Link>
-          <Link href="/admin/custom" className={buttonClasses("primary", "md")}>
-            All custom events
-          </Link>
-        </div>
-      </Card>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-3xl">
-      <ol
-        className="mb-8 flex flex-wrap items-center gap-x-3 gap-y-2"
-        aria-label="Steps"
-      >
-        {STEPS.map((st, i) => (
-          <li key={st.key} className="flex items-center gap-3">
-            {i > 0 ? (
-              <span className="h-px w-4 bg-line sm:w-5" aria-hidden />
-            ) : null}
-            <button
-              type="button"
-              disabled={i > step}
-              onClick={() => go(i)}
-              aria-current={i === step ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-2 text-[13px] transition disabled:cursor-default",
-                i === step
-                  ? "font-medium text-ink"
-                  : i < step
-                    ? "text-ink-soft hover:text-ink"
-                    : "text-ink-faint",
-              )}
-            >
-              <span
-                className={cn(
-                  "flex size-6 items-center justify-center rounded-full text-[12px]",
-                  i === step
-                    ? "bg-ink text-ivory"
-                    : i < step
-                      ? "bg-bronze-100 text-bronze-700"
-                      : "border border-line-strong bg-paper",
-                )}
-              >
-                {i < step ? <CheckCircle2 className="size-3.5" /> : i + 1}
-              </span>
-              <span className={cn(i !== step && "hidden sm:inline")}>
-                {st.label}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ol>
+      <CustomSteps current={step} onSelect={(i) => go(i)} />
 
       <Card className="px-5 py-7 sm:px-8 sm:py-8">
         <p className="eyebrow mb-2">
-          Step {step + 1} of {STEPS.length}
+          Step {step + 1} of {CUSTOM_STEPS.length}
         </p>
         <h2
           ref={headingRef}
@@ -536,7 +400,7 @@ export function CustomEventWizard({
               "What's the occasion?",
               "When and where is it?",
               "What's in the package?",
-              "Review and send the payment link",
+              "Review the event and package",
             ][step]
           }
         </h2>
@@ -547,7 +411,7 @@ export function CustomEventWizard({
               "This sets the wording and the designs the host can choose from.",
               "Shown on the payment page and the invitations. The host can change these later.",
               "Set your own price and guest allowance. The host sees what's included before paying.",
-              "Check everything, then create the event and send the link.",
+              "Check everything, then create the event. Next you design the invitation, then send the payment link.",
             ][step]
           }
         </p>
@@ -780,13 +644,15 @@ export function CustomEventWizard({
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field id="ev-date" label="Date" error={err("event.date")}>
-                  <Input
+                  <DateInput
                     id="ev-date"
-                    type="date"
                     min={today()}
                     value={s.event.date}
-                    onChange={(e) => set("event", { date: e.target.value })}
-                    aria-invalid={Boolean(err("event.date"))}
+                    onChange={(v) => set("event", { date: v })}
+                    invalid={Boolean(err("event.date"))}
+                    describedBy={
+                      err("event.date") ? "ev-date-error" : undefined
+                    }
                   />
                 </Field>
                 <Field id="ev-time" label="Time" error={err("event.time")}>
@@ -960,15 +826,16 @@ export function CustomEventWizard({
                   error={err("package.dueDate")}
                   hint="Shown to the host as a reminder; the link keeps working after it."
                 >
-                  <Input
+                  <DateInput
                     id="pkg-due"
-                    type="date"
                     min={today()}
+                    max={s.event.date || undefined}
                     value={s.package.dueDate}
-                    onChange={(e) =>
-                      set("package", { dueDate: e.target.value })
+                    onChange={(v) => set("package", { dueDate: v })}
+                    invalid={Boolean(err("package.dueDate"))}
+                    describedBy={
+                      err("package.dueDate") ? "pkg-due-error" : "pkg-due-hint"
                     }
-                    aria-invalid={Boolean(err("package.dueDate"))}
                   />
                 </Field>
                 <Field
@@ -1047,76 +914,17 @@ export function CustomEventWizard({
                 </Summary>
               </dl>
 
-              <fieldset className="rounded-2xl border border-line bg-sand/40 p-4 sm:p-5">
-                <legend className="sr-only">Send the payment link</legend>
-                <p className="mb-3 text-sm font-medium text-ink">
-                  Send the payment link by
+              <div className="flex items-start gap-3 rounded-2xl border border-line bg-sand/40 p-4 text-[13.5px] text-ink-soft sm:p-5">
+                <Palette className="mt-0.5 size-4 shrink-0 text-bronze-600" />
+                <p>
+                  <span className="font-medium text-ink">
+                    Nothing is sent yet.
+                  </span>{" "}
+                  Next you choose the invitation design — any design, premium
+                  included, or your own artwork — and its wording. Then you send
+                  the payment link by WhatsApp or email.
                 </p>
-                <div className="space-y-3">
-                  <div>
-                    <Checkbox
-                      checked={s.send.whatsapp && canWhatsApp}
-                      disabled={!canWhatsApp}
-                      onChange={(v) => set("send", { whatsapp: v })}
-                      label={
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1.5",
-                            hasPhone ? "text-ink" : "text-ink-faint",
-                          )}
-                        >
-                          <MessageCircle className="size-4" /> WhatsApp
-                        </span>
-                      }
-                    />
-                    {!hasPhone ? (
-                      <p className="ms-[26px] mt-1 text-[12.5px] text-ink-faint">
-                        Add a WhatsApp number in{" "}
-                        <button
-                          type="button"
-                          className="underline underline-offset-2"
-                          onClick={() => go(0)}
-                        >
-                          Host
-                        </button>{" "}
-                        to send on WhatsApp.
-                      </p>
-                    ) : !whatsappReady ? (
-                      <p className="ms-[26px] mt-1 text-[12.5px] text-ochre">
-                        The WhatsApp payment template isn&apos;t approved yet —{" "}
-                        <Link
-                          href="/admin/templates"
-                          className="underline underline-offset-2"
-                        >
-                          submit it in Templates
-                        </Link>
-                        . Until then use email or copy the link.
-                      </p>
-                    ) : null}
-                  </div>
-                  <Checkbox
-                    checked={s.send.email}
-                    onChange={(v) => set("send", { email: v })}
-                    label={
-                      <span className="inline-flex items-center gap-1.5 text-ink">
-                        <Mail className="size-4" /> Email
-                      </span>
-                    }
-                  />
-                </div>
-                <p className="mt-3 text-[12.5px] text-ink-faint">
-                  Untick both to only create the link and share it yourself.
-                  When the host pays, they get a numbered receipt by email
-                  {canWhatsApp ? " and WhatsApp" : ""}.
-                </p>
-              </fieldset>
-              {testPayments ? (
-                <p className="rounded-xl border border-ochre/25 bg-ochre-soft px-4 py-3 text-[13px] text-ink-soft">
-                  Payments are in <b>test mode</b> — the link completes a test
-                  payment without charging. Set PAYMENT_PROVIDER=tap to take
-                  real payments.
-                </p>
-              ) : null}
+              </div>
             </div>
           ) : null}
         </div>
@@ -1145,7 +953,7 @@ export function CustomEventWizard({
               Cancel
             </Link>
           )}
-          {step < STEPS.length - 1 ? (
+          {step < WIZARD_STEPS - 1 ? (
             <Button onClick={next}>
               Continue
               <ArrowRight className="size-4" />
@@ -1155,11 +963,9 @@ export function CustomEventWizard({
               variant="accent"
               onClick={submit}
               loading={busy}
-              icon={<Send className="size-4" />}
+              icon={<Palette className="size-4" />}
             >
-              {s.send.email || (s.send.whatsapp && canWhatsApp)
-                ? "Create & send link"
-                : "Create link"}
+              Create & design invitation
             </Button>
           )}
         </div>

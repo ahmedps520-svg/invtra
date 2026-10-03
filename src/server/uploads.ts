@@ -72,10 +72,11 @@ export async function uploadView(u: { id: string; key: string; kind: UploadKind;
 }
 
 /** Ensure a storage key referenced by the client belongs to this user's event. */
-export async function assertOwnedUpload(userId: string, eventId: string, key: string | null | undefined, kinds?: UploadKind[]) {
+export async function assertEventUpload(eventId: string, key: string | null | undefined, kinds?: UploadKind[]) {
   if (!key) return null;
   const u = await db.upload.findUnique({ where: { key } });
-  if (!u || u.userId !== userId || u.eventId !== eventId || (kinds && !kinds.includes(u.kind))) {
+  // Any file uploaded to this event — by the host or by INVTRA staff designing it for them.
+  if (!u || u.eventId !== eventId || (kinds && !kinds.includes(u.kind))) {
     throw badRequest("invalid_upload", "That file isn't available.");
   }
   return u;

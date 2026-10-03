@@ -318,6 +318,27 @@ export async function cancelCustomPackage(adminId: string, orderId: string) {
   await audit(adminId, "admin.custom.cancel", "order", order.id);
 }
 
+/** A staff-prepared package with its host and event (null if the id isn't one). */
+export async function getCustomPackage(orderId: string) {
+  const order = await db.order.findFirst({
+    where: { id: orderId, plan: "CUSTOM", payToken: { not: null } },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          locale: true,
+        },
+      },
+      event: true,
+    },
+  });
+  if (!order || !order.event || order.event.deletedAt) return null;
+  return { ...order, event: order.event, payUrl: payUrl(order.payToken!) };
+}
+
 export type CustomerLookup = {
   name: string;
   phone: string | null;

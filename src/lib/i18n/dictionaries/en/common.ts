@@ -109,6 +109,14 @@ export const common = {
     search: "Search country or code",
     noResults: "No country found",
   },
+  date: {
+    placeholder: "dd/mm/yyyy",
+    open: "Choose a date",
+    previous: "Previous month",
+    next: "Next month",
+    today: "Today",
+    clear: "Clear",
+  },
   footer: {
     rights: "All rights reserved.",
     privacy: "Privacy",

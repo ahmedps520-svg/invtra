@@ -63,6 +63,16 @@ export function formatDateTime(date: Date, opts: { locale: Locale; timeZone?: st
   }).format(date);
 }
 
+/** "02/12/2026 19:30" — day first, 24-hour, Latin digits (exports and spreadsheets). */
+export function formatNumericDateTime(date: Date, timeZone: string): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone })
+      .formatToParts(date)
+      .map((p) => [p.type, p.value]),
+  );
+  return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}`;
+}
+
 export function formatNumber(n: number, locale: Locale, digits: DigitStyle = "latn"): string {
   return new Intl.NumberFormat(intlLocale(locale, digits)).format(n);
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
-import { findOwnedEvent } from "@/server/events/access";
+import { findEditableEvent } from "@/server/events/access";
 import { buildInvitationVM } from "@/server/invitations/view-model";
 import { InvitationExperience } from "@/components/invitation/experience";
 import { isThemeKey } from "@/lib/themes/registry";
@@ -19,7 +19,7 @@ export default async function PreviewPage({ params, searchParams }: Props) {
   const { eventId } = await params;
   const sp = await searchParams;
   const user = await requireUser(`/preview/${eventId}`);
-  const event = await findOwnedEvent(user.id, eventId, {
+  const event = await findEditableEvent(user, eventId, {
     scheduleItems: { orderBy: { sortOrder: "asc" } },
     galleryImages: { orderBy: { sortOrder: "asc" } },
   });

@@ -3,9 +3,9 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { badRequest, ok, parseJson, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getEditableEvent } from "@/server/events/access";
 import { eventDesign } from "@/server/events/design";
-import { assertOwnedUpload } from "@/server/uploads";
+import { assertEventUpload } from "@/server/uploads";
 import { staleAcceptedCount } from "@/server/sending/service";
 import { deepMerge, designPatchSchema, designSchema } from "@/lib/design/schema";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
@@ -28,7 +28,7 @@ const bodySchema = z.object({
 export const PATCH = route<Ctx>("events.design", async (req: NextRequest, ctx) => {
   const user = await requireApiUser();
   const { id } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
+  const event = await getEditableEvent(user, id);
   const body = await parseJson(req, bodySchema);
 
   let themeKey = event.themeKey;
@@ -44,12 +44,12 @@ export const PATCH = route<Ctx>("events.design", async (req: NextRequest, ctx) =
     design = { ...design, palette: t.palette, fonts: t.fonts, animation: t.animation, card: { ...design.card, qr: { ...design.card.qr, style: t.card.qr.style } } };
   }
   if (body.design) design = designSchema.parse(deepMerge(design, body.design));
-  if (design.background.imageKey) await assertOwnedUpload(user.id, event.id, design.background.imageKey, ["BACKGROUND", "COVER"]);
+  if (design.background.imageKey) await assertEventUpload(event.id, design.background.imageKey, ["BACKGROUND", "COVER"]);
 
-  const custom = body.customImageKey !== undefined ? await assertOwnedUpload(user.id, event.id, body.customImageKey, ["CUSTOM_INVITATION"]) : undefined;
-  if (body.coverImageKey) await assertOwnedUpload(user.id, event.id, body.coverImageKey, ["COVER", "BACKGROUND"]);
-  if (body.logoKey) await assertOwnedUpload(user.id, event.id, body.logoKey, ["LOGO"]);
-  if (body.musicKey) await assertOwnedUpload(user.id, event.id, body.musicKey, ["MUSIC"]);
+  const custom = body.customImageKey !== undefined ? await assertEventUpload(event.id, body.customImageKey, ["CUSTOM_INVITATION"]) : undefined;
+  if (body.coverImageKey) await assertEventUpload(event.id, body.coverImageKey, ["COVER", "BACKGROUND"]);
+  if (body.logoKey) await assertEventUpload(event.id, body.logoKey, ["LOGO"]);
+  if (body.musicKey) await assertEventUpload(event.id, body.musicKey, ["MUSIC"]);
   const imageMode = body.imageMode ?? event.imageMode;
 
   const data: Prisma.EventUpdateInput = {

@@ -288,3 +288,50 @@ describe("update-page test (/updating-test)", () => {
     expect(sw).toContain("if(PREVIEW){done();return}location.reload()");
   });
 });
+
+describe("day-first dates (dd/mm/yyyy)", async () => {
+  const { isoToDMY, parseDMY, typeDMY, addMonths, addDays, monthWeeks, weekday } = await import("@/lib/date-input");
+  const { formatNumericDateTime, formatDate } = await import("@/lib/format");
+
+  it("shows and reads dates day first", () => {
+    expect(isoToDMY("2026-12-02")).toBe("02/12/2026");
+    expect(parseDMY("02/12/2026")).toBe("2026-12-02");
+    expect(parseDMY("2/12/2026")).toBe("2026-12-02");
+    expect(parseDMY("2-12-2026")).toBe("2026-12-02");
+    expect(parseDMY("31/04/2026")).toBeNull(); // April has 30 days
+    expect(parseDMY("29/02/2027")).toBeNull();
+    expect(parseDMY("29/02/2028")).toBe("2028-02-29");
+    expect(parseDMY("12/2026")).toBeNull();
+    expect(isoToDMY("")).toBe("");
+  });
+
+  it("adds the slashes while typing, never while deleting", () => {
+    let text = "";
+    for (const ch of "02122026") text = typeDMY(text + ch, text);
+    expect(text).toBe("02/12/2026");
+    expect(typeDMY("02/12/", "02/12/2")).toBe("02/12/");
+    expect(typeDMY("02/1", "02/12")).toBe("02/1");
+    expect(typeDMY("2/", "2")).toBe("2/");
+    expect(typeDMY("2/12/2026", "2/12/202")).toBe("2/12/2026");
+    expect(typeDMY("2026-12-02", "")).toBe("02/12/2026"); // pasted ISO
+  });
+
+  it("does calendar maths with Sunday-first weeks", () => {
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2026-01-15", -1)).toBe("2025-12-15");
+    expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
+    expect(weekday("2026-10-04")).toBe(0); // a Sunday
+    const weeks = monthWeeks(2026, 10); // 1 Oct 2026 is a Thursday
+    expect(weeks[0].slice(0, 5)).toEqual([null, null, null, null, "2026-10-01"]);
+    expect(weeks.flat().filter(Boolean)).toHaveLength(31);
+  });
+
+  it("formats every displayed date day first", () => {
+    const d = new Date("2026-12-02T16:30:00Z");
+    expect(formatNumericDateTime(d, "Asia/Riyadh")).toBe("02/12/2026 19:30");
+    expect(formatDate(d, { locale: "en", timeZone: "Asia/Riyadh", style: "short" })).toBe("02/12/2026");
+    expect(formatDate(d, { locale: "en", timeZone: "Asia/Riyadh", style: "long" })).toBe("2 December 2026");
+    // Arabic adds right-to-left marks around the slashes; the order is still day/month/year.
+    expect(formatDate(d, { locale: "ar", timeZone: "Asia/Riyadh", style: "short" }).replace(/\u200f/g, "")).toBe("02/12/2026");
+  });
+});

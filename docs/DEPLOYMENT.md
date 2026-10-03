@@ -99,9 +99,11 @@ Refunds are issued in the Tap dashboard, then recorded in *Admin → Payments*.
 
 **Admin → Custom events → New custom event** walks staff through the host, occasion, date and
 venue, then the package: unlimited guests (or a fixed number), your own price in
-`PAYMENT_CURRENCY`, and what's included. INVTRA creates the host's account if needed, the
-event, and a secret payment link (`/pay/<token>`, no sign-in needed) sent by email and — once
-the `invtra_payment_request` template is approved — WhatsApp. The host pays on the same Tap
+`PAYMENT_CURRENCY`, and what's included. INVTRA creates the host's account if needed and the
+event; staff then design the invitation in the same editor customers use (any design, premium
+included, or their own artwork, plus wording, colours and fonts), and finally send the secret
+payment link (`/pay/<token>`, no sign-in needed) by email and — once the
+`invtra_payment_request` template is approved — WhatsApp. The host pays on the same Tap
 checkout (Apple Pay, Google Pay, mada, cards); the plan is activated and a numbered receipt
 (`INVTRA-2026-0001`, sequential per year) is emailed and sent on WhatsApp. The payment page then
 shows the printable receipt. Unpaid packages can be re-sent or withdrawn from the list.

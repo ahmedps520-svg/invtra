@@ -1,6 +1,6 @@
 import { db } from "@/server/db";
 import { notFound, ok, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getEditableEvent } from "@/server/events/access";
 import { storage } from "@/server/storage";
 
 type Ctx = { params: Promise<{ id: string; uploadId: string }> };
@@ -8,8 +8,8 @@ type Ctx = { params: Promise<{ id: string; uploadId: string }> };
 export const DELETE = route<Ctx>("events.upload.delete", async (_req, ctx) => {
   const user = await requireApiUser();
   const { id, uploadId } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
-  const upload = await db.upload.findFirst({ where: { id: uploadId, eventId: event.id, userId: user.id } });
+  const event = await getEditableEvent(user, id);
+  const upload = await db.upload.findFirst({ where: { id: uploadId, eventId: event.id } });
   if (!upload) throw notFound("Upload");
   const inUse =
     [event.customImageKey, event.coverImageKey, event.logoKey, event.musicKey].includes(upload.key) ||
