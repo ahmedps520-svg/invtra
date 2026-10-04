@@ -36,6 +36,10 @@ export const marketing = {
     legal: "Legal",
     contact: "Contact",
     contactBody: "Questions, custom events or press — we answer every message.",
+    chatLabel: "Chat with us on WhatsApp",
+    chatShort: "Chat with us",
+    chatMessage: "Hello INVTRA, I have a question about digital invitations.",
+    whatsapp: "WhatsApp",
     createAccount: "Create an account",
     trademark:
       "WhatsApp is a trademark of Meta Platforms, Inc. INVTRA is an independent service built on the official WhatsApp Business Platform.",

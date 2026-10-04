@@ -7,6 +7,6 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
   const { token } = await ctx.params;
   const data = await loadPublicInvitation(token);
   if (!data || data.state !== "active") return new NextResponse(null, { status: 404 });
-  const { png } = await renderTeaser(data.event);
+  const { png } = await renderTeaser(data.event, data.guest);
   return new NextResponse(new Uint8Array(png), { headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=3600" } });
 }

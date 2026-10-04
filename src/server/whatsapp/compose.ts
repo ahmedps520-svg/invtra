@@ -9,6 +9,8 @@ import {
   type TemplateVariable,
 } from "@/lib/whatsapp/templates";
 import { eventDesign } from "@/server/events/design";
+import { sectionStartsAt } from "@/server/events/sections";
+import { parseSections } from "@/lib/sections";
 import type { MessageContent, SendTemplateParams, TemplateComponent } from "./types";
 
 export type MessageLocale = "en" | "ar" | "bilingual";
@@ -25,28 +27,36 @@ export function guestLocale(event: Pick<Event, "language">, guest: Pick<Guest, "
 type EventForValues = Pick<
   Event,
   "hostNames" | "hostNamesAr" | "title" | "titleAr" | "startsAt" | "timezone" | "venueName" | "venueNameAr" | "templateVariables" | "themeKey" | "design"
->;
+> &
+  Partial<Pick<Event, "sectionsEnabled" | "sections">>;
 
-/** Values for every template variable, with the customer's per-event overrides applied. */
-export function templateValues(event: EventForValues, guest: Pick<Guest, "name">, token: string): Record<TemplateVariable, string> {
+/**
+ * Values for every template variable, with the customer's per-event overrides applied.
+ * A guest in the men's / women's section gets that section's time and venue.
+ */
+export function templateValues(event: EventForValues, guest: Pick<Guest, "name"> & Partial<Pick<Guest, "section">>, token: string): Record<TemplateVariable, string> {
   const digits = eventDesign(event).digits;
   const overrides = (event.templateVariables ?? {}) as Partial<Record<TemplateVariable, string>>;
   const pick = (k: TemplateVariable, fallback: string) => {
     const v = overrides[k];
     return typeof v === "string" && v.trim() ? v.trim() : fallback;
   };
+  const sec = event.sectionsEnabled && guest.section ? parseSections(event.sections)[guest.section] : null;
+  const startsAt = sec?.time ? sectionStartsAt(event, sec.time) : event.startsAt;
+  const venue = sec?.venueName || sec?.venueNameAr ? sec.venueName || sec.venueNameAr! : pick("venue", event.venueName);
+  const venueAr = sec?.venueName || sec?.venueNameAr ? sec.venueNameAr || sec.venueName! : pick("venue_ar", event.venueNameAr || event.venueName);
   return {
     guest_name: guest.name,
     host_names: pick("host_names", event.hostNames),
     host_names_ar: pick("host_names_ar", event.hostNamesAr || event.hostNames),
     event_name: pick("event_name", event.title),
     event_name_ar: pick("event_name_ar", event.titleAr || event.title),
-    event_date: formatDate(event.startsAt, { locale: "en", timeZone: event.timezone, style: "full" }),
-    event_date_ar: formatDate(event.startsAt, { locale: "ar", timeZone: event.timezone, style: "full", digits }),
-    event_time: formatTime(event.startsAt, { locale: "en", timeZone: event.timezone }),
-    event_time_ar: formatTime(event.startsAt, { locale: "ar", timeZone: event.timezone, digits }),
-    venue: pick("venue", event.venueName),
-    venue_ar: pick("venue_ar", event.venueNameAr || event.venueName),
+    event_date: formatDate(startsAt, { locale: "en", timeZone: event.timezone, style: "full" }),
+    event_date_ar: formatDate(startsAt, { locale: "ar", timeZone: event.timezone, style: "full", digits }),
+    event_time: formatTime(startsAt, { locale: "en", timeZone: event.timezone }),
+    event_time_ar: formatTime(startsAt, { locale: "ar", timeZone: event.timezone, digits }),
+    venue,
+    venue_ar: venueAr,
     invitation_token: token,
     customer_name: "",
     package_amount: "",
@@ -108,7 +118,7 @@ export function composeTemplate(
 export async function pickTemplate(
   event: Pick<Event, "type" | "language" | "messageTemplateId">,
   guest: Pick<Guest, "locale">,
-  purpose: "INVITATION" | "UPDATE" = "INVITATION",
+  purpose: "INVITATION" | "UPDATE" | "REMINDER" | "NUDGE" = "INVITATION",
 ): Promise<MessageTemplate | null> {
   const locale = guestLocale(event, guest);
   const candidates = await db.messageTemplate.findMany({

@@ -6,6 +6,7 @@ import { getI18n } from "@/server/i18n";
 import { findOwnedEvent } from "@/server/events/access";
 import { defaultCountryFor } from "@/server/guests/service";
 import { invitationUrl } from "@/server/invitations";
+import { sectionCounts } from "@/server/guests/sections";
 import { GuestsManager } from "@/components/dashboard/guests/guests-manager";
 import { GUEST_STATUSES, type GuestList, type GuestStatusKey } from "@/components/dashboard/guests/types";
 
@@ -30,10 +31,11 @@ export default async function GuestsPage({
   const raw = typeof sp.status === "string" ? sp.status : null;
   const status = raw && (GUEST_STATUSES as readonly string[]).includes(raw) ? (raw as GuestStatusKey) : null;
   const where = { eventId: event.id, isTest: false, ...(status ? { status: status as GuestStatus } : {}) };
-  const [total, guests, counts] = await Promise.all([
+  const [total, guests, counts, bySection] = await Promise.all([
     db.guest.count({ where }),
     db.guest.findMany({ where, orderBy: { createdAt: "asc" }, take: 50, include: { invitation: { select: { token: true } } } }),
     db.guest.groupBy({ by: ["status"], where: { eventId: event.id, isTest: false }, _count: true }),
+    db.guest.groupBy({ by: ["section"], where: { eventId: event.id, isTest: false }, _count: true }),
   ]);
   const initial = JSON.parse(
     JSON.stringify({
@@ -41,6 +43,7 @@ export default async function GuestsPage({
       page: 1,
       pageSize: 50,
       counts: Object.fromEntries(counts.map((c) => [c.status, c._count])),
+      sectionCounts: sectionCounts(bySection),
       guests: guests.map(({ invitation, ...g }) => ({ ...g, invitationUrl: invitation ? invitationUrl(invitation.token) : null })),
     }),
   ) as GuestList;
@@ -49,6 +52,7 @@ export default async function GuestsPage({
     <GuestsManager
       eventId={event.id}
       eventLanguage={event.language}
+      sectionsEnabled={event.sectionsEnabled}
       defaultCountry={defaultCountryFor(event.timezone)}
       initial={initial}
       initialStatus={status}

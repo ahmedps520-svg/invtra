@@ -7,6 +7,8 @@ import { eventStats } from "@/server/events/service";
 import { cardPreviewProps } from "@/server/events/preview";
 import { sendReadiness, staleAcceptedCount } from "@/server/sending/service";
 import { EventOverview } from "@/components/dashboard/overview";
+import { doorClosesAt, doorUrl } from "@/server/door/service";
+import { reminderOverview } from "@/server/reminders/service";
 
 export async function generateMetadata() {
   const { dict } = await getI18n();
@@ -19,13 +21,14 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
   const event = await findOwnedEvent(user.id, id);
   if (!event) notFound();
 
-  const [stats, activity, batch, stale, preview, readiness] = await Promise.all([
+  const [stats, activity, batch, stale, preview, readiness, reminders] = await Promise.all([
     eventStats(event.id),
     db.activity.findMany({ where: { eventId: event.id }, orderBy: { createdAt: "desc" }, take: 30 }),
     db.sendBatch.findFirst({ where: { eventId: event.id, kind: { not: "TEST" } }, orderBy: { createdAt: "desc" } }),
     staleAcceptedCount(event),
     cardPreviewProps(event),
     sendReadiness(event),
+    reminderOverview(event),
   ]);
 
   return (
@@ -35,6 +38,8 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
       preview={preview}
       ready={readiness.ready}
       unsent={readiness.unsent}
+      reminders={reminders}
+      door={{ url: event.doorToken ? doorUrl(event.doorToken) : null, closesAt: doorClosesAt(event).toISOString(), timeZone: event.timezone }}
       // eslint-disable-next-line react-hooks/purity -- request time for relative timestamps
       serverNow={Date.now()}
       initial={{

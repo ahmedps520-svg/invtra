@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CalendarPlus, Check, ChevronDown, Download, Lock, X } from "lucide-react";
+import { Check, ChevronDown, Download, Lock, X } from "lucide-react";
 import { fmt } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 import { Label, Reveal, SectionHeading, Txt, useInvitation, useNumber } from "./primitives";
@@ -213,6 +213,7 @@ export function EntryPass({ status }: { status: Status }) {
         {unlocked ? (
           <>
             <p className={cn(s.display, "mt-6 text-2xl")}>{guest.name}</p>
+            {vm.section ? <Txt en={vm.section.label.en} ar={vm.section.label.ar} as="p" className={cn(s.eyebrow, "mt-2 block")} inline /> : null}
             <Txt
               en={guest.allowedCount > 1 ? fmt(vm.dict.en.admits, { n: guest.attendingCount ?? guest.allowedCount }) : vm.dict.en.admitsOne}
               ar={guest.allowedCount > 1 ? fmt(vm.dict.ar.admits, { n: num(guest.attendingCount ?? guest.allowedCount) }) : vm.dict.ar.admitsOne}
@@ -226,10 +227,6 @@ export function EntryPass({ status }: { status: Status }) {
                 <a href={`/i/${vm.token}/image?download=1`} className={cn(s.button, s.primary, "w-full")}>
                   <Download className="size-4" />
                   {d.pass.download}
-                </a>
-                <a href={`/i/${vm.token}/calendar`} className={cn(s.button, s.ghost, "w-full")}>
-                  <CalendarPlus className="size-4" />
-                  {d.pass.calendar}
                 </a>
               </div>
             ) : null}

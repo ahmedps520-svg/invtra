@@ -25,7 +25,7 @@ export type TemplateFormValues = {
   metaName: string;
   language: string;
   locale: string;
-  purpose: "INVITATION" | "UPDATE" | "PAYMENT_REQUEST" | "PAYMENT_RECEIPT";
+  purpose: "INVITATION" | "UPDATE" | "REMINDER" | "NUDGE" | "PAYMENT_REQUEST" | "PAYMENT_RECEIPT";
   category: string;
   headerType: string;
   body: string;
@@ -117,8 +117,9 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
     return next;
   }, [f.variables, count]);
 
+  const replyButtons = f.purpose === "INVITATION" || f.purpose === "NUDGE";
   const buttons: TemplateButton[] =
-    f.purpose === "INVITATION"
+    replyButtons
       ? [
           { type: "QUICK_REPLY", text: acceptText, action: "ACCEPT" },
           { type: "QUICK_REPLY", text: declineText, action: "DECLINE" },
@@ -175,7 +176,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
       const err = e as ApiError;
       const fields: Record<string, string> = {};
       for (const [k, v] of Object.entries(err.fields ?? {})) {
-        if (k === "buttons.0.text") fields[f.purpose === "INVITATION" ? "acceptText" : "urlText"] = v;
+        if (k === "buttons.0.text") fields[replyButtons ? "acceptText" : "urlText"] = v;
         else if (k === "buttons.1.text") fields.declineText = v;
         else if (k === "buttons.0.url") fields.url = v;
         else if (k.startsWith("variables")) fields.variables = v.startsWith("Invalid enum") ? "Choose a variable for every placeholder" : v;
@@ -275,6 +276,8 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
                     <Select id="t-purpose" value={f.purpose} onChange={(e) => set("purpose", e.target.value as TemplateFormValues["purpose"])}>
                       <option value="INVITATION">Invitation</option>
                       <option value="UPDATE">Update</option>
+                      <option value="REMINDER">Day-before reminder</option>
+                      <option value="NUDGE">Reply reminder (nudge)</option>
                       <option value="PAYMENT_REQUEST">Payment request</option>
                       <option value="PAYMENT_RECEIPT">Payment receipt</option>
                     </Select>
@@ -372,7 +375,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
 
             {section(
               "Buttons",
-              f.purpose === "INVITATION" ? (
+              replyButtons ? (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field id="t-accept" label="Accept button" optional={`(${acceptText.length}/25)`} error={errors.acceptText}>
                     <Input id="t-accept" dir="auto" maxLength={25} value={acceptText} onChange={(e) => setAcceptText(e.target.value)} />
@@ -387,7 +390,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
                   <Field id="t-urltext" label="Button text" optional={`(${urlText.length}/25)`} error={errors.urlText}>
                     <Input id="t-urltext" dir="auto" maxLength={25} value={urlText} onChange={(e) => setUrlText(e.target.value)} />
                   </Field>
-                  <Field id="t-url" label="Link" error={errors.url ?? errors.buttons} hint={f.purpose === "UPDATE" ? "Must end with {{1}} — replaced by the guest's invitation code." : "Must end with {{1}} — replaced by the payment-link code (…/pay/{{1}})."}>
+                  <Field id="t-url" label="Link" error={errors.url ?? errors.buttons} hint={f.purpose === "UPDATE" || f.purpose === "REMINDER" ? "Must end with {{1}} — replaced by the guest's invitation code." : "Must end with {{1}} — replaced by the payment-link code (…/pay/{{1}})."}>
                     <Input id="t-url" dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)} className="tabular-nums" />
                   </Field>
                 </div>

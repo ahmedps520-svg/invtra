@@ -9,12 +9,14 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
+import { SECTION_LABELS } from "@/lib/sections";
+import { cn } from "@/lib/utils";
 import { errorMessage } from "../i18n";
 import type { GuestRow } from "./types";
 
-type Values = { name: string; phone: string; groupName: string; allowedCount: string; locale: "" | "en" | "ar" };
+type Values = { name: string; phone: string; groupName: string; allowedCount: string; locale: "" | "en" | "ar"; section: "" | "MEN" | "WOMEN" };
 
-const empty: Values = { name: "", phone: "", groupName: "", allowedCount: "1", locale: "" };
+const empty: Values = { name: "", phone: "", groupName: "", allowedCount: "1", locale: "", section: "" };
 
 function valuesOf(g: GuestRow | null): Values {
   if (!g) return empty;
@@ -24,6 +26,7 @@ function valuesOf(g: GuestRow | null): Values {
     groupName: g.groupName ?? "",
     allowedCount: String(g.allowedCount),
     locale: g.locale === "en" || g.locale === "ar" ? g.locale : "",
+    section: g.section ?? "",
   };
 }
 
@@ -33,6 +36,7 @@ export function GuestFormDialog({
   onClose,
   eventId,
   eventLanguage,
+  sectionsEnabled = false,
   guest,
   onSaved,
   defaultCountry,
@@ -41,12 +45,13 @@ export function GuestFormDialog({
   onClose: () => void;
   eventId: string;
   eventLanguage: "EN" | "AR" | "BILINGUAL";
+  sectionsEnabled?: boolean;
   guest: GuestRow | null;
   onSaved: () => void;
   /** The event's country — numbers typed without a code are local to it. */
   defaultCountry: string;
 }) {
-  const { dict } = useI18n();
+  const { dict, locale } = useI18n();
   const d = dict.dashboard.guestForm;
   const toast = useToast();
   const [values, setValues] = useState<Values>(() => valuesOf(guest));
@@ -77,6 +82,8 @@ export function GuestFormDialog({
       groupName: values.groupName.trim() || null,
       allowedCount: count,
       locale: values.locale || null,
+      // Only sent when the event has sections, so turning them off never loses a guest's choice.
+      ...(sectionsEnabled ? { section: values.section || null } : {}),
     };
     try {
       if (guest) await api(`/api/events/${eventId}/guests/${guest.id}`, { method: "PATCH", body });
@@ -84,7 +91,7 @@ export function GuestFormDialog({
       toast(guest ? d.saved : fmt(d.added, { name: body.name }));
       onSaved();
       if (another) {
-        setValues((v) => ({ ...empty, groupName: v.groupName, locale: v.locale }));
+        setValues((v) => ({ ...empty, groupName: v.groupName, locale: v.locale, section: v.section }));
         setErrors({});
         setTimeout(() => nameRef.current?.focus(), 30);
       } else onClose();
@@ -176,6 +183,39 @@ export function GuestFormDialog({
           </Field>
         </div>
         <p className="-mt-3 text-[13px] text-ink-faint">{d.allowedHint}</p>
+        {sectionsEnabled ? (
+          <Field id="g-section" label={d.section} hint={d.sectionHint}>
+            <div role="radiogroup" aria-label={d.section} className="grid grid-cols-2 gap-2.5">
+              {(["MEN", "WOMEN"] as const).map((s) => {
+                const active = values.section === s;
+                return (
+                  <button
+                    key={s}
+                    id={s === "MEN" ? "g-section" : undefined}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => set("section", active ? "" : s)}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-start text-sm transition-all duration-300 ease-luxe",
+                      active
+                        ? s === "MEN"
+                          ? "border-[#2f5d8a]/50 bg-[#2f5d8a]/[0.07] text-ink shadow-soft"
+                          : "border-[#a2456b]/50 bg-[#a2456b]/[0.07] text-ink shadow-soft"
+                        : "border-line bg-paper text-ink-soft hover:border-line-strong hover:text-ink",
+                    )}
+                  >
+                    <span
+                      className={cn("size-2.5 rounded-full ring-1", active ? (s === "MEN" ? "bg-[#2f5d8a] ring-[#2f5d8a]" : "bg-[#a2456b] ring-[#a2456b]") : "ring-line-strong")}
+                      aria-hidden="true"
+                    />
+                    {SECTION_LABELS[s][locale]}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+        ) : null}
         <Field id="g-locale" label={d.language} hint={d.languageHint}>
           <Select id="g-locale" value={values.locale} onChange={(e) => set("locale", e.target.value as Values["locale"])}>
             <option value="">{fmt(d.languageDefault, { lang: langName })}</option>

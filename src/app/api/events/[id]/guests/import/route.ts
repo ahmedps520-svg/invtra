@@ -11,6 +11,7 @@ const rowSchema = z.object({
   phone: z.string(),
   groupName: z.string().nullable().optional(),
   allowedCount: z.number().int().optional(),
+  section: z.enum(["MEN", "WOMEN"]).nullable().optional(),
 });
 
 export const POST = route<Ctx>("guests.import", async (req: NextRequest, ctx) => {
@@ -20,7 +21,7 @@ export const POST = route<Ctx>("guests.import", async (req: NextRequest, ctx) =>
   const { rows, country } = await parseJson(req, z.object({ rows: z.array(rowSchema).max(5000), country: z.string().length(2).optional() }));
   const result = await importGuests(
     event.id,
-    rows.map((r) => ({ name: r.name, phone: r.phone, groupName: r.groupName ?? null, allowedCount: r.allowedCount ?? 1, locale: null, notes: null })),
+    rows.map((r) => ({ name: r.name, phone: r.phone, groupName: r.groupName ?? null, allowedCount: r.allowedCount ?? 1, section: r.section ?? null, locale: null, notes: null })),
     country ?? defaultCountryFor(event.timezone),
   );
   return ok(result, { status: 201 });

@@ -158,6 +158,18 @@ model Event {
   rsvpDeadline        DateTime?
   allowWebRsvp        Boolean   @default(true)
 
+  // Separate men's and women's sections (common at Saudi weddings): each guest can belong to
+  // one, and each section can have its own time, venue and entrance note (src/lib/sections.ts).
+  sectionsEnabled Boolean @default(false)
+  sections        Json?
+
+  // Door check-in link for staff (/door/<doorToken>) — no account needed; regenerating revokes the old link.
+  doorToken          String?   @unique
+  doorTokenCreatedAt DateTime?
+
+  // INVTRA sends accepted guests a reminder with the location the day before.
+  autoReminder Boolean @default(true)
+
   // Design
   themeKey          String
   design            Json // see src/lib/design/schema.ts
@@ -186,6 +198,8 @@ model Event {
   teaserMediaId        String?
   teaserMediaVersion   String?
   teaserMediaExpiresAt DateTime?
+  // Same cache for the men's / women's section teasers (their own time and venue): { [version]: { id, expiresAt } }
+  sectionTeaserMedia   Json?
 
   firstSentAt       DateTime?
   deactivatedAt     DateTime?
@@ -295,6 +309,11 @@ enum DeliveryStatus {
   FAILED
 }
 
+enum GuestSection {
+  MEN
+  WOMEN
+}
+
 enum RsvpSource {
   WHATSAPP
   WEB
@@ -313,6 +332,7 @@ model Guest {
   locale         String? // optional per-guest language override ("en" | "ar")
   notes          String?
   isTest         Boolean @default(false) // host's own number for "send me a test"; hidden from lists & stats
+  section        GuestSection? // men's or women's section, when the event has sections
 
   status            GuestStatus    @default(PENDING)
   rsvpStatus        RsvpStatus     @default(PENDING)
@@ -335,6 +355,9 @@ model Guest {
   lastScannedAt         DateTime?
   checkedInAt           DateTime?
   checkedInCount        Int?
+  reminderSentAt        DateTime? // day-before reminder (sent by INVTRA, or from the host's own WhatsApp)
+  nudgedAt              DateTime? // last "we're still waiting for your reply" reminder
+  nudgeCount            Int       @default(0)
   lastActivityAt        DateTime  @default(now())
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -407,7 +430,7 @@ model QRScan {
   eventId      String
   event        Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
   guestId      String
-  byHost       Boolean    @default(false) // scanned by the signed-in host (door check-in)
+  byHost       Boolean    @default(false) // scanned at the door (the signed-in host or staff with the door link)
   createdAt    DateTime   @default(now())
 
   @@index([eventId, createdAt])
@@ -463,6 +486,8 @@ enum TemplatePurpose {
   UPDATE // event changed: re-sends the invitation link (works outside the 24h window)
   PAYMENT_REQUEST // custom package: payment link to the host (URL button /pay/{{1}})
   PAYMENT_RECEIPT // payment confirmation with the receipt (URL button /pay/{{1}})
+  REMINDER // the day before: accepted guests get the time and place (URL button /i/{{1}})
+  NUDGE // guests who haven't replied yet: a gentle reminder with Accept / Decline
 }
 
 enum TemplateStatus {
@@ -561,6 +586,8 @@ enum MessagePurpose {
   REPLY // inbound button press / text
   PAYMENT_REQUEST // to a host: payment link for a custom package
   PAYMENT_RECEIPT // to a host: payment received + receipt
+  REMINDER // day-before reminder to an accepted guest
+  NUDGE // reminder to a guest who hasn't replied
   OTHER
 }
 

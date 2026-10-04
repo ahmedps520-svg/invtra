@@ -63,6 +63,9 @@ const schema = z
     LEGAL_VAT_NUMBER: z.string().optional(),
     LEGAL_ADDRESS: z.string().optional(),
 
+    // Support chat: the "Chat with us on WhatsApp" button (digits with country code; empty hides it).
+    SUPPORT_WHATSAPP: z.string().default("966557663974"),
+
     // Background jobs
     INLINE_WORKER: bool,
     WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(64).default(8),

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isValidTimeZone } from "@/lib/time";
 import { EVENT_TYPES } from "@/lib/events/types";
+import { sectionsSchema } from "@/lib/sections";
 
 const optionalText = (max: number) =>
   z
@@ -67,6 +68,11 @@ export const eventInputSchema = z.object({
   rsvpDeadline: z.union([dateStr, z.literal("")]).optional().nullable(),
   allowWebRsvp: z.boolean().default(true),
   schedule: z.array(scheduleItemSchema).max(30).default([]),
+  /** Separate men's and women's sections, each with optional time / place overrides. */
+  sectionsEnabled: z.boolean().optional(),
+  sections: sectionsSchema.optional().nullable(),
+  /** Day-before reminder to accepted guests, sent by INVTRA. */
+  autoReminder: z.boolean().optional(),
 });
 
 export type EventInput = z.infer<typeof eventInputSchema>;

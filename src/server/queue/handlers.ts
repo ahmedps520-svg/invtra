@@ -1,4 +1,4 @@
-import type { Job } from "@prisma/client";
+import type { Event, Job } from "@prisma/client";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { logError } from "@/server/log";
@@ -17,6 +17,7 @@ import { toWhatsAppId } from "@/lib/phone";
 import { batchProgress, cancelBatch } from "@/server/sending/batch";
 import { enqueue, PermanentJobError, type JobType } from "./queue";
 import { sendPaymentWhatsApp, sendReceipt } from "@/server/custom/messages";
+import { MAX_NUDGES, reminderDue, viaInvtra } from "@/server/reminders/service";
 
 /**
  * Job handlers. A handler either succeeds, throws (→ retried with backoff), or throws
@@ -36,6 +37,8 @@ export const handlers: Record<JobType, (job: Job, payload: Payload) => Promise<v
   "invitation.notice": (_job, p) => sendSystemText(String(p.guestId), p.key === "deadline" ? "deadline" : "closed"),
   "payment.request": (_job, p) => sendPaymentWhatsApp(String(p.orderId), "request"),
   "payment.receipt": (_job, p) => sendReceipt(String(p.orderId), p.channel === "whatsapp" ? "whatsapp" : "email"),
+  "reminder.send": (_job, p) => sendFollowUp(String(p.guestId), "REMINDER"),
+  "nudge.send": (_job, p) => sendFollowUp(String(p.guestId), "NUDGE"),
   "mock.webhook": async (_job, p) => {
     const raw = JSON.stringify(p.body);
     const r = await handleWhatsAppWebhook(raw, signWebhookBody(raw, env().WHATSAPP_APP_SECRET ?? ""));
@@ -87,18 +90,10 @@ async function sendInvitationRequest(job: Job, guestId: string) {
   let headerMediaId: string | null = null;
   let headerImageKey: string | null = null;
   if (template.headerType === "IMAGE") {
-    const teaser = await renderTeaser(event);
+    // Guests in a section with its own time or place get that section's card.
+    const teaser = await renderTeaser(event, guest);
     headerImageKey = teaser.key;
-    if (event.teaserMediaId && event.teaserMediaVersion === teaser.version && event.teaserMediaExpiresAt && event.teaserMediaExpiresAt > new Date()) {
-      headerMediaId = event.teaserMediaId;
-    } else {
-      const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: "image/png", filename: "invitation.png" });
-      headerMediaId = up.mediaId;
-      await db.event.update({
-        where: { id: event.id },
-        data: { teaserMediaId: up.mediaId, teaserMediaVersion: teaser.version, teaserMediaExpiresAt: new Date(Date.now() + MEDIA_TTL_MS) },
-      });
-    }
+    headerMediaId = await teaserMediaId(event, teaser);
   }
 
   const values = templateValues(event, guest, invitation.token);
@@ -144,6 +139,30 @@ async function sendInvitationRequest(job: Job, guestId: string) {
     }
     throw e; // transient — retry with backoff
   }
+}
+
+/** WhatsApp media id for the teaser card, uploaded once per design version (and section) and reused. */
+async function teaserMediaId(event: Event, teaser: { version: string; png: Buffer; variant: string | null }): Promise<string> {
+  const now = new Date();
+  if (!teaser.variant) {
+    if (event.teaserMediaId && event.teaserMediaVersion === teaser.version && event.teaserMediaExpiresAt && event.teaserMediaExpiresAt > now) return event.teaserMediaId;
+    const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: "image/png", filename: "invitation.png" });
+    await db.event.update({
+      where: { id: event.id },
+      data: { teaserMediaId: up.mediaId, teaserMediaVersion: teaser.version, teaserMediaExpiresAt: new Date(Date.now() + MEDIA_TTL_MS) },
+    });
+    return up.mediaId;
+  }
+  const cache = (event.sectionTeaserMedia ?? {}) as Record<string, { id: string; expiresAt: string }>;
+  const hit = cache[teaser.version];
+  if (hit && new Date(hit.expiresAt) > now) return hit.id;
+  const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: "image/png", filename: "invitation.png" });
+  // Keep only current entries (old design versions are never used again).
+  const fresh = Object.fromEntries(Object.entries(cache).filter(([, v]) => new Date(v.expiresAt) > now).slice(-4));
+  const next = { ...fresh, [teaser.version]: { id: up.mediaId, expiresAt: new Date(Date.now() + MEDIA_TTL_MS).toISOString() } };
+  await db.event.update({ where: { id: event.id }, data: { sectionTeaserMedia: next } });
+  event.sectionTeaserMedia = next;
+  return up.mediaId;
 }
 
 async function markRequestFailed(
@@ -280,6 +299,73 @@ async function deliverInvitation(guestId: string, reason: string) {
   if (reason !== "repeat") {
     await recordActivity(db, event.id, "guest.invitation_sent", { name: guest.name, update: reason === "update" }, guest.id);
   }
+  await simulateReceipts(messageId, guest.phone);
+}
+
+// ── Day-before reminder / reply reminder (nudge) ────────────────────────────
+
+async function sendFollowUp(guestId: string, purpose: "REMINDER" | "NUDGE") {
+  const guest = await db.guest.findUnique({ where: { id: guestId }, include: { event: true, invitation: true } });
+  if (!guest || guest.isTest) return;
+  const event = guest.event;
+  if (!eventIsActive(event) || !viaInvtra(guest)) return;
+  // Things may have changed since this was queued.
+  if (purpose === "REMINDER" && (guest.rsvpStatus !== "ACCEPTED" || guest.reminderSentAt || !event.autoReminder || !reminderDue(event, guest))) return;
+  if (purpose === "NUDGE" && (guest.rsvpStatus !== "PENDING" || guest.nudgeCount >= MAX_NUDGES || event.startsAt < new Date())) return;
+
+  const template = await pickTemplate(event, guest, purpose);
+  if (!template) return; // not approved for this language — nothing to send
+  const invitation = guest.invitation ?? (await ensureInvitation(guest));
+  const { params, content } = composeTemplate(template, templateValues(event, guest, invitation.token), { to: guest.phone, token: invitation.token });
+
+  await throttleSend();
+  let messageId: string;
+  try {
+    ({ messageId } = await whatsapp().sendTemplate(params));
+  } catch (e) {
+    if (e instanceof WhatsAppApiError && !e.retryable) {
+      await db.whatsAppMessage.create({
+        data: {
+          eventId: event.id,
+          guestId: guest.id,
+          direction: "OUTBOUND",
+          purpose,
+          provider: whatsapp().name,
+          phone: guest.phone,
+          type: "template",
+          status: "FAILED",
+          failedAt: new Date(),
+          errorCode: e.code !== null ? String(e.code) : e.reason,
+          errorMessage: e.message.slice(0, 500),
+          content: content as object,
+        },
+      });
+      // Don't try again for this guest (a reminder is a courtesy).
+      await db.guest.update({ where: { id: guest.id }, data: purpose === "REMINDER" ? { reminderSentAt: new Date() } : { nudgedAt: new Date(), nudgeCount: { increment: 1 } } });
+      return;
+    }
+    throw e;
+  }
+  const now = new Date();
+  await db.whatsAppMessage.create({
+    data: {
+      eventId: event.id,
+      guestId: guest.id,
+      direction: "OUTBOUND",
+      purpose,
+      provider: whatsapp().name,
+      waMessageId: messageId,
+      phone: guest.phone,
+      type: "template",
+      status: "SENT",
+      sentAt: now,
+      content: content as object,
+    },
+  });
+  await db.guest.update({
+    where: { id: guest.id },
+    data: purpose === "REMINDER" ? { reminderSentAt: now, lastActivityAt: now } : { nudgedAt: now, nudgeCount: { increment: 1 }, lastActivityAt: now },
+  });
   await simulateReceipts(messageId, guest.phone);
 }
 

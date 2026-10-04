@@ -11,6 +11,7 @@ export type GuestRow = {
   attendingCount: number | null;
   locale: string | null;
   notes: string | null;
+  section: "MEN" | "WOMEN" | null;
   status: GuestStatusKey;
   rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED";
   rsvpSource: "WHATSAPP" | "WEB" | "HOST" | null;
@@ -37,6 +38,8 @@ export type GuestList = {
   page: number;
   pageSize: number;
   counts: Partial<Record<GuestStatusKey, number>>;
+  /** Guests per section (events with men's and women's sections). */
+  sectionCounts?: { MEN: number; WOMEN: number; NONE: number };
   guests: GuestRow[];
 };
 

@@ -7,6 +7,7 @@ import { getOwnedEvent } from "@/server/events/access";
 import { addGuest, defaultCountryFor } from "@/server/guests/service";
 import { invitationUrl } from "@/server/invitations";
 import { guestInputSchema } from "@/lib/validation/guest";
+import { sectionCounts } from "@/server/guests/sections";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -16,6 +17,7 @@ const querySchema = z.object({
   q: z.string().trim().max(100).optional(),
   status: z.enum(STATUSES).optional(),
   rsvp: z.enum(["PENDING", "ACCEPTED", "DECLINED"]).optional(),
+  section: z.enum(["MEN", "WOMEN", "NONE"]).optional(),
   sort: z.enum(["name", "status", "activity", "created"]).default("created"),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(10).max(200).default(50),
@@ -31,6 +33,7 @@ export const GET = route<Ctx>("guests.list", async (req: NextRequest, ctx) => {
     isTest: false,
     ...(q.status ? { status: q.status as GuestStatus } : {}),
     ...(q.rsvp ? { rsvpStatus: q.rsvp } : {}),
+    ...(q.section ? { section: q.section === "NONE" ? null : q.section } : {}),
     ...(q.q
       ? {
           OR: [
@@ -43,7 +46,7 @@ export const GET = route<Ctx>("guests.list", async (req: NextRequest, ctx) => {
   };
   const orderBy: Prisma.GuestOrderByWithRelationInput =
     q.sort === "name" ? { name: "asc" } : q.sort === "status" ? { status: "asc" } : q.sort === "activity" ? { lastActivityAt: "desc" } : { createdAt: "asc" };
-  const [total, guests, counts] = await Promise.all([
+  const [total, guests, counts, bySection] = await Promise.all([
     db.guest.count({ where }),
     db.guest.findMany({
       where,
@@ -53,8 +56,10 @@ export const GET = route<Ctx>("guests.list", async (req: NextRequest, ctx) => {
       include: { invitation: { select: { token: true } } },
     }),
     db.guest.groupBy({ by: ["status"], where: { eventId: event.id, isTest: false }, _count: true }),
+    db.guest.groupBy({ by: ["section"], where: { eventId: event.id, isTest: false }, _count: true }),
   ]);
   return ok({
+    sectionCounts: sectionCounts(bySection),
     total,
     page: q.page,
     pageSize: q.pageSize,

@@ -47,6 +47,8 @@ export interface InvitationVM {
     rsvpOpen: boolean;
     allowWebRsvp: boolean;
     past: boolean;
+    /** "Add to Google Calendar" link for this guest (null on previews and demos). */
+    googleCalendarUrl: string | null;
     schedule: { time: Bi; title: string; titleAr: string | null; description: string | null }[];
     gallery: { url: string; width: number; height: number; caption: string | null }[];
     coverUrl: string | null;
@@ -54,6 +56,8 @@ export interface InvitationVM {
     musicUrl: string | null;
     backgroundUrl: string | null;
   };
+  /** The guest's men's / women's section — the time and place above are already theirs. */
+  section: { key: "MEN" | "WOMEN"; label: Bi; note: string | null; noteAr: string | null } | null;
   guest: {
     name: string;
     allowedCount: number;

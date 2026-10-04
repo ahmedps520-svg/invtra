@@ -14,7 +14,9 @@ export type JobType =
   | "invitation.notice"
   | "mock.webhook"
   | "payment.request"
-  | "payment.receipt";
+  | "payment.receipt"
+  | "reminder.send"
+  | "nudge.send";
 
 export const PRIORITY = { bulk: 0, normal: 5, interactive: 10 } as const;
 

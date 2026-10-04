@@ -16,7 +16,11 @@ import { api } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { formatNumber } from "@/lib/format";
 import { percent } from "@/lib/utils";
+import { SECTION_LABELS } from "@/lib/sections";
 import { ActivityFeed, type ActivityItem } from "./activity-feed";
+import { DoorCard } from "./door-card";
+import { RemindersCard } from "./reminders-card";
+import type { ReminderOverview } from "@/server/reminders/service";
 import { errorMessage, plural } from "./i18n";
 import { ResponseRing, Tile } from "./stats";
 import { stepHref } from "./steps";
@@ -36,6 +40,8 @@ export type OverviewStats = {
   viewedGuests: number;
   scannedGuests: number;
   checkedIn: number;
+  /** Men's and women's sections (null when the event has none). */
+  sections?: Record<"MEN" | "WOMEN", { total: number; accepted: number; attending: number; arrived: number }> | null;
 };
 
 export type BatchSummary = { id: string; total: number; sent: number; failed: number; skipped: number; status: string; kind: string } | null;
@@ -57,9 +63,14 @@ export function EventOverview({
   ready,
   unsent,
   serverNow,
+  door,
+  reminders,
 }: {
   eventId: string;
   eventTitle: string;
+  /** The door check-in link for staff (null until the host creates one). */
+  door: { url: string | null; closesAt: string; timeZone: string };
+  reminders: ReminderOverview;
   initial: OverviewData;
   preview: PreviewProps;
   ready: boolean;
@@ -205,7 +216,7 @@ export function EventOverview({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Card>
             <CardHeader title={d.responses.title} description={d.responses.description} />
             <div className="flex flex-col items-center gap-8 px-6 py-7 sm:flex-row sm:items-center sm:gap-10">
@@ -232,9 +243,34 @@ export function EventOverview({
                   <MiniStat label={t.checkedIn} value={s.checkedIn} locale={locale} />
                 </div>
                 {s.total && !s.sent ? <p className="mt-4 text-[13px] text-ink-faint">{d.responses.empty}</p> : null}
+                {s.sections ? (
+                  <div className="mt-5 grid gap-3 border-t border-line pt-5 sm:grid-cols-2">
+                    {(["MEN", "WOMEN"] as const).map((k) => {
+                      const x = s.sections![k];
+                      return (
+                        <div key={k} className="rounded-xl border border-line bg-ivory/50 px-4 py-3">
+                          <p className="flex items-center gap-2 text-[13px] font-medium text-ink">
+                            <span className={k === "MEN" ? "size-2 rounded-full bg-[#2f5d8a]" : "size-2 rounded-full bg-[#a2456b]"} aria-hidden="true" />
+                            {SECTION_LABELS[k][locale]}
+                          </p>
+                          <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">
+                            {fmt(d.sectionLine, {
+                              accepted: formatNumber(x.accepted, locale),
+                              total: formatNumber(x.total, locale),
+                              attending: formatNumber(x.attending, locale),
+                              arrived: formatNumber(x.arrived, locale),
+                            })}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             </div>
           </Card>
+
+          {s.total > 0 ? <RemindersCard eventId={eventId} data={reminders} /> : null}
 
           <Card>
             <CardHeader
@@ -255,7 +291,7 @@ export function EventOverview({
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card className="overflow-hidden">
             <CardHeader
               title={d.preview.title}
@@ -269,6 +305,8 @@ export function EventOverview({
               <CardPreview {...preview} className="w-full max-w-[260px] rounded-[3px] shadow-lift ring-1 ring-ink/5" title={eventTitle} />
             </div>
           </Card>
+
+          <DoorCard eventId={eventId} eventTitle={eventTitle} initialUrl={door.url} closesAt={door.closesAt} timeZone={door.timeZone} />
 
           <DeleteEvent eventId={eventId} eventTitle={eventTitle} />
         </div>

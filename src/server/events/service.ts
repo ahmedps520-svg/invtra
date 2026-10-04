@@ -5,6 +5,7 @@ import { cancelPendingJobs } from "@/server/queue/queue";
 import { zonedToUtc, utcToZoned } from "@/lib/time";
 import { DEFAULT_THEME, getTheme, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
 import type { EventInput } from "@/lib/validation/event";
+import { parseSections, sectionDiffers, SECTION_KEYS } from "@/lib/sections";
 
 /** Fields printed on the invitation image — changing them requires re-sending updates. */
 const CARD_FIELDS = ["title", "titleAr", "hostNames", "hostNamesAr", "startsAt", "timezone", "venueName", "venueNameAr", "address", "addressAr", "type", "language"] as const;
@@ -43,7 +44,18 @@ function toEventData(input: EventInput) {
     contactEmail: input.contactEmail,
     rsvpDeadline: input.rsvpDeadline ? zonedToUtc(input.rsvpDeadline, "12:00", input.timezone) : null,
     allowWebRsvp: input.allowWebRsvp,
+    sectionsEnabled: input.sectionsEnabled,
+    // Kept while sections are off, so turning them back on restores the details.
+    sections: input.sections ? (input.sections as unknown as Prisma.InputJsonValue) : undefined,
+    autoReminder: input.autoReminder,
   };
+}
+
+/** What the sections print on guests' cards (their time and place) — a change means new cards. */
+function cardSections(e: { sectionsEnabled: boolean; sections: unknown }) {
+  if (!e.sectionsEnabled) return null;
+  const s = parseSections(e.sections);
+  return SECTION_KEYS.map((k) => (sectionDiffers(s[k]) ? [s[k].time, s[k].venueName, s[k].venueNameAr, s[k].address, s[k].addressAr] : null));
 }
 
 /** The design a new event starts with when the customer hasn't picked one yet. */
@@ -85,7 +97,7 @@ export async function updateEvent(event: Event, input: EventInput) {
     const a = (event as Record<string, unknown>)[k];
     const b = (data as Record<string, unknown>)[k];
     return a instanceof Date || b instanceof Date ? (a as Date | null)?.getTime() !== (b as Date | null)?.getTime() : (a ?? null) !== (b ?? null);
-  });
+  }) || JSON.stringify(cardSections(event)) !== JSON.stringify(cardSections({ sectionsEnabled: data.sectionsEnabled ?? event.sectionsEnabled, sections: data.sections ?? event.sections }));
   const updated = await db.$transaction(async (tx) => {
     await tx.scheduleItem.deleteMany({ where: { eventId: event.id } });
     const e = await tx.event.update({
@@ -96,6 +108,10 @@ export async function updateEvent(event: Event, input: EventInput) {
         scheduleItems: { create: input.schedule.map((s, i) => ({ ...s, sortOrder: i })) },
       },
     });
+    // A new date or time: everyone gets the day-before reminder for the new start.
+    if (e.startsAt.getTime() !== event.startsAt.getTime() && e.startsAt > new Date()) {
+      await tx.guest.updateMany({ where: { eventId: event.id, reminderSentAt: { not: null } }, data: { reminderSentAt: null } });
+    }
     return e;
   });
   return { event: updated, cardChanged };
@@ -132,6 +148,9 @@ export function eventToInput(event: Event & { scheduleItems: { time: string; tit
     contactEmail: event.contactEmail,
     rsvpDeadline: event.rsvpDeadline ? utcToZoned(event.rsvpDeadline, event.timezone).date : "",
     allowWebRsvp: event.allowWebRsvp,
+    sectionsEnabled: event.sectionsEnabled,
+    sections: parseSections(event.sections),
+    autoReminder: event.autoReminder,
     schedule: event.scheduleItems.map((s) => ({ time: s.time, title: s.title, titleAr: s.titleAr, description: s.description })),
   };
 }
@@ -162,7 +181,9 @@ export async function eventStats(eventId: string) {
   const viewedGuests = await db.guest.count({ where: { ...where, viewCount: { gt: 0 } } });
   const scannedGuests = await db.guest.count({ where: { ...where, scanCount: { gt: 0 } } });
   const checkedIn = await db.guest.count({ where: { ...where, checkedInAt: { not: null } } });
+  const event = await db.event.findUnique({ where: { id: eventId }, select: { sectionsEnabled: true } });
   return {
+    sections: event?.sectionsEnabled ? await sectionStats(eventId) : null,
     total,
     sent,
     accepted: count("ACCEPTED"),
@@ -176,6 +197,27 @@ export async function eventStats(eventId: string) {
     scannedGuests,
     checkedIn,
   };
+}
+
+/** Per section (men's / women's): guests, accepted, people attending and arrivals. */
+async function sectionStats(eventId: string) {
+  const rows = await db.guest.groupBy({
+    by: ["section", "rsvpStatus"],
+    where: { eventId, isTest: false },
+    _count: true,
+    _sum: { attendingCount: true, checkedInCount: true },
+  });
+  const one = (section: "MEN" | "WOMEN") => {
+    const mine = rows.filter((r) => r.section === section);
+    const accepted = mine.find((r) => r.rsvpStatus === "ACCEPTED");
+    return {
+      total: mine.reduce((n, r) => n + r._count, 0),
+      accepted: accepted?._count ?? 0,
+      attending: accepted?._sum.attendingCount ?? 0,
+      arrived: mine.reduce((n, r) => n + (r._sum.checkedInCount ?? 0), 0),
+    };
+  };
+  return { MEN: one("MEN"), WOMEN: one("WOMEN") };
 }
 
 export type EventStats = Awaited<ReturnType<typeof eventStats>>;

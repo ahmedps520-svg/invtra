@@ -112,6 +112,24 @@ Set `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER` and `LEGAL_ADDRES
 on receipts. INVTRA's receipts are payment confirmations, not ZATCA e-invoices — a
 VAT-registered business in Saudi Arabia still needs a ZATCA-compliant invoicing solution.
 
+## Door check-in for staff
+
+On an event's overview the host can create a **door link** (`/door/<token>`) and send it to the
+people at the entrance. They open it on their phone — no account — and scan guests' QR codes with
+the in-page camera (or the phone's own camera app: QR scans from a phone that opened the door
+link land on the door view), search by name or the last digits of a phone number, and check guests
+in with the number of people arriving. With men's and women's sections, each phone can pick its
+entrance and is warned about a guest from the other section. A new link revokes the old one, and
+links stop working two days after the event. Camera access needs HTTPS (it is on invtra.store).
+
+## Support chat on WhatsApp
+
+Every page of the website shows a green "Chat with us" button (and the number in the footer)
+that opens a WhatsApp chat with INVTRA support, with a greeting already typed. It uses
+`SUPPORT_WHATSAPP` (digits with the country code, default `966557663974`); set it to an
+empty value on Render to hide the button. It is an ordinary wa.me link: the visitor sends
+the message from their own WhatsApp, and you answer from the WhatsApp Business app.
+
 ## Search engines (Google & Bing)
 
 The site is built to be indexed: every marketing page has an English URL and an Arabic one

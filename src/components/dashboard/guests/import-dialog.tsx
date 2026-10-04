@@ -13,6 +13,7 @@ import { fmt } from "@/lib/i18n/config";
 import { formatNumber } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { CountrySelect } from "@/components/ui/phone-input";
+import { SECTION_LABELS } from "@/lib/sections";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural } from "../i18n";
 
@@ -23,6 +24,7 @@ type PreviewRow = {
   rawPhone: string;
   groupName: string | null;
   allowedCount: number;
+  section: "MEN" | "WOMEN" | null;
   error: "missing_name" | "missing_phone" | "invalid_phone" | null;
   duplicate: "file" | "existing" | null;
 };
@@ -37,12 +39,15 @@ export function ImportDialog({
   onClose,
   eventId,
   defaultCountry,
+  sectionsEnabled = false,
   onImported,
 }: {
   open: boolean;
   onClose: () => void;
   eventId: string;
   defaultCountry: string;
+  /** Adds a Section column (men / women) to the sample file. */
+  sectionsEnabled?: boolean;
   onImported: () => void;
 }) {
   const { dict, locale } = useI18n();
@@ -68,9 +73,10 @@ export function ImportDialog({
   }
 
   function downloadSample() {
-    const header = "Name,Phone,Group,Guests";
+    const header = sectionsEnabled ? "Name,Phone,Group,Guests,Section" : "Name,Phone,Group,Guests";
     const quote = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
-    const csv = [header, ...d.sampleRows.map((r) => r.map(quote).join(","))].join("\r\n");
+    const sample = d.sampleRows.map((r, i) => (sectionsEnabled ? [...r, d.sampleSections[i] ?? ""] : r));
+    const csv = [header, ...sample.map((r) => r.map(quote).join(","))].join("\r\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -105,7 +111,7 @@ export function ImportDialog({
     if (!preview) return;
     const rows = preview.rows
       .filter((r) => !r.error && !r.duplicate)
-      .map((r) => ({ name: r.name, phone: r.phone, groupName: r.groupName, allowedCount: r.allowedCount }));
+      .map((r) => ({ name: r.name, phone: r.phone, groupName: r.groupName, allowedCount: r.allowedCount, section: r.section }));
     setBusy(true);
     try {
       const res = await api<Result>(`/api/events/${eventId}/guests/import`, { method: "POST", body: { rows, country: preview.country } });
@@ -133,6 +139,7 @@ export function ImportDialog({
 
   const n = (v: number) => formatNumber(v, locale);
   const rows = preview ? (problemsOnly ? preview.rows.filter((r) => r.error || r.duplicate) : preview.rows) : [];
+  const showSection = sectionsEnabled || Boolean(preview?.rows.some((r) => r.section));
 
   let footer: React.ReactNode;
   if (result)
@@ -211,6 +218,7 @@ export function ImportDialog({
                     <th className="hidden px-3 py-2.5 text-start font-medium sm:table-cell">{d.columns.phone}</th>
                     <th className="hidden px-3 py-2.5 text-start font-medium sm:table-cell">{d.columns.group}</th>
                     <th className="hidden px-3 py-2.5 text-center font-medium sm:table-cell">{d.columns.guests}</th>
+                    {showSection ? <th className="hidden px-3 py-2.5 text-start font-medium sm:table-cell">{d.columns.section}</th> : null}
                     <th className="px-3 py-2.5 text-start font-medium">{d.columns.status}</th>
                   </tr>
                 </thead>
@@ -236,6 +244,11 @@ export function ImportDialog({
                           {r.groupName || <span className="text-ink-faint">—</span>}
                         </td>
                         <td className="hidden px-3 py-2 text-center tabular-nums text-ink-soft sm:table-cell">{r.allowedCount}</td>
+                        {showSection ? (
+                          <td className="hidden px-3 py-2 text-ink-soft sm:table-cell">
+                            {r.section ? SECTION_LABELS[r.section][locale] : <span className="text-ink-faint">—</span>}
+                          </td>
+                        ) : null}
                         <td className="px-3 py-2">
                           {bad ? (
                             <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-rosewood">

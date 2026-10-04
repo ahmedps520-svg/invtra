@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await requireUser("/dashboard");
   const { locale } = await getI18n();
   return (
-    <I18nProvider locale={locale} dict={pickNamespaces(locale, ["dashboard", "themes"])}>
+    <I18nProvider locale={locale} dict={pickNamespaces(locale, ["dashboard", "themes", "door"])}>
       <div className="flex min-h-dvh flex-col bg-ivory">
         <DashboardTopBar
           user={{ name: user.name, email: user.email, role: user.role }}

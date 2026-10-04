@@ -120,6 +120,10 @@ The standard set lives in `src/server/whatsapp/catalog.ts` and is loaded by `npm
 | celebration_ar | invtra_celebration_invite_ar | ar | Invitation — baby showers, birthdays, graduations, anniversaries |
 | update_en | invtra_invitation_update | en | Update (URL button `/i/{{1}}`) |
 | update_ar | invtra_invitation_update_ar | ar | Update |
+| reminder_en | invtra_event_reminder | en | Day-before reminder to accepted guests (URL button `/i/{{1}}`) |
+| reminder_ar | invtra_event_reminder_ar | ar | Day-before reminder |
+| nudge_en | invtra_rsvp_reminder | en | Reply reminder to guests who haven't answered (Accept / Decline) |
+| nudge_ar | invtra_rsvp_reminder_ar | ar | Reply reminder |
 | payment_request_en | invtra_payment_request | en | Payment link for a custom package (URL button `/pay/{{1}}`) |
 | payment_request_ar | invtra_payment_request_ar | ar | Payment link for a custom package |
 | payment_receipt_en | invtra_payment_receipt | en | Receipt after a custom package is paid (URL button `/pay/{{1}}`) |
@@ -127,6 +131,9 @@ The standard set lives in `src/server/whatsapp/catalog.ts` and is loaded by `npm
 
 All are **Utility** templates. Invitation and update templates have an **image header** (the
 event's invitation design without any QR) and, for invitations, two **quick-reply** buttons.
+The reminder templates have no header: the day-before reminder has a URL button to the guest's
+invitation, and the reply reminder has the same Accept / Decline buttons as the invitation
+(the answer is recorded exactly like the first one). Submit all four from Admin → Templates.
 The four payment templates go to the event **host**, not to guests: they have no header and a
 single URL button that opens the host's payment page (which becomes the receipt once paid).
 Until `invtra_payment_request` is approved, Admin → Custom events sends the link by email only
@@ -173,6 +180,20 @@ the host presses send themselves — nothing is automated, so no Meta setup is i
 - Those guests reply on their invitation page — always allowed for them, even when the event
   only accepts replies through WhatsApp buttons. The link preview shows the invitation design.
 - A paid plan is required, exactly as for sending through INVTRA.
+
+## Reminders
+
+- **Day before** — when *Remind guests the day before* is on (Event details → Replies, on by
+  default), the worker checks every five minutes and sends `invtra_event_reminder` to guests who
+  accepted through INVTRA, 24 hours before their start (their own section's time when the event
+  has men's and women's sections). Each guest gets it once; changing the date resets it. Guests
+  who accepted in the last day are skipped (they just got their invitation), and nothing is sent
+  in a language whose reminder template isn't approved yet.
+- **Reply reminders** — on the event overview the host can remind guests INVTRA invited who
+  haven't answered for a day (`invtra_rsvp_reminder`, at most twice per guest, two days apart).
+- **From the host's own WhatsApp** — the Reminders card also lists every accepted guest (and
+  everyone who hasn't replied) with a wa.me button: the reminder, the map link and the guest's
+  invitation are typed in, and the host presses send.
 
 ## Development without WhatsApp
 

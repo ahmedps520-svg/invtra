@@ -9,13 +9,14 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Private areas, personal invitation links (/i/, /Q/) and payment links are never indexed.
+        // Private areas, personal invitation links (/i/, /Q/), door links and payment links are never indexed.
         disallow: [
           "/dashboard",
           "/admin",
           "/api/",
           "/i/",
           "/Q/",
+          "/door/",
           "/preview/",
           "/billing/",
           "/pay/",

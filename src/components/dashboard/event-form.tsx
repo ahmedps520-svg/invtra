@@ -24,6 +24,8 @@ import { eventInputSchema, type EventInput } from "@/lib/validation/event";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural, themeName } from "./i18n";
 import { ScheduleEditor, type ScheduleRow } from "./schedule-editor";
+import { SECTION_FIELDS, SectionsEditor, sectionRowsFrom, type SectionRows } from "./sections-editor";
+import { SECTION_KEYS } from "@/lib/sections";
 
 type Lang = "EN" | "AR" | "BILINGUAL";
 type EventType = EventInput["type"];
@@ -85,6 +87,9 @@ type FormState = Record<TextKey, string> & {
   type: EventType;
   language: Lang;
   allowWebRsvp: boolean;
+  autoReminder: boolean;
+  sectionsEnabled: boolean;
+  sections: SectionRows;
   schedule: ScheduleRow[];
 };
 
@@ -120,6 +125,9 @@ function fromInput(input?: EventInput | null): FormState {
     type: input?.type ?? "WEDDING",
     language,
     allowWebRsvp: input?.allowWebRsvp ?? true,
+    autoReminder: input?.autoReminder ?? true,
+    sectionsEnabled: input?.sectionsEnabled ?? false,
+    sections: sectionRowsFrom(input?.sections),
     schedule: (input?.schedule ?? []).map((r, i) => ({
       key: `init-${i}`,
       time: r.time,
@@ -164,6 +172,21 @@ function toPayload(f: FormState, tz: string) {
     contactEmail: opt(f.contactEmail),
     rsvpDeadline: f.rsvpDeadline || "",
     allowWebRsvp: f.allowWebRsvp,
+    autoReminder: f.autoReminder,
+    sectionsEnabled: f.sectionsEnabled,
+    sections: Object.fromEntries(
+      SECTION_KEYS.map((k) => {
+        const row = f.sections[k];
+        const v = Object.fromEntries(SECTION_FIELDS.map((field) => [field, opt(row[field])])) as Record<(typeof SECTION_FIELDS)[number], string | null>;
+        // Arabic-only events edit the Arabic fields; mirror them like the main details.
+        if (ar) {
+          v.venueName = v.venueNameAr ?? v.venueName;
+          v.address = v.addressAr ?? v.address;
+          v.note = v.noteAr ?? v.note;
+        }
+        return [k, v];
+      }),
+    ) as Record<(typeof SECTION_KEYS)[number], Record<(typeof SECTION_FIELDS)[number], string | null>>,
     schedule: f.schedule.map((r) => ({
       time: r.time,
       title: ar ? t(r.titleAr) || t(r.title) : t(r.title),
@@ -255,6 +278,7 @@ export function EventForm({
     (key: string, issue?: Pick<ZodIssue, "code" | "message">): string => {
       const e = d.errors;
       if (issue?.code === "too_big") return e.tooLong;
+      if (key.startsWith("sections.")) return key.endsWith(".time") ? e.time : key.endsWith(".mapsUrl") ? e.mapsUrl : e.generic;
       if (key.startsWith("schedule.")) return key.endsWith(".time") ? e.scheduleTime : key.endsWith(".title") ? e.scheduleTitle : e.generic;
       const known: Record<string, string> = {
         title: e.title,
@@ -550,6 +574,19 @@ export function EventForm({
           </details>
         </Section>
 
+        {/* Men's & women's sections */}
+        <Section title={d.sections.split.title} description={d.sections.split.description}>
+          <SectionsEditor
+            enabled={form.sectionsEnabled}
+            onToggle={(v) => set("sectionsEnabled", v)}
+            rows={form.sections}
+            onChange={(rows) => set("sections", rows)}
+            language={lang}
+            eventTime={form.time}
+            errors={errors}
+          />
+        </Section>
+
         {/* Programme */}
         <Section title={d.sections.schedule.title} description={d.sections.schedule.description}>
           <ScheduleEditor
@@ -565,6 +602,9 @@ export function EventForm({
         <Section title={d.sections.replies.title} description={d.sections.replies.description}>
           <div className="rounded-2xl border border-line bg-ivory/50 px-4 py-4">
             <Switch id="ev-allowWebRsvp" checked={form.allowWebRsvp} onChange={(v) => set("allowWebRsvp", v)} label={f.allowWebRsvp} description={f.allowWebRsvpHint} />
+          </div>
+          <div className="rounded-2xl border border-line bg-ivory/50 px-4 py-4">
+            <Switch id="ev-autoReminder" checked={form.autoReminder} onChange={(v) => set("autoReminder", v)} label={f.autoReminder} description={f.autoReminderHint} />
           </div>
           <Field id="ev-rsvpDeadline" label={f.rsvpDeadline} optional={d.optional} hint={f.rsvpDeadlineHint} error={err("rsvpDeadline")}>
             <DateInput

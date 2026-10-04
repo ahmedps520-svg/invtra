@@ -6,6 +6,7 @@ import { templateValues } from "@/server/whatsapp/compose";
 import { updateGuest } from "@/server/guests/status";
 import { eventIsActive } from "@/server/rsvp";
 import { sendReadiness } from "./service";
+import { parseSections, SECTION_LABELS } from "@/lib/sections";
 
 /**
  * "Send from my own WhatsApp": the host sends each guest their personal invitation link
@@ -32,12 +33,20 @@ function messageLang(event: Pick<Event, "language">, guest: Pick<Guest, "locale"
   return event.language === "AR" ? "ar" : event.language === "EN" ? "en" : "both";
 }
 
+/** "🚪 Women's section — Ladies' entrance from gate 2" for guests in a section. */
+export function sectionLine(event: Partial<Pick<Event, "sectionsEnabled" | "sections">>, guest: Partial<Pick<Guest, "section">>, lang: "en" | "ar"): string {
+  if (!event.sectionsEnabled || !guest.section) return "";
+  const s = parseSections(event.sections)[guest.section];
+  const note = lang === "ar" ? s.noteAr || s.note : s.note || s.noteAr;
+  return `\n🚪 ${SECTION_LABELS[guest.section][lang]}${note ? ` — ${note}` : ""}`;
+}
+
 /** The text that opens in WhatsApp, with the guest's personal link at the end. */
-export function manualMessage(event: MessageEvent, guest: Pick<Guest, "name" | "locale">, token: string): string {
+export function manualMessage(event: MessageEvent, guest: Pick<Guest, "name" | "locale"> & Partial<Pick<Guest, "section">>, token: string): string {
   const v = templateValues(event, guest, token);
   const link = invitationUrl(token);
-  const ar = `السلام عليكم ${v.guest_name}،\n\nيتشرّف ${v.host_names_ar} بدعوتكم لحضور ${v.event_name_ar}.\n📅 ${v.event_date_ar} · ${v.event_time_ar}\n📍 ${v.venue_ar}`;
-  const en = `Dear ${v.guest_name},\n\n${v.host_names} would be delighted to welcome you to ${v.event_name}.\n📅 ${v.event_date} · ${v.event_time}\n📍 ${v.venue}`;
+  const ar = `السلام عليكم ${v.guest_name}،\n\nيتشرّف ${v.host_names_ar} بدعوتكم لحضور ${v.event_name_ar}.\n📅 ${v.event_date_ar} · ${v.event_time_ar}\n📍 ${v.venue_ar}${sectionLine(event, guest, "ar")}`;
+  const en = `Dear ${v.guest_name},\n\n${v.host_names} would be delighted to welcome you to ${v.event_name}.\n📅 ${v.event_date} · ${v.event_time}\n📍 ${v.venue}${sectionLine(event, guest, "en")}`;
   const lang = messageLang(event, guest);
   if (lang === "ar") return `${ar}\n\nدعوتك الخاصة وتأكيد الحضور:\n${link}`;
   if (lang === "en") return `${en}\n\nYour personal invitation and RSVP:\n${link}`;
@@ -70,7 +79,7 @@ export async function manualSendList(event: Event): Promise<ManualGuest[]> {
   const guests = await db.guest.findMany({
     where: { eventId: event.id, isTest: false },
     orderBy: { createdAt: "asc" },
-    select: { id: true, eventId: true, name: true, phone: true, groupName: true, locale: true, status: true, deliveryStatus: true, manualSentAt: true },
+    select: { id: true, eventId: true, name: true, phone: true, groupName: true, locale: true, section: true, status: true, deliveryStatus: true, manualSentAt: true },
   });
   if (!guests.length) return [];
   await ensureInvitations(guests);

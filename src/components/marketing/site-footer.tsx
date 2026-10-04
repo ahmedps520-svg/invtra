@@ -6,6 +6,9 @@ import { EYEBROW } from "./styles";
 import { localePath } from "@/lib/i18n/routing";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
 import type { CompanyDetails } from "@/server/legal";
+import { formatPhone } from "@/lib/phone";
+import { WhatsAppIcon } from "@/components/brand/whatsapp-icon";
+import { supportChatUrl } from "@/lib/support";
 
 const CONTACT_EMAIL = "contact@invtra.store";
 
@@ -15,11 +18,14 @@ export function SiteFooter({
   locale,
   signedIn,
   company,
+  supportWhatsApp,
 }: {
   dict: Dictionary;
   locale: "en" | "ar";
   signedIn: boolean;
   company?: CompanyDetails | null;
+  /** INVTRA's support number on WhatsApp (digits), shown under the email. */
+  supportWhatsApp?: string;
 }) {
   const t = dict.marketing.footer;
   const lp = (href: string) => localePath(locale, href);
@@ -92,6 +98,18 @@ export function SiteFooter({
                   strokeWidth={1.5}
                 />
               </a>
+              {supportWhatsApp ? (
+                <a
+                  href={supportChatUrl(supportWhatsApp, t.chatMessage)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t.chatLabel}
+                  className="mt-2 flex w-fit items-center gap-2 text-[15px] text-ink transition-colors hover:text-[#128C7E]"
+                >
+                  <WhatsAppIcon className="size-4 text-[#25D366]" />
+                  <span dir="ltr">{formatPhone(`+${supportWhatsApp.replace(/\D/g, "")}`)}</span>
+                </a>
+              ) : null}
               <p className="mt-2 max-w-xs text-[13px] leading-relaxed text-ink-faint">{t.contactBody}</p>
             </div>
           </div>

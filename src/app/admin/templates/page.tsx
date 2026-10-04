@@ -131,6 +131,8 @@ export default async function TemplatesPage() {
   const groups = [
     { purpose: "INVITATION", title: "Invitation requests", description: "First contact — the invitation with Accept / Decline buttons." },
     { purpose: "UPDATE", title: "Invitation updates", description: "Re-sends the invitation link when details change (works outside the 24-hour window)." },
+    { purpose: "REMINDER", title: "Day-before reminders", description: "Accepted guests get the time and place the day before (URL button to the invitation)." },
+    { purpose: "NUDGE", title: "Reply reminders", description: "Guests who haven't replied get a gentle reminder with Accept / Decline (hosts send these)." },
     { purpose: "PAYMENT_REQUEST", title: "Payment requests", description: "Custom packages: sends the host the payment link (Admin → Custom events)." },
     { purpose: "PAYMENT_RECEIPT", title: "Payment receipts", description: "Confirms a payment to the host with a link to the receipt." },
   ] as const;

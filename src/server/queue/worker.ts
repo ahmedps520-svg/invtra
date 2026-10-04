@@ -6,6 +6,7 @@ import { purgeExpiredRateLimits } from "@/server/security/rate-limit";
 import { claimJobs, completeJob, failJob, PermanentJobError, queueBus, reclaimStaleJobs, retryJob, type JobType } from "./queue";
 import { handlers, onJobFailed } from "./handlers";
 import { purgeDeletedEvents } from "@/server/maintenance";
+import { queueDueReminders } from "@/server/reminders/service";
 
 /**
  * Queue worker. Run standalone with `npm run worker` (production), or inside the
@@ -24,6 +25,7 @@ export function startWorker(opts: { concurrency: number; pollMs?: number; label?
   let ticking = false;
   let lastMaintenance = 0;
   let lastHourly = 0;
+  let lastReminders = 0;
 
   const schedule = (ms: number) => {
     if (stopped) return;
@@ -55,6 +57,10 @@ export function startWorker(opts: { concurrency: number; pollMs?: number; label?
       await reclaimStaleJobs();
       await purgeExpiredRateLimits();
       await db.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+    }
+    if (now - lastReminders > 5 * 60_000) {
+      lastReminders = now;
+      await queueDueReminders().catch((e) => logError("worker:reminders", e));
     }
     if (now - lastHourly > 3_600_000) {
       lastHourly = now;

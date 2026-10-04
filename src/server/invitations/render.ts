@@ -6,8 +6,19 @@ import { buildCardSvg, buildCustomCardSvg, type CardImage } from "@/lib/card/bui
 import { CARD_PHRASES } from "@/lib/invitation-copy";
 import { cardContent, eventDesign, eventTheme } from "@/server/events/design";
 import { invitationQrText, personalImageVersion, teaserImageVersion } from "./index";
+import { eventForGuest, sectionFor } from "@/server/events/sections";
+import { sectionDiffers } from "@/lib/sections";
 
 type RenderEvent = Event;
+
+/**
+ * The card variant for a guest: their section's key when it prints a different time or
+ * place (men's and women's cards differ), otherwise null (everyone shares the main card).
+ */
+export function cardVariant(event: RenderEvent, guest: Partial<Pick<Guest, "section">> | null | undefined): string | null {
+  const s = sectionFor(event, guest);
+  return s && sectionDiffers(s.details) ? s.key : null;
+}
 
 async function loadImage(key: string | null | undefined, width?: number | null, height?: number | null): Promise<CardImage | null> {
   if (!key) return null;
@@ -62,15 +73,16 @@ export async function buildEventCardSvg(
  */
 export async function renderPersonalInvitation(
   event: RenderEvent,
-  guest: Pick<Guest, "id" | "name" | "allowedCount">,
+  guest: Pick<Guest, "id" | "name" | "allowedCount"> & Partial<Pick<Guest, "section">>,
   invitation: Pick<Invitation, "id" | "token" | "imageKey" | "imageVersion">,
 ): Promise<{ key: string; version: string; png: Buffer }> {
-  const version = personalImageVersion(event, guest, invitation.token);
+  const variant = cardVariant(event, guest);
+  const version = personalImageVersion(event, guest, invitation.token, variant);
   if (invitation.imageKey && invitation.imageVersion === version) {
     const cached = await storage().get(invitation.imageKey);
     if (cached) return { key: invitation.imageKey, version, png: cached };
   }
-  const svg = await buildEventCardSvg(event, { guest, qrText: invitationQrText(invitation.token) });
+  const svg = await buildEventCardSvg(variant ? eventForGuest(event, guest) : event, { guest, qrText: invitationQrText(invitation.token) });
   const png = renderSvgToPng(svg);
   const key = `renders/${event.id}/${invitation.id}-${version}.png`;
   await storage().put(key, png, "image/png");
@@ -80,13 +92,17 @@ export async function renderPersonalInvitation(
 }
 
 /** Non-personal image (no QR) used as the header of the Accept/Decline message and for link previews. */
-export async function renderTeaser(event: RenderEvent): Promise<{ key: string; version: string; png: Buffer }> {
-  const version = teaserImageVersion(event);
+export async function renderTeaser(
+  event: RenderEvent,
+  guest?: Partial<Pick<Guest, "section">> | null,
+): Promise<{ key: string; version: string; png: Buffer; variant: string | null }> {
+  const variant = cardVariant(event, guest);
+  const version = teaserImageVersion(event, variant);
   const key = `renders/${event.id}/teaser-${version}.png`;
   const cached = await storage().get(key);
-  if (cached) return { key, version, png: cached };
-  const svg = await buildEventCardSvg(event, { guest: null, qrText: null, qrPlaceholder: false });
+  if (cached) return { key, version, png: cached, variant };
+  const svg = await buildEventCardSvg(variant ? eventForGuest(event, guest) : event, { guest: null, qrText: null, qrPlaceholder: false });
   const png = renderSvgToPng(svg);
   await storage().put(key, png, "image/png");
-  return { key, version, png };
+  return { key, version, png, variant };
 }

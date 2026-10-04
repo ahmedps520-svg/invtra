@@ -48,11 +48,14 @@ export async function ensureInvitations(guests: Pick<Guest, "id" | "eventId">[])
 /** Hash of everything that changes a guest's personalised image. */
 export function personalImageVersion(
   event: Pick<Event, "id" | "contentVersion" | "design" | "themeKey" | "imageMode" | "customImageKey" | "language" | "updatedAt">,
-  guest: Pick<Guest, "name" | "allowedCount">,
+  guest: Pick<Guest, "name" | "allowedCount"> & Partial<Pick<Guest, "section">>,
   token: string,
+  /** The guest's section when it changes the card's time or place. */
+  variant: string | null = null,
 ) {
   return sha256(
     JSON.stringify([
+      ...(variant ? [variant] : []),
       event.id,
       event.contentVersion,
       event.design,
@@ -70,8 +73,9 @@ export function personalImageVersion(
 
 export function teaserImageVersion(
   event: Pick<Event, "id" | "contentVersion" | "design" | "themeKey" | "imageMode" | "customImageKey" | "language">,
+  variant: string | null = null,
 ) {
   return sha256(
-    JSON.stringify(["teaser", event.id, event.contentVersion, event.design, event.themeKey, event.imageMode, event.customImageKey, event.language]),
+    JSON.stringify(["teaser", ...(variant ? [variant] : []), event.id, event.contentVersion, event.design, event.themeKey, event.imageMode, event.customImageKey, event.language]),
   ).slice(0, 16);
 }

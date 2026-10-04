@@ -59,6 +59,12 @@ export function HostBar({ status, highlight }: { status: "PENDING" | "ACCEPTED" 
               {guest.allowedCount > 1 ? fmt(d.admits, { n: limit }) : d.admitsOne}
               <span className="mx-1.5 opacity-50">·</span>
               {d.host.statuses[status]}
+              {vm.section ? (
+                <>
+                  <span className="mx-1.5 opacity-50">·</span>
+                  {vm.lang === "ar" ? vm.section.label.ar : vm.section.label.en}
+                </>
+              ) : null}
               <span className="mx-1.5 opacity-50">·</span>
               {d.host.scans}: {guest.scanCount}
             </p>

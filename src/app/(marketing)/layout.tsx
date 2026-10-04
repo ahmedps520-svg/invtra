@@ -7,6 +7,7 @@ import { pickNamespaces, type Dictionary } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { WhatsAppChatButton } from "@/components/marketing/whatsapp-chat";
 import { OfferBanner } from "@/components/offers/national-day";
 import { activeOffer, offerInfo } from "@/lib/offers";
 import { env } from "@/server/env";
@@ -47,7 +48,8 @@ export default async function MarketingLayout({ children }: { children: ReactNod
         <main id="main" className="flex-1">
           {children}
         </main>
-        <SiteFooter dict={dict} locale={locale} signedIn={signedIn} company={companyDetails()} />
+        <SiteFooter dict={dict} locale={locale} signedIn={signedIn} company={companyDetails()} supportWhatsApp={env().SUPPORT_WHATSAPP} />
+        <WhatsAppChatButton number={env().SUPPORT_WHATSAPP} />
       </div>
     </I18nProvider>
   );

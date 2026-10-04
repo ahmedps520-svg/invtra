@@ -38,6 +38,7 @@ import { api } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { formatNumber, formatRelative } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
+import { SECTION_LABELS } from "@/lib/sections";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural } from "../i18n";
 import { stepHref } from "../steps";
@@ -47,11 +48,13 @@ import { ImportDialog } from "./import-dialog";
 import { failureKey, GUEST_STATUSES, type GuestList, type GuestRow, type GuestStatusKey } from "./types";
 
 type Sort = "created" | "name" | "status" | "activity";
+type SectionFilter = "MEN" | "WOMEN" | "NONE";
 const PAGE_SIZE = 50;
 
 export function GuestsManager({
   eventId,
   eventLanguage,
+  sectionsEnabled = false,
   defaultCountry,
   initial,
   initialStatus,
@@ -59,6 +62,8 @@ export function GuestsManager({
 }: {
   eventId: string;
   eventLanguage: "EN" | "AR" | "BILINGUAL";
+  /** The event has men's and women's sections. */
+  sectionsEnabled?: boolean;
   defaultCountry: string;
   initial: GuestList;
   initialStatus: GuestStatusKey | null;
@@ -73,6 +78,7 @@ export function GuestsManager({
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<GuestStatusKey | null>(initialStatus);
+  const [section, setSection] = useState<SectionFilter | null>(null);
   const [sort, setSort] = useState<Sort>("created");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -94,6 +100,7 @@ export function GuestsManager({
       const params = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE), sort });
       if (query) params.set("q", query);
       if (status) params.set("status", status);
+      if (section) params.set("section", section);
       if (!silent) setLoading(true);
       try {
         const res = await api<GuestList>(`/api/events/${eventId}/guests?${params}`, { signal });
@@ -112,7 +119,7 @@ export function GuestsManager({
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [eventId, page, sort, query, status, toast, dict],
+    [eventId, page, sort, query, status, section, toast, dict],
   );
 
   // Debounce the search box.
@@ -215,6 +222,20 @@ export function GuestsManager({
     }
   }
 
+  async function moveToSection(ids: string[], to: "MEN" | "WOMEN") {
+    setBusy("section");
+    try {
+      const r = await api<{ updated: number }>(`/api/events/${eventId}/guests/section`, { method: "POST", body: { ids, section: to } });
+      toast(plural(locale, d.sections.moved, r.updated, { section: SECTION_LABELS[to][locale] }));
+      setSelected(new Set());
+      refresh();
+    } catch (e) {
+      toast(errorMessage(e, dict), "error");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function mark(g: GuestRow, response: "ACCEPTED" | "DECLINED" | "PENDING", attendingCount?: number) {
     setBusy("mark");
     try {
@@ -254,7 +275,8 @@ export function GuestsManager({
   };
 
   const totalAll = Object.values(data.counts).reduce((s, n) => s + (n ?? 0), 0);
-  const filtered = Boolean(query || status);
+  const filtered = Boolean(query || status || section);
+  const missingSection = sectionsEnabled ? (data.sectionCounts?.NONE ?? 0) : 0;
   const pageIds = data.guests.map((g) => g.id);
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
   const toggle = (id: string, on: boolean) =>
@@ -313,9 +335,12 @@ export function GuestsManager({
       <button type="button" onClick={() => setDetailsId(g.id)} className="max-w-full truncate text-start font-medium text-ink hover:text-bronze-700">
         {g.name}
       </button>
-      <p className="mt-0.5 truncate text-xs text-ink-faint">
-        {g.groupName ? <span>{g.groupName} · </span> : null}
-        {plural(locale, d.admits, g.allowedCount)}
+      <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-ink-faint">
+        {sectionsEnabled && g.section ? <SectionPill section={g.section} label={d.sections.short[g.section]} /> : null}
+        <span className="truncate">
+          {g.groupName ? <span>{g.groupName} · </span> : null}
+          {plural(locale, d.admits, g.allowedCount)}
+        </span>
       </p>
     </div>
   );
@@ -377,6 +402,26 @@ export function GuestsManager({
                 className="ps-10"
               />
             </div>
+            {sectionsEnabled ? (
+              <div className="sm:w-48">
+                <label htmlFor="g-section" className="sr-only">
+                  {d.sections.label}
+                </label>
+                <Select
+                  id="g-section"
+                  value={section ?? ""}
+                  onChange={(e) => {
+                    setSection((e.target.value || null) as SectionFilter | null);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">{d.sections.all}</option>
+                  <option value="MEN">{SECTION_LABELS.MEN[locale]}</option>
+                  <option value="WOMEN">{SECTION_LABELS.WOMEN[locale]}</option>
+                  <option value="NONE">{d.sections.none}</option>
+                </Select>
+              </div>
+            ) : null}
             <div className="sm:w-60">
               <label htmlFor="g-sort" className="sr-only">
                 {d.sort.label}
@@ -412,6 +457,19 @@ export function GuestsManager({
             ))}
           </div>
 
+          {missingSection > 0 && section !== "NONE" ? (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ochre/25 bg-ochre-soft px-4 py-3 text-[13.5px] text-ink-soft">
+              <span>{plural(locale, d.sections.missing, missingSection)}</span>
+              <button
+                type="button"
+                onClick={() => (setSection("NONE"), setPage(1))}
+                className="rounded-full border border-ochre/30 bg-paper px-3 py-1 text-[13px] font-medium text-ink transition hover:border-ochre"
+              >
+                {d.sections.showMissing}
+              </button>
+            </div>
+          ) : null}
+
           <div className={cn("mt-5 overflow-hidden rounded-2xl border border-line bg-paper shadow-soft transition-opacity duration-300", loading && "opacity-60")} aria-busy={loading}>
             {data.guests.length === 0 ? (
               <div className="flex flex-col items-center px-6 py-14 text-center">
@@ -426,6 +484,7 @@ export function GuestsManager({
                       setQ("");
                       setQuery("");
                       setStatus(null);
+                      setSection(null);
                       setPage(1);
                     }}
                   >
@@ -580,6 +639,23 @@ export function GuestsManager({
                 <RefreshCw className={cn("size-3.5", busy === "resend" && "animate-spin")} />
                 {d.bulk.resend}
               </button>
+              {sectionsEnabled ? (
+                <>
+                  <span className="hidden ps-1 text-ivory/60 sm:inline">{d.sections.moveTo}</span>
+                  {(["MEN", "WOMEN"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      disabled={busy === "section"}
+                      onClick={() => moveToSection([...selected], s)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition hover:bg-white/10 disabled:opacity-50"
+                    >
+                      <span className={cn("size-1.5 rounded-full", s === "MEN" ? "bg-[#8fb3d9]" : "bg-[#e3a3bd]")} aria-hidden="true" />
+                      {d.sections.short[s]}
+                    </button>
+                  ))}
+                </>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setToDelete([...selected])}
@@ -608,6 +684,7 @@ export function GuestsManager({
         onClose={() => setForm((f) => ({ ...f, open: false }))}
         eventId={eventId}
         eventLanguage={eventLanguage}
+        sectionsEnabled={sectionsEnabled}
         guest={form.guest}
         onSaved={refresh}
         defaultCountry={defaultCountry}
@@ -618,6 +695,7 @@ export function GuestsManager({
         onClose={() => setImportState((s) => ({ ...s, open: false }))}
         eventId={eventId}
         defaultCountry={defaultCountry}
+        sectionsEnabled={sectionsEnabled}
         onImported={refresh}
       />
       <GuestDetailsDialog
@@ -687,6 +765,21 @@ export function GuestsManager({
         ) : null}
       </Dialog>
     </div>
+  );
+}
+
+/** "Men" / "Women" tag beside a guest. */
+export function SectionPill({ section, label }: { section: "MEN" | "WOMEN"; label: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-medium",
+        section === "MEN" ? "bg-[#2f5d8a]/10 text-[#2f5d8a]" : "bg-[#a2456b]/10 text-[#a2456b]",
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", section === "MEN" ? "bg-[#2f5d8a]" : "bg-[#a2456b]")} aria-hidden="true" />
+      {label}
+    </span>
   );
 }
 

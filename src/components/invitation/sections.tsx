@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Calendar, CalendarPlus, Clock, DoorOpen, ExternalLink, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { getTheme } from "@/lib/themes/registry";
 import { cn } from "@/lib/utils";
 import { Divider, Label, Reveal, SectionHeading, Txt, useInvitation } from "./primitives";
@@ -33,8 +33,9 @@ export function Block({ children, id, className }: { children: React.ReactNode; 
   );
 }
 
-export function Details() {
+export function Details({ status }: { status?: "PENDING" | "ACCEPTED" | "DECLINED" }) {
   const { vm, d } = useInvitation();
+  const section = vm.section;
   const [showMap, setShowMap] = useState(false);
   const e = vm.event;
   const item = (icon: React.ReactNode, label: (x: typeof d) => string, en: string, ar?: string | null) => (
@@ -56,6 +57,12 @@ export function Details() {
       </div>
       <Reveal className="mt-10 text-center">
         <Txt en={e.address} ar={e.addressAr} as="p" className={cn(s.muted, "text-sm")} />
+        {section && (section.note || section.noteAr) ? (
+          <p className="mx-auto mt-4 flex max-w-md items-start justify-center gap-2 text-sm">
+            <DoorOpen className={cn("mt-0.5 size-4 shrink-0", s.accent)} aria-hidden="true" />
+            <Txt en={section.note ?? section.noteAr} ar={section.noteAr ?? section.note} />
+          </p>
+        ) : null}
         {vm.design.sections.map ? (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <a href={e.mapsUrl} target="_blank" rel="noopener noreferrer" className={cn(s.button, s.primary)}>
@@ -68,6 +75,7 @@ export function Details() {
             </button>
           </div>
         ) : null}
+        {e.googleCalendarUrl && vm.token && !e.past && status !== "DECLINED" ? <AddToCalendar google={e.googleCalendarUrl} ics={`/i/${vm.token}/calendar`} /> : null}
         {showMap ? (
           <div className="mt-6 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--inv-line)" }}>
             <iframe
@@ -82,6 +90,39 @@ export function Details() {
         ) : null}
       </Reveal>
     </section>
+  );
+}
+
+/** Apple Calendar (.ics, also Outlook) and Google Calendar, at the guest's own section time and place. */
+function AddToCalendar({ google, ics }: { google: string; ics: string }) {
+  const { d } = useInvitation();
+  return (
+    <div className="mt-8">
+      <Label pick={(x) => x.calendar.title} className={cn(s.eyebrow, "mb-3 block !text-[0.62rem]")} />
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <a href={ics} className={cn(s.button, s.ghost)} data-testid="calendar-apple">
+          <CalendarPlus className="size-4" />
+          {d.calendar.apple}
+        </a>
+        <a href={google} target="_blank" rel="noopener noreferrer" className={cn(s.button, s.ghost)} data-testid="calendar-google">
+          <CalendarPlus className="size-4" />
+          {d.calendar.google}
+          <ExternalLink className="size-3.5 opacity-70" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/** "Men's section" / "قسم النساء" under the guest's name. */
+export function SectionBadge({ className }: { className?: string }) {
+  const { vm } = useInvitation();
+  if (!vm.section) return null;
+  return (
+    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-sm", className)} style={{ borderColor: "var(--inv-line)" }}>
+      <span className="size-1.5 rounded-full" style={{ background: "var(--inv-accent)" }} aria-hidden="true" />
+      <Txt en={vm.section.label.en} ar={vm.section.label.ar} inline />
+    </span>
   );
 }
 

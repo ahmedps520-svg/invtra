@@ -1,7 +1,7 @@
 import { Prisma, type MessageTemplate } from "@prisma/client";
 
 /** What a template is for (see TemplatePurpose in prisma/schema.prisma). */
-export const TEMPLATE_PURPOSES = ["INVITATION", "UPDATE", "PAYMENT_REQUEST", "PAYMENT_RECEIPT"] as const;
+export const TEMPLATE_PURPOSES = ["INVITATION", "UPDATE", "REMINDER", "NUDGE", "PAYMENT_REQUEST", "PAYMENT_RECEIPT"] as const;
 export type TemplatePurposeName = (typeof TEMPLATE_PURPOSES)[number];
 import { z } from "zod";
 import { db } from "@/server/db";
@@ -58,7 +58,8 @@ export function templateShapeErrors(t: {
 
   const qr = t.buttons.filter((b) => b.type === "QUICK_REPLY");
   const url = t.buttons.filter((b) => b.type === "URL");
-  if (t.purpose === "INVITATION") {
+  if (t.purpose === "INVITATION" || t.purpose === "NUDGE") {
+    // Reply reminders carry the same Accept / Decline buttons as the invitation.
     const actions = qr.map((b) => (b.type === "QUICK_REPLY" ? b.action : null)).sort();
     if (url.length || qr.length !== 2 || actions[0] !== "ACCEPT" || actions[1] !== "DECLINE") {
       errors.buttons = "Invitation templates need exactly two quick-reply buttons: one Accept and one Decline.";
@@ -68,7 +69,7 @@ export function templateShapeErrors(t: {
     if (qr.length || url.length !== 1 || !b || b.type !== "URL") errors.buttons = "This kind of template needs exactly one URL button.";
     else if (!/^https?:\/\/[^\s{}]+\{\{1\}\}$/.test(b.url)) {
       errors["buttons.0.url"] =
-        t.purpose === "UPDATE" ? "The URL must be https://… and end with {{1}} (the invitation code)." : "The URL must be https://… and end with {{1}} (the payment-link code).";
+        t.purpose === "UPDATE" || t.purpose === "REMINDER" ? "The URL must be https://… and end with {{1}} (the invitation code)." : "The URL must be https://… and end with {{1}} (the payment-link code).";
     }
   }
   return errors;

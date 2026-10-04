@@ -12,6 +12,8 @@ export const guestInputSchema = z.object({
     .transform((v) => (v ? v : null)),
   allowedCount: z.coerce.number().int().min(1, "At least 1").max(50, "At most 50").default(1),
   locale: z.enum(["en", "ar"]).optional().nullable(),
+  /** Men's or women's section (events with sections); null = none, omitted = unchanged. */
+  section: z.enum(["MEN", "WOMEN"]).optional().nullable(),
   notes: z
     .string()
     .trim()

@@ -2,7 +2,9 @@ import type { Event, GalleryImage, Guest, ScheduleItem } from "@prisma/client";
 import { mediaUrl } from "@/server/storage";
 import { eventDesign } from "@/server/events/design";
 import { rsvpDeadlinePassed } from "@/server/rsvp";
-import { invitationQrText } from "@/server/invitations";
+import { invitationQrText, invitationUrl } from "@/server/invitations";
+import { eventForGuest, sectionInfo } from "@/server/events/sections";
+import { googleCalendarUrl } from "@/server/invitations/calendar";
 import { formatDate, formatTime, formatWallTime } from "@/lib/format";
 import { copyFor } from "@/lib/invitation-copy";
 import { normalizeDesign, type InvitationDesign } from "@/lib/design/schema";
@@ -30,7 +32,7 @@ export function mapsLinks(event: Pick<Event, "mapsUrl" | "venueName" | "address"
 /** Build the invitation page view model. `guest` null renders a non-personal page. */
 export async function buildInvitationVM(opts: {
   event: FullEvent;
-  guest: (Pick<Guest, "name" | "allowedCount" | "attendingCount" | "rsvpStatus" | "checkedInAt" | "checkedInCount" | "scanCount" | "locale"> & Partial<Pick<Guest, "manualSentAt">>) | null;
+  guest: (Pick<Guest, "name" | "allowedCount" | "attendingCount" | "rsvpStatus" | "checkedInAt" | "checkedInCount" | "scanCount" | "locale"> & Partial<Pick<Guest, "manualSentAt" | "section">>) | null;
   token: string | null;
   mode: InvitationVM["mode"];
   themeKey?: ThemeKey;
@@ -38,7 +40,10 @@ export async function buildInvitationVM(opts: {
   /** Show the entry-pass QR (accepted guest or preview). */
   qrText?: string | null;
 }): Promise<InvitationVM> {
-  const { event, guest } = opts;
+  const { event: main, guest } = opts;
+  // The guest's own section (men's / women's) replaces the time and place they see.
+  const event = eventForGuest(main, guest);
+  const section = sectionInfo(main, guest);
   const themeKey = (opts.themeKey ?? getTheme(event.themeKey).key) as ThemeKey;
   const design = opts.design ?? (opts.themeKey && opts.themeKey !== event.themeKey ? normalizeDesign(getTheme(themeKey).defaults, { ...eventDesign(event), palette: getTheme(themeKey).defaults.palette, fonts: getTheme(themeKey).defaults.fonts }) : eventDesign(event));
   const tz = event.timezone;
@@ -103,10 +108,12 @@ export async function buildInvitationVM(opts: {
             ar: formatDate(event.rsvpDeadline, { locale: "ar", timeZone: tz, style: "long", digits }),
           }
         : null,
-      rsvpOpen: !rsvpDeadlinePassed(event, now) && (event.endsAt ?? event.startsAt) > now,
+      rsvpOpen: !rsvpDeadlinePassed(main, now) && (main.endsAt ?? main.startsAt) > now,
       // Guests invited from the host's own WhatsApp have no reply buttons, so they reply here.
       allowWebRsvp: event.allowWebRsvp || Boolean(guest?.manualSentAt),
-      past: (event.endsAt ?? new Date(event.startsAt.getTime() + 6 * 3600_000)) < now,
+      past: (main.endsAt ?? new Date(main.startsAt.getTime() + 6 * 3600_000)) < now,
+      googleCalendarUrl:
+        opts.token && (opts.mode === "guest" || opts.mode === "host") ? googleCalendarUrl(event, { lang, url: invitationUrl(opts.token), section }) : null,
       schedule: event.scheduleItems.map((s) => ({
         time: { en: formatWallTime(s.time, "en"), ar: formatWallTime(s.time, "ar", digits) },
         title: s.title,
@@ -119,6 +126,7 @@ export async function buildInvitationVM(opts: {
       musicUrl,
       backgroundUrl,
     },
+    section: section ? { key: section.key, label: section.label, note: section.note, noteAr: section.noteAr } : null,
     guest: guest
       ? {
           name: guest.name,

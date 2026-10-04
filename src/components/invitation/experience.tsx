@@ -14,7 +14,7 @@ import type { InvitationVM } from "./types";
 import { InvitationProvider, Label, Reveal, Txt, themeVars, useInvitation, useNumber } from "./primitives";
 import { Hero } from "./hero";
 import { Countdown } from "./countdown";
-import { Block, Closing, Contact, Details, Info, Schedule } from "./sections";
+import { Block, Closing, Contact, Details, Info, Schedule, SectionBadge } from "./sections";
 import { Gallery } from "./gallery";
 import { EntryPass, Rsvp } from "./rsvp";
 import { MusicToggle } from "./music";
@@ -150,6 +150,7 @@ function Body({ checkin }: { checkin?: boolean }) {
             className={cn(s.eyebrow, "mt-3 block")}
             inline
           />
+          {vm.section ? <SectionBadge className="mt-4" /> : null}
         </Reveal>
       ) : null}
 
@@ -166,7 +167,7 @@ function Body({ checkin }: { checkin?: boolean }) {
       ) : null}
 
       <Block>
-        <Details />
+        <Details status={status} />
       </Block>
 
       {sec.schedule && vm.event.schedule.length ? (

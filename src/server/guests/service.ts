@@ -11,6 +11,7 @@ import { guestInputSchema, type GuestInput } from "@/lib/validation/guest";
 import { invitationUrl } from "@/server/invitations";
 import { cancelPendingJobs } from "@/server/queue/queue";
 import { countryForTimezone } from "@/lib/timezone-country";
+import { parseSectionValue, SECTION_LABELS, type SectionKey } from "@/lib/sections";
 
 export { TIMEZONE_COUNTRY } from "@/lib/timezone-country";
 export const defaultCountryFor = countryForTimezone;
@@ -40,6 +41,7 @@ export async function addGuest(eventId: string, input: GuestInput, defaultCountr
         allowedCount: input.allowedCount,
         locale: input.locale ?? null,
         notes: input.notes,
+        section: input.section ?? null,
       },
     });
   } catch (e) {
@@ -65,6 +67,7 @@ export async function editGuest(guest: Guest, input: GuestInput, defaultCountry:
         attendingCount: guest.attendingCount ? Math.min(guest.attendingCount, input.allowedCount) : guest.attendingCount,
         locale: input.locale ?? null,
         notes: input.notes,
+        ...(input.section !== undefined ? { section: input.section } : {}),
         // A corrected number gets a clean slate so it can be (re)sent.
         ...(phoneChanged && guest.rsvpStatus === "PENDING"
           ? { deliveryStatus: "NOT_SENT", deliveryError: null, deliveryErrorCode: null, status: "PENDING", requestSentAt: null }
@@ -100,23 +103,25 @@ export type ImportRow = {
   rawPhone: string;
   groupName: string | null;
   allowedCount: number;
+  section: SectionKey | null;
   error: string | null;
   duplicate: "file" | "existing" | null;
 };
 
-const HEADERS: Record<"name" | "phone" | "group" | "count", RegExp> = {
+const HEADERS: Record<"name" | "phone" | "group" | "count" | "section", RegExp> = {
   name: /^(name|full ?name|guest|guest ?name|invitee|الاسم|اسم|اسم الضيف|الضيف)$/i,
   phone: /^(phone|phone ?number|mobile|whatsapp|whats ?app|number|tel|telephone|رقم|الرقم|الجوال|جوال|الهاتف|هاتف|واتساب|رقم الواتساب)$/i,
   group: /^(group|family|family ?name|group ?name|household|table|العائلة|الأسرة|المجموعة|العائله)$/i,
   count: /^(guests|count|allowed|party|party ?size|number of guests|seats|pax|admits|عدد|العدد|عدد الضيوف|عدد المدعوين)$/i,
+  section: /^(section|side|hall|gender|men ?\/ ?women|القسم|قسم|الجنس|رجال ?\/ ?نساء)$/i,
 };
 
-function mapColumns(header: string[]): { name: number; phone: number; group: number; count: number } | null {
+function mapColumns(header: string[]): { name: number; phone: number; group: number; count: number; section: number } | null {
   const idx = (re: RegExp) => header.findIndex((h) => re.test(String(h ?? "").trim()));
   const name = idx(HEADERS.name);
   const phone = idx(HEADERS.phone);
   if (name === -1 || phone === -1) return null;
-  return { name, phone, group: idx(HEADERS.group), count: idx(HEADERS.count) };
+  return { name, phone, group: idx(HEADERS.group), count: idx(HEADERS.count), section: idx(HEADERS.section) };
 }
 
 async function readRows(file: { name: string; data: Buffer }): Promise<string[][]> {
@@ -159,7 +164,7 @@ export async function previewImport(eventId: string, file: { name: string; data:
   let firstRowNumber = 2;
   if (!cols) {
     // No recognisable header → assume Name, Phone, Group, Guests.
-    cols = { name: 0, phone: 1, group: 2, count: 3 };
+    cols = { name: 0, phone: 1, group: 2, count: 3, section: 4 };
     body = rows;
     firstRowNumber = 1;
   }
@@ -177,6 +182,7 @@ export async function previewImport(eventId: string, file: { name: string; data:
     const groupName = cols!.group >= 0 ? String(r[cols!.group] ?? "").trim() || null : null;
     const countRaw = cols!.count >= 0 ? Number(String(r[cols!.count] ?? "").replace(/[^\d]/g, "")) : 1;
     const allowedCount = Number.isFinite(countRaw) && countRaw >= 1 ? Math.min(countRaw, 50) : 1;
+    const section = cols!.section >= 0 ? parseSectionValue(String(r[cols!.section] ?? "")) : null;
     const phone = normalizePhone(rawPhone, defaultCountry);
     let error: string | null = null;
     if (!name) error = "missing_name";
@@ -187,7 +193,7 @@ export async function previewImport(eventId: string, file: { name: string; data:
       else if (seen.has(phone.e164)) duplicate = "file";
       seen.add(phone.e164);
     }
-    out.push({ row: firstRowNumber + i, name, rawPhone, phone: phone.ok ? phone.e164 : rawPhone, groupName, allowedCount, error, duplicate });
+    out.push({ row: firstRowNumber + i, name, rawPhone, phone: phone.ok ? phone.e164 : rawPhone, groupName, allowedCount, section, error, duplicate });
   });
   return {
     rows: out,
@@ -229,6 +235,7 @@ export async function importGuests(eventId: string, rows: GuestInput[], defaultC
       groupName: parsed.data.groupName,
       allowedCount: parsed.data.allowedCount,
       locale: parsed.data.locale ?? null,
+      section: parsed.data.section ?? null,
     });
   }
   await assertCapacity(eventId, data.length);
@@ -241,7 +248,7 @@ export async function importGuests(eventId: string, rows: GuestInput[], defaultC
 // ── Export ──────────────────────────────────────────────────────────────────
 
 export async function exportGuestsCsv(eventId: string): Promise<string> {
-  const event = await db.event.findUnique({ where: { id: eventId }, select: { timezone: true } });
+  const event = await db.event.findUnique({ where: { id: eventId }, select: { timezone: true, sectionsEnabled: true } });
   const when = (d: Date) => formatNumericDateTime(d, event?.timezone ?? "Asia/Riyadh"); // dd/mm/yyyy HH:mm, event time
   const guests = await db.guest.findMany({
     where: { eventId, isTest: false },
@@ -254,6 +261,7 @@ export async function exportGuestsCsv(eventId: string): Promise<string> {
       "Phone",
       "Group",
       "Guests allowed",
+      ...(event?.sectionsEnabled ? ["Section"] : []),
       "Attending",
       "Status",
       "RSVP",
@@ -270,6 +278,7 @@ export async function exportGuestsCsv(eventId: string): Promise<string> {
       g.phone,
       g.groupName ?? "",
       g.allowedCount,
+      ...(event?.sectionsEnabled ? [g.section ? SECTION_LABELS[g.section].en : ""] : []),
       g.attendingCount ?? "",
       g.status,
       g.rsvpStatus,

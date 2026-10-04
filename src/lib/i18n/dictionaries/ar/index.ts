@@ -6,5 +6,6 @@ import { dashboard } from "./dashboard";
 import { editor } from "./editor";
 import { invitation } from "./invitation";
 import { themes } from "./themes";
+import { door } from "./door";
 
-export const ar: Dictionary = { common, marketing, auth, dashboard, editor, invitation, themes };
+export const ar: Dictionary = { common, marketing, auth, dashboard, editor, invitation, themes, door };
