@@ -112,6 +112,26 @@ Set `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER` and `LEGAL_ADDRES
 on receipts. INVTRA's receipts are payment confirmations, not ZATCA e-invoices — a
 VAT-registered business in Saudi Arabia still needs a ZATCA-compliant invoicing solution.
 
+## VAT and starting fresh
+
+**Admin → VAT** shows, per month in Riyadh time and to the halala: receipts, money collected,
+refunds, the VAT owed and your income excluding VAT, plus quarter totals (what a Saudi VAT return
+covers) and sales over the last 12 months against the registration thresholds (mandatory above
+SAR 375,000, optional above SAR 187,500). Prices include VAT, so each receipt holds
+`VAT_RATE`/(100 + `VAT_RATE`) of its amount as VAT (15/115 by default), rounded per receipt; a
+refund takes its VAT off the month it is made. Click a month for every receipt line by line, or
+download the month as CSV for your accountant.
+
+On the 1st of each month the worker saves last month's statement and emails it to every admin
+account and `ADMIN_EMAIL` (set `EMAIL_PROVIDER=smtp` and `SMTP_URL` so the email is actually
+delivered). Once you're VAT-registered, set `LEGAL_VAT_NUMBER`: receipts then show the amount
+before VAT and the VAT line.
+
+**Admin → Payments → Start fresh** deletes every order, payment attempt, receipt number and VAT
+statement — for clearing test payments before going live (type `DELETE ALL PAYMENTS` to confirm).
+Events keep their plans; the audit log keeps a summary. Never use it after real customers have
+paid.
+
 ## Door check-in for staff
 
 On an event's overview the host can create a **door link** (`/door/<token>`) and send it to the

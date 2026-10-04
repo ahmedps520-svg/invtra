@@ -715,6 +715,7 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   paidAt      DateTime?
+  refundedAt  DateTime? // when it was marked refunded (VAT is credited in that month)
 
   // Custom packages prepared by INVTRA staff (Admin → Custom events)
   payToken      String?   @unique // secret for the public payment link /pay/<token>
@@ -730,6 +731,27 @@ model Order {
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+/**
+ * Monthly VAT statement (Admin → VAT): what was collected, refunded and the VAT owed for a
+ * calendar month in Riyadh time, saved and emailed to admins on the 1st of the next month.
+ * Amounts are in minor units (halalas); prices are VAT-inclusive.
+ */
+model TaxStatement {
+  id         String    @id @default(cuid())
+  month      String // "2026-10"
+  currency   String
+  rate       Int // VAT %, e.g. 15
+  receipts   Int // paid orders in the month
+  gross      Int // collected (VAT included)
+  refunds    Int // refunded in the month
+  vat        Int // VAT owed for the month (on sales minus on refunds)
+  net        Int // income excluding VAT
+  createdAt  DateTime  @default(now())
+  emailedAt  DateTime?
+
+  @@unique([month, currency])
 }
 
 /** Sequential receipt numbers per calendar year (INVTRA-2026-0001, …). */

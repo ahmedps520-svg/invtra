@@ -314,7 +314,7 @@ export async function markOrderRefunded(
     if (order.status !== "PAID") throw conflict("order_not_paid", "Only paid orders can be refunded.");
     const updated = await tx.order.update({
       where: { id: orderId },
-      data: { status: "REFUNDED", note: appendNote(order.note, opts.note) },
+      data: { status: "REFUNDED", refundedAt: new Date(), note: appendNote(order.note, opts.note) },
     });
     await tx.payment.updateMany({ where: { orderId, status: "SUCCEEDED" }, data: { status: "REFUNDED" } });
     let plan: { plan: PlanTier | null; guestLimit: number } | undefined;

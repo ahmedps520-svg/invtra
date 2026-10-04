@@ -1,11 +1,13 @@
 import { Logo } from "@/components/brand/logo";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney, intlLocale } from "@/lib/format";
 import { planName } from "@/lib/plans";
 import { offerName } from "@/lib/offers";
 import { guestsLabel } from "@/server/payments/receipts";
 import type { CompanyDetails } from "@/server/legal";
 import type { PayCopy } from "@/lib/i18n/pay-copy";
 import { cn } from "@/lib/utils";
+import { fmt } from "@/lib/i18n/config";
+import { vatInside, vatRate } from "@/server/admin/tax";
 import { PrintButton } from "./print-button";
 
 export type ReceiptData = {
@@ -49,6 +51,9 @@ export function Receipt({ data, t, ar, company }: { data: ReceiptData; t: PayCop
   const tz = data.event?.timezone ?? "Asia/Riyadh";
   const eventTitle = (ar ? data.event?.titleAr || data.event?.title : data.event?.title) ?? "";
   const plan = offerName(data.promo, ar ? "ar" : "en") ?? (data.plan === "CUSTOM" ? t.customPlan : `${planName(data.plan)}${ar ? "" : " plan"}`);
+  // VAT-registered (a VAT number is set): show the VAT inside the price, to the halala.
+  const rate = vatRate();
+  const vat = company?.vat && rate ? vatInside(data.amount, rate) : null;
   return (
     <article className="receipt rounded-[1.75rem] border border-line bg-paper px-6 py-8 shadow-soft sm:px-10 sm:py-10 print:rounded-none print:border-0 print:px-0 print:py-0 print:shadow-none">
       <header className="flex flex-wrap items-start justify-between gap-6 border-b border-line pb-6">
@@ -127,13 +132,25 @@ export function Receipt({ data, t, ar, company }: { data: ReceiptData; t: PayCop
           </tr>
         </tbody>
         <tfoot>
+          {vat !== null ? (
+            <>
+              <tr className="border-t border-line text-[13.5px] text-ink-soft">
+                <td className="pt-3">{t.exclVat}</td>
+                <td className="pt-3 text-end tabular-nums">{exactAmount(data.amount - vat, data.currency, locale)}</td>
+              </tr>
+              <tr className="text-[13.5px] text-ink-soft">
+                <td className="pb-3 pt-1">{fmt(t.vatLine, { rate })}</td>
+                <td className="pb-3 pt-1 text-end tabular-nums">{exactAmount(vat, data.currency, locale)}</td>
+              </tr>
+            </>
+          ) : null}
           <tr className="border-t-2 border-ink/80">
             <td className="pt-4 font-display text-xl text-ink">{t.total}</td>
             <td className="pt-4 text-end font-display text-2xl text-ink tabular-nums">{formatMoney(data.amount, data.currency, locale)}</td>
           </tr>
         </tfoot>
       </table>
-      <p className="mt-4 text-[12px] text-ink-faint">{t.vat}</p>
+      <p className="mt-4 text-[12px] text-ink-faint">{vat !== null ? fmt(t.vatIncluded, { rate }) : t.vat}</p>
       {data.refunded ? <p className="mt-3 rounded-xl bg-rosewood-soft px-4 py-2 text-[13px] text-rosewood">{t.refunded}</p> : null}
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 print:hidden">
@@ -142,4 +159,10 @@ export function Receipt({ data, t, ar, company }: { data: ReceiptData; t: PayCop
       </div>
     </article>
   );
+}
+
+/** Money with all its decimals (VAT lines must add up to the halala). */
+function exactAmount(minor: number, currency: string, locale: "en" | "ar") {
+  const d = ["KWD", "BHD", "OMR"].includes(currency) ? 3 : 2;
+  return new Intl.NumberFormat(intlLocale(locale), { style: "currency", currency, minimumFractionDigits: d, maximumFractionDigits: d }).format(minor / 10 ** d);
 }

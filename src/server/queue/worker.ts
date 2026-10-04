@@ -7,6 +7,7 @@ import { claimJobs, completeJob, failJob, PermanentJobError, queueBus, reclaimSt
 import { handlers, onJobFailed } from "./handlers";
 import { purgeDeletedEvents } from "@/server/maintenance";
 import { queueDueReminders } from "@/server/reminders/service";
+import { closeTaxMonth } from "@/server/admin/tax";
 
 /**
  * Queue worker. Run standalone with `npm run worker` (production), or inside the
@@ -67,6 +68,8 @@ export function startWorker(opts: { concurrency: number; pollMs?: number; label?
       await db.job.deleteMany({ where: { status: { in: ["COMPLETED", "CANCELLED"] }, completedAt: { lt: new Date(now - 14 * 86_400_000) } } });
       await db.webhookEvent.deleteMany({ where: { processedAt: { lt: new Date(now - 30 * 86_400_000) } } });
       await purgeDeletedEvents();
+      // On the 1st: save last month's VAT statement and email it to the admins.
+      await closeTaxMonth().catch((e) => logError("worker:vat-statement", e));
     }
   }
 

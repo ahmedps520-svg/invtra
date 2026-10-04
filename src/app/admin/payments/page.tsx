@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { planName } from "@/lib/plans";
 import { offerName } from "@/lib/offers";
 import Link from "next/link";
-import { Ban, CheckCircle2, Undo2 } from "lucide-react";
+import { Ban, CheckCircle2, Trash2, Undo2 } from "lucide-react";
+import { db } from "@/server/db";
+import { RESET_PHRASE } from "@/server/admin/tax";
 import { requireAdmin } from "@/server/auth/guards";
 import { env } from "@/server/env";
 import {
@@ -47,10 +49,12 @@ export default async function PaymentsPage({
   await requireAdmin();
   const sp = await searchParams;
   const view = str(sp, "view") === "payments" ? "payments" : "orders";
-  const [summary, orders, payments] = await Promise.all([
+  const [summary, orders, payments, orderCount, attemptCount] = await Promise.all([
     paymentSummary(),
     view === "orders" ? listOrders(sp) : null,
     view === "payments" ? listPayments(sp) : null,
+    db.order.count(),
+    db.payment.count(),
   ]);
   const params = currentParams(
     sp,
@@ -486,6 +490,38 @@ export default async function PaymentsPage({
             params={params}
           />
         </>
+      ) : null}
+
+      {orderCount > 0 ? (
+        <section className="mt-14 rounded-2xl border border-rosewood/20 bg-paper px-6 py-5">
+          <h2 className="font-display text-xl text-ink">Start fresh</h2>
+          <p className="mt-1.5 max-w-3xl text-[13.5px] leading-relaxed text-ink-faint">
+            For clearing test payments before going live: deletes every order ({num(orderCount)}), payment attempt ({num(attemptCount)}), receipt number
+            and VAT statement. Events keep the plans they have, open payment links stop working, and the next receipt is INVTRA-
+            {new Date().getUTCFullYear()}-0001 again. A summary stays in the audit log. Never use it once real customers have paid — Saudi rules require
+            keeping sales records.
+          </p>
+          <AdminAction
+            url="/api/admin/payments/reset"
+            label="Delete all payment history"
+            variant="outline"
+            className="mt-4 border-rosewood/30 text-rosewood hover:border-rosewood hover:bg-rosewood-soft"
+            icon={<Trash2 className="size-3.5" />}
+            confirm={{
+              title: "Delete all payment history?",
+              description: (
+                <>
+                  {num(orderCount)} orders and {num(attemptCount)} payment attempts
+                  {summary.paid.length ? ` (${summary.paid.map((r) => money(r.amount, r.currency)).join(" + ")} marked paid)` : ""} will be deleted
+                  permanently. This can&apos;t be undone.
+                </>
+              ),
+              confirmLabel: "Delete everything",
+              tone: "danger",
+              reason: { label: `Type ${RESET_PHRASE} to confirm`, placeholder: RESET_PHRASE, required: true, field: "confirm" },
+            }}
+          />
+        </section>
       ) : null}
     </>
   );

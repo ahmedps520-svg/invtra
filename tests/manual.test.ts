@@ -32,12 +32,14 @@ async function setup(opts: { plan?: "BASIC" | null; language?: "EN" | "AR" | "BI
       allowWebRsvp: false, // only the WhatsApp buttons — manual guests must still be able to reply
     },
   });
-  const guests = await Promise.all(
-    [
-      ["Khalid", "+966501110001", null],
-      ["Noura", "+966501110002", "ar"],
-    ].map(([name, phone, locale]) => db.guest.create({ data: { eventId: event.id, name: name!, phone: phone!, locale } })),
-  );
+  // One after the other, so the list order (by creation time) is fixed.
+  const guests = [];
+  for (const [name, phone, locale] of [
+    ["Khalid", "+966501110001", null],
+    ["Noura", "+966501110002", "ar"],
+  ]) {
+    guests.push(await db.guest.create({ data: { eventId: event.id, name: name!, phone: phone!, locale } }));
+  }
   return { user, event, guests };
 }
 

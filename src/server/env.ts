@@ -62,6 +62,8 @@ const schema = z
     LEGAL_CR_NUMBER: z.string().optional(),
     LEGAL_VAT_NUMBER: z.string().optional(),
     LEGAL_ADDRESS: z.string().optional(),
+    // VAT (Admin → VAT): the rate in %, used to work out the VAT inside every receipt (prices include VAT).
+    VAT_RATE: z.coerce.number().min(0).max(100).default(15),
 
     // Support chat: the "Chat with us on WhatsApp" button (digits with country code; empty hides it).
     SUPPORT_WHATSAPP: z.string().default("966557663974"),
