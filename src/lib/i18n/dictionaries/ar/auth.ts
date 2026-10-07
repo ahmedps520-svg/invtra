@@ -23,6 +23,12 @@ export const auth: typeof en = {
     showPassword: "إظهار كلمة المرور",
     hidePassword: "إخفاء كلمة المرور",
   },
+  apple: {
+    continue: "المتابعة باستخدام Apple",
+    or: "أو",
+    failed: "تعذّر تسجيل الدخول باستخدام Apple. حاول مرة أخرى أو استخدم بريدك الإلكتروني.",
+    deactivated: "تم إيقاف هذا الحساب. يرجى مراسلتنا على contact@invtra.store.",
+  },
   login: {
     title: "أهلًا بعودتك",
     subtitle: "سجّل الدخول لمتابعة دعواتك.",

@@ -5,6 +5,9 @@ import { rsvpDeadlinePassed } from "@/server/rsvp";
 import { invitationQrText, invitationUrl } from "@/server/invitations";
 import { eventForGuest, sectionInfo } from "@/server/events/sections";
 import { googleCalendarUrl } from "@/server/invitations/calendar";
+import { walletConfig } from "@/server/apple/config";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { formatDate, formatTime, formatWallTime } from "@/lib/format";
 import { copyFor } from "@/lib/invitation-copy";
 import { normalizeDesign, type InvitationDesign } from "@/lib/design/schema";
@@ -138,6 +141,7 @@ export async function buildInvitationVM(opts: {
           scanCount: guest.scanCount,
         }
       : null,
+    wallet: opts.token && (opts.mode === "guest" || opts.mode === "host") && (await walletConfig()) ? { badge: walletBadge(lang) } : null,
     qrSvg: qrText ? qrSvg({ text: qrText, size: 320, style: design.card.qr.style, fg: textColor, bg: plate, logo: design.card.qr.showLogo }) : null,
     copy: {
       en: copyFor(event.type, "en", { eyebrow: design.texts.eyebrow, intro: design.texts.intro, closing: design.texts.closing }),
@@ -145,4 +149,13 @@ export async function buildInvitationVM(opts: {
     },
     dict: { en: en.invitation, ar: ar.invitation },
   };
+}
+
+/** Apple's official "Add to Apple Wallet" badge, if it has been added to public/badges (EN / AR). */
+function walletBadge(lang: PageLang): string | null {
+  for (const l of lang === "ar" ? ["ar", "en"] : ["en", "ar"]) {
+    const file = `add-to-apple-wallet-${l}.svg`;
+    if (existsSync(path.join(process.cwd(), "public", "badges", file))) return `/badges/${file}`;
+  }
+  return null;
 }

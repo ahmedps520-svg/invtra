@@ -6,6 +6,8 @@ import { getSessionUser } from "@/server/auth/session";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { LoginForm } from "@/components/auth/login-form";
 import { safeNext, withNext } from "@/components/auth/next-path";
+import { AppleSignInButton } from "@/components/auth/apple-button";
+import { appleReady } from "@/server/apple/signin";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dict } = await getI18n();
@@ -26,6 +28,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <>
       <AuthHeading title={t.title} subtitle={t.subtitle} />
       <div className="mt-10">
+        {(await appleReady()) ? (
+          <AppleSignInButton
+            href={`/api/auth/apple/start?next=${encodeURIComponent(next)}`}
+            label={dict.auth.apple.continue}
+            or={dict.auth.apple.or}
+            error={sp.error === "apple" ? dict.auth.apple.failed : sp.error === "deactivated" ? dict.auth.apple.deactivated : null}
+          />
+        ) : null}
         <LoginForm next={next} forgotHref="/forgot-password" />
       </div>
       <p className="mt-10 border-t border-line pt-6 text-center text-[14px] text-ink-faint">

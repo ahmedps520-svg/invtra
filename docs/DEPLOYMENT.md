@@ -112,6 +112,30 @@ Set `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER` and `LEGAL_ADDRES
 on receipts. INVTRA's receipts are payment confirmations, not ZATCA e-invoices — a
 VAT-registered business in Saudi Arabia still needs a ZATCA-compliant invoicing solution.
 
+## Apple (Wallet passes, Sign in with Apple)
+
+Set up from **Admin → Apple** with an Apple Developer Program membership — no command line or
+environment variables. Keys are generated or uploaded there and stored encrypted with
+`APP_SECRET` (changing `APP_SECRET` means setting Apple up again).
+
+- **Apple Wallet** — create a Pass Type ID (`pass.store.invtra.invitation`), press *Create the
+  request* and download it, create a *Pass Type ID Certificate* with it in Apple Developer, and
+  upload the `pass.cer` you get (a `.p12` from a Mac's Keychain works too). Accepted guests on
+  iPhone, iPad and Mac then see *Add to Apple Wallet* on their entry pass. Saved passes register
+  for updates (`/api/wallet/v1/…`), and INVTRA pushes a refresh through Apple when the time,
+  venue or section changes, when a guest is checked in, or when an invitation is cancelled
+  (the pass becomes void). The certificate lasts a year — renew it the same way.
+  Apple asks websites to use its official *Add to Apple Wallet* badge: download the badges from
+  developer.apple.com/wallet and save them as `public/badges/add-to-apple-wallet-en.svg` and
+  `…-ar.svg`; until then a plain button is shown.
+- **Sign in with Apple** — follow the steps on the page (App ID, Services ID with the return URL
+  `https://invtra.store/api/auth/apple/callback`, a key), then enter the Team ID, Services ID and
+  Key ID and upload the `.p8` file. *Continue with Apple* appears on the sign-in and sign-up
+  pages. Accounts are matched by Apple ID, then by a verified email; hosts who signed up with
+  Apple can add a password with *Forgot password*. Register `invtra.store` and
+  `contact@invtra.store` for Apple's private email relay so emails reach "Hide My Email" users.
+- **Apple Pay** needs nothing here: it is offered on Tap's payment page.
+
 ## VAT and starting fresh
 
 **Admin → VAT** shows, per month in Riyadh time and to the halala: receipts, money collected,

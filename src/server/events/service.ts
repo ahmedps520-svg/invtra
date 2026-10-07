@@ -6,6 +6,7 @@ import { zonedToUtc, utcToZoned } from "@/lib/time";
 import { DEFAULT_THEME, getTheme, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
 import type { EventInput } from "@/lib/validation/event";
 import { parseSections, sectionDiffers, SECTION_KEYS } from "@/lib/sections";
+import { walletChanged } from "@/server/apple/push";
 
 /** Fields printed on the invitation image — changing them requires re-sending updates. */
 const CARD_FIELDS = ["title", "titleAr", "hostNames", "hostNamesAr", "startsAt", "timezone", "venueName", "venueNameAr", "address", "addressAr", "type", "language"] as const;
@@ -114,6 +115,7 @@ export async function updateEvent(event: Event, input: EventInput) {
     }
     return e;
   });
+  await walletChanged({ eventId: event.id });
   return { event: updated, cardChanged };
 }
 
@@ -163,6 +165,7 @@ export async function deleteEvent(eventId: string) {
   await db.event.update({ where: { id: eventId }, data: { deletedAt: new Date() } });
   await cancelPendingJobs({ eventId });
   await db.sendBatch.updateMany({ where: { eventId, status: { in: ["QUEUED", "RUNNING"] } }, data: { status: "CANCELLED", completedAt: new Date() } });
+  await walletChanged({ eventId });
 }
 
 /** Headline numbers for the event overview (test guests excluded). */

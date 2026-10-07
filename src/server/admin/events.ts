@@ -7,6 +7,7 @@ import { cancelBatch } from "@/server/sending/batch";
 import { grantPlan } from "@/server/payments/service";
 import { THEME_KEYS } from "@/lib/themes/registry";
 import { paging, type SearchParams, oneOf, str } from "./params";
+import { walletChanged } from "@/server/apple/push";
 
 export const EVENT_FILTERS = ["upcoming", "past", "deactivated", "deleted"] as const;
 export type EventFilter = (typeof EVENT_FILTERS)[number];
@@ -129,6 +130,7 @@ export async function deactivateEvent(actorId: string, eventId: string, reason: 
   if (event.deactivatedAt) throw conflict("already_deactivated", "This event is already deactivated.");
   await db.event.update({ where: { id: eventId }, data: { deactivatedAt: new Date(), deactivatedReason: reason } });
   const halted = await haltEventSending(eventId);
+  await walletChanged({ eventId });
   await audit(actorId, "admin.event.deactivate", "event", eventId, { reason, title: event.title, ...halted });
   return halted;
 }

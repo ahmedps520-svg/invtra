@@ -64,6 +64,7 @@ export const invitation = {
     title: "Your entry pass",
     body: "Please present this QR code at the entrance.",
     download: "Save invitation",
+    wallet: "Add to Apple Wallet",
     locked: "Your personal QR code will appear here once you accept the invitation.",
     personal: "Personal to {name} — please don't share it.",
   },

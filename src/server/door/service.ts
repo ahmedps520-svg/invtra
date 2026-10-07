@@ -5,6 +5,7 @@ import { badRequest, notFound } from "@/server/http";
 import { recordActivity } from "@/server/activity";
 import { recordScan } from "@/server/invitations/public";
 import { generateSecretToken, isWellFormedInvitationToken } from "@/server/security/tokens";
+import { walletChanged } from "@/server/apple/push";
 
 /**
  * Door check-in for staff. The host creates a link (/door/<token>) and sends it to whoever
@@ -169,6 +170,7 @@ export async function doorCheckIn(event: Event, guestId: string, opts: { count?:
       : { checkedInAt: guest.checkedInAt ?? new Date(), checkedInCount: opts.count ?? guest.attendingCount ?? guest.allowedCount, lastActivityAt: new Date() },
     select: GUEST_FIELDS,
   });
+  await walletChanged({ guestIds: [guest.id] });
   if (!opts.undo && !guest.checkedInAt) {
     await recordActivity(db, event.id, "guest.checked_in", { name: guest.name, count: updated.checkedInCount, door: true }, guest.id);
   }

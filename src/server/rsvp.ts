@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { recordActivity } from "@/server/activity";
 import { updateGuest } from "@/server/guests/status";
 import { zonedToUtc, utcToZoned } from "@/lib/time";
+import { walletChanged } from "@/server/apple/push";
 
 export type RsvpResponse = "ACCEPTED" | "DECLINED";
 
@@ -40,6 +41,13 @@ export async function respond(input: {
   source: RsvpSource;
   attendingCount?: number | null;
 }): Promise<RsvpOutcome> {
+  const outcome = await respondTx(input);
+  // A saved Apple Wallet pass becomes void when the guest declines (and valid again on accepting).
+  if (outcome.kind === "changed") await walletChanged({ guestIds: [input.guestId] });
+  return outcome;
+}
+
+function respondTx(input: { guestId: string; response: RsvpResponse; source: RsvpSource; attendingCount?: number | null }): Promise<RsvpOutcome> {
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT "id" FROM "Guest" WHERE "id" = ${input.guestId} FOR UPDATE`;
     const guest = await tx.guest.findUniqueOrThrow({ where: { id: input.guestId }, include: { invitation: true } });

@@ -33,7 +33,8 @@ model User {
   id               String        @id @default(cuid())
   email            String        @unique
   name             String
-  passwordHash     String
+  passwordHash     String // "" for accounts created with Sign in with Apple (no password yet)
+  appleSub         String?       @unique // Sign in with Apple user id
   role             Role          @default(CUSTOMER)
   status           AccountStatus @default(ACTIVE)
   deactivatedAt    DateTime?
@@ -394,6 +395,9 @@ model Invitation {
   waMediaVersion   String?
   waMediaExpiresAt DateTime?
 
+  // Apple Wallet: when the pass last changed (devices registered for updates fetch it again)
+  walletUpdatedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -752,6 +756,26 @@ model TaxStatement {
   emailedAt  DateTime?
 
   @@unique([month, currency])
+}
+
+/** Integration settings managed from the admin (Apple certificates…). Secrets are encrypted with APP_SECRET. */
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/** iPhones that saved a guest's Apple Wallet pass and want updates (Apple's PassKit web service). */
+model WalletRegistration {
+  id              String   @id @default(cuid())
+  deviceLibraryId String
+  pushToken       String
+  passTypeId      String
+  serialNumber    String // Invitation.id
+  createdAt       DateTime @default(now())
+
+  @@unique([deviceLibraryId, passTypeId, serialNumber])
+  @@index([serialNumber])
 }
 
 /** Sequential receipt numbers per calendar year (INVTRA-2026-0001, …). */

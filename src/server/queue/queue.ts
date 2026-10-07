@@ -16,7 +16,8 @@ export type JobType =
   | "payment.request"
   | "payment.receipt"
   | "reminder.send"
-  | "nudge.send";
+  | "nudge.send"
+  | "wallet.push";
 
 export const PRIORITY = { bulk: 0, normal: 5, interactive: 10 } as const;
 

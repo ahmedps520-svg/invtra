@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Check, ChevronDown, Download, Lock, X } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
+import { Check, ChevronDown, Download, Lock, Wallet, X } from "lucide-react";
 import { fmt } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 import { Label, Reveal, SectionHeading, Txt, useInvitation, useNumber } from "./primitives";
@@ -228,6 +228,7 @@ export function EntryPass({ status }: { status: Status }) {
                   <Download className="size-4" />
                   {d.pass.download}
                 </a>
+                {vm.wallet ? <AddToWallet href={`/i/${vm.token}/wallet`} badge={vm.wallet.badge} label={d.pass.wallet} /> : null}
               </div>
             ) : null}
             <Txt
@@ -242,5 +243,33 @@ export function EntryPass({ status }: { status: Status }) {
         )}
       </Reveal>
     </section>
+  );
+}
+
+const subscribeNoop = () => () => {};
+
+/** iPhone, iPad (reports as Mac) or Mac — the devices with Apple Wallet. */
+function useAppleDevice() {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent),
+    () => false,
+  );
+}
+
+/** "Add to Apple Wallet": Apple's badge when it's been added to the site, otherwise a plain button. */
+function AddToWallet({ href, badge, label }: { href: string; badge: string | null; label: string }) {
+  const apple = useAppleDevice();
+  if (!apple) return null;
+  return badge ? (
+    <a href={href} className="mt-1 inline-block" aria-label={label} data-testid="add-to-wallet">
+      {/* eslint-disable-next-line @next/next/no-img-element -- Apple's badge artwork, unmodified */}
+      <img src={badge} alt={label} className="h-12 w-auto" />
+    </a>
+  ) : (
+    <a href={href} className={cn(s.button, s.ghost, "w-full")} data-testid="add-to-wallet">
+      <Wallet className="size-4" />
+      {label}
+    </a>
   );
 }

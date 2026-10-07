@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { forbidden, notFound, ok, parseJson, requireApiUser, route } from "@/server/http";
 import { recordActivity } from "@/server/activity";
 import { isWellFormedInvitationToken } from "@/server/security/tokens";
+import { walletChanged } from "@/server/apple/push";
 
 type Ctx = { params: Promise<{ token: string }> };
 
@@ -21,5 +22,6 @@ export const POST = route<Ctx>("invitation.check-in", async (req: NextRequest, c
     data: undo ? { checkedInAt: null, checkedInCount: null } : { checkedInAt: new Date(), checkedInCount: count ?? inv.guest.attendingCount ?? inv.guest.allowedCount },
   });
   if (!undo) await recordActivity(db, inv.eventId, "guest.checked_in", { name: g.name, count: g.checkedInCount }, g.id);
+  await walletChanged({ guestIds: [g.id] });
   return ok({ checkedInAt: g.checkedInAt, checkedInCount: g.checkedInCount });
 });

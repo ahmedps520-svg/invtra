@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@resvg/resvg-js", "sharp", "exceljs", "nodemailer"],
   outputFileTracingIncludes: {
     // Fonts used by the server-side invitation image renderer.
-    "/**": ["./assets/fonts/**/*"],
+    "/**": ["./assets/fonts/**/*", "./assets/apple/**/*"],
   },
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },

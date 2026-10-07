@@ -66,6 +66,7 @@ export const invitation: typeof en = {
     title: "بطاقة الدخول",
     body: "يرجى إبراز رمز QR عند الدخول.",
     download: "حفظ الدعوة",
+    wallet: "إضافة إلى Apple Wallet",
     locked: "سيظهر رمز الدخول الخاص بكم هنا بعد قبول الدعوة.",
     personal: "خاص بـ {name} — يرجى عدم مشاركته.",
   },

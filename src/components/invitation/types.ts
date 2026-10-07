@@ -68,6 +68,8 @@ export interface InvitationVM {
     scanCount: number;
   } | null;
   qrSvg: string | null;
+  /** Apple Wallet is set up: accepted guests on Apple devices get "Add to Apple Wallet" (badge = Apple's artwork, when added to /public/badges). */
+  wallet: { badge: string | null } | null;
   copy: { en: { eyebrow: string; intro: string; closing: string }; ar: { eyebrow: string; intro: string; closing: string } };
   dict: { en: InvitationDict; ar: InvitationDict };
 }

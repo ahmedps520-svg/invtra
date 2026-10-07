@@ -12,6 +12,7 @@ import { invitationUrl } from "@/server/invitations";
 import { cancelPendingJobs } from "@/server/queue/queue";
 import { countryForTimezone } from "@/lib/timezone-country";
 import { parseSectionValue, SECTION_LABELS, type SectionKey } from "@/lib/sections";
+import { walletChanged } from "@/server/apple/push";
 
 export { TIMEZONE_COUNTRY } from "@/lib/timezone-country";
 export const defaultCountryFor = countryForTimezone;
@@ -53,6 +54,12 @@ export async function addGuest(eventId: string, input: GuestInput, defaultCountr
 }
 
 export async function editGuest(guest: Guest, input: GuestInput, defaultCountry: string): Promise<Guest> {
+  const updated = await editGuestRow(guest, input, defaultCountry);
+  await walletChanged({ guestIds: [guest.id] }); // name, guests or section on a saved Wallet pass
+  return updated;
+}
+
+async function editGuestRow(guest: Guest, input: GuestInput, defaultCountry: string): Promise<Guest> {
   const phone = normalizePhone(input.phone, defaultCountry);
   if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number with country code.", { phone: "Enter a valid number, e.g. +966 50 123 4567" });
   const phoneChanged = phone.e164 !== guest.phone;

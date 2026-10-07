@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { notFound, ok, parseJson, requireApiUser, route } from "@/server/http";
 import { getOwnedEvent } from "@/server/events/access";
 import { recordActivity } from "@/server/activity";
+import { walletChanged } from "@/server/apple/push";
 
 type Ctx = { params: Promise<{ id: string; guestId: string }> };
 
@@ -20,5 +21,6 @@ export const POST = route<Ctx>("guests.check-in", async (req: NextRequest, ctx) 
     data: undo ? { checkedInAt: null, checkedInCount: null } : { checkedInAt: new Date(), checkedInCount: count ?? guest.attendingCount ?? guest.allowedCount, lastActivityAt: new Date() },
   });
   if (!undo) await recordActivity(db, event.id, "guest.checked_in", { name: guest.name, count: updated.checkedInCount }, guest.id);
+  await walletChanged({ guestIds: [guest.id] });
   return ok({ guest: { id: updated.id, checkedInAt: updated.checkedInAt, checkedInCount: updated.checkedInCount } });
 });

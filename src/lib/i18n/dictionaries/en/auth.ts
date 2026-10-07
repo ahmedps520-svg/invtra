@@ -21,6 +21,12 @@ export const auth = {
     showPassword: "Show password",
     hidePassword: "Hide password",
   },
+  apple: {
+    continue: "Continue with Apple",
+    or: "or",
+    failed: "Signing in with Apple didn't work. Please try again, or use your email.",
+    deactivated: "This account has been deactivated. Please email contact@invtra.store.",
+  },
   login: {
     title: "Welcome back",
     subtitle: "Sign in to continue with your invitations.",
