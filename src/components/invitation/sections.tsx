@@ -50,10 +50,10 @@ export function Details({ status }: { status?: "PENDING" | "ACCEPTED" | "DECLINE
   return (
     <section>
       <SectionHeading label={(x) => x.details.title} />
-      <div className="grid gap-10 sm:grid-cols-3 sm:gap-6">
+      <div className={cn("grid gap-10 sm:gap-6", e.venueName || e.venueNameAr ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
         {item(<Calendar className="size-4" />, (x) => x.details.date, e.date.en, e.date.ar)}
         {item(<Clock className="size-4" />, (x) => x.details.time, e.time.en, e.time.ar)}
-        {item(<MapPin className="size-4" />, (x) => x.details.venue, e.venueName, e.venueNameAr)}
+        {e.venueName || e.venueNameAr ? item(<MapPin className="size-4" />, (x) => x.details.venue, e.venueName || e.venueNameAr!, e.venueNameAr) : null}
       </div>
       <Reveal className="mt-10 text-center">
         <Txt en={e.address} ar={e.addressAr} as="p" className={cn(s.muted, "text-sm")} />
@@ -63,7 +63,7 @@ export function Details({ status }: { status?: "PENDING" | "ACCEPTED" | "DECLINE
             <Txt en={section.note ?? section.noteAr} ar={section.noteAr ?? section.note} />
           </p>
         ) : null}
-        {vm.design.sections.map ? (
+        {vm.design.sections.map && e.hasLocation ? (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <a href={e.mapsUrl} target="_blank" rel="noopener noreferrer" className={cn(s.button, s.primary)}>
               <MapPin className="size-4" />

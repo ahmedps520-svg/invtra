@@ -167,9 +167,11 @@ function useSummaries(): Record<SectionId, { text: ReactNode; aside?: ReactNode 
     background: { text: t.background[d.background.mode] },
     qr: {
       text:
-        draft.imageMode === "CUSTOM"
-          ? t.qr.styles[d.card.qr.style]
-          : [t.qr.positions[side], t.qr.sizes[d.card.qr.size], t.qr.styles[d.card.qr.style]].join(" · "),
+        d.card.qr.enabled === false
+          ? t.summary.qrOff
+          : draft.imageMode === "CUSTOM"
+            ? t.qr.styles[d.card.qr.style]
+            : [t.qr.positions[side], t.qr.sizes[d.card.qr.size], t.qr.styles[d.card.qr.style]].join(" · "),
     },
     website: {
       text: `${fmt(t.summary.sectionsOn, { n: sectionsOn, total: Object.keys(d.sections).length })} · ${t.website.animations[d.animation].label}`,

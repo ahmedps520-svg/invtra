@@ -13,7 +13,7 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
   const sp = await searchParams;
   const { locale } = await getI18n();
   const events = await db.event.findMany({
-    where: { userId: user.id, deletedAt: null },
+    where: { userId: user.id, deletedAt: null, customDraft: false },
     orderBy: { startsAt: "asc" },
     select: { id: true, title: true, titleAr: true, plan: true, guestLimit: true, _count: { select: { guests: { where: { isTest: false } } } } },
   });

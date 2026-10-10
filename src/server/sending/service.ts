@@ -31,7 +31,8 @@ export async function sendReadiness(event: Event) {
   const whatsappReady =
     e.WHATSAPP_PROVIDER === "mock" || Boolean(e.WHATSAPP_ACCESS_TOKEN && e.WHATSAPP_PHONE_NUMBER_ID && e.WHATSAPP_APP_SECRET);
   const checks: ReadinessCheck[] = [
-    { key: "details", ok: Boolean(event.title && event.hostNames && event.venueName && event.address) },
+    // Custom events (prepared by INVTRA) may leave the hosts, venue or address out on purpose.
+    { key: "details", ok: Boolean(event.title && (event.custom || (event.hostNames && event.venueName && event.address))) },
     { key: "date", ok: event.startsAt > new Date() },
     { key: "design", ok: event.imageMode === "GENERATED" || Boolean(event.customImageKey) },
     { key: "guests", ok: guestCount > 0, detail: { total: guestCount, unsent } },

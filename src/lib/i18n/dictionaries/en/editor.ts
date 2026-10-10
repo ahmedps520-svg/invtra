@@ -40,6 +40,7 @@ export const editor = {
   },
 
   summary: {
+    qrOff: "No QR code",
     generated: "INVTRA design",
     custom: "Your own image",
     defaultWording: "Our suggested wording",
@@ -114,6 +115,13 @@ export const editor = {
     useSuggestion: "Use {value}",
     clear: "Clear",
     restore: "Edit our suggestion",
+    onCard: "On the invitation image",
+    onCardHint: "Untick anything you'd rather leave off the card.",
+    lines: { eyebrow: "Opening line", names: "Names", intro: "Invitation line", date: "Date", time: "Time", venue: "Venue" },
+    extra: "Extra lines",
+    extraHint: "Anything else to print — one line each, up to four. Also shown on the guest page.",
+    extraPlaceholder: "e.g. Children are welcome",
+    extraPlaceholderAr: "مثال: الأطفال مرحَّب بهم",
   },
 
   colours: {
@@ -258,6 +266,17 @@ export const editor = {
     branding: "INVTRA signature",
     brandingHint: "A discreet INVTRA wordmark at the foot of the invitation.",
     customNote: "On your uploaded image, the code's position and size are set in Invitation image above.",
+    show: "Print a QR code",
+    showHint: "Turn off for an invitation without a code. Guests can still be checked in by name from the door link.",
+    target: "The code opens",
+    targetGuest: "Each guest's own invitation",
+    targetGuestHint: "Recommended — scanned at the door to check the guest in.",
+    targetLink: "A link you choose",
+    targetLinkHint: "The same link on every invitation — a website, a location, a gift list… Check guests in by name at the door.",
+    link: "Link",
+    linkError: "Use a full web link, like https://example.com",
+    caption: "Line under the code",
+    captionHint: "Leave empty for “Scan for your invitation”.",
   },
 
   website: {

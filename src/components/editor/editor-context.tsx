@@ -23,6 +23,9 @@ interface EditorContextValue {
   themes: EditorThemeOption[];
   premiumIncluded: boolean;
   nav: EditorProps["nav"];
+  detailsHref: string;
+  /** Custom-event options (QR on/off and link, lines left off, extra lines). */
+  advanced: boolean;
   /** Uploads by storage key (signed URL + dimensions). */
   uploads: Record<string, EditorUpload>;
   addUpload: (u: EditorUpload) => void;
@@ -296,6 +299,8 @@ export function EditorProvider({ props, children }: { props: EditorProps; childr
       themes: props.themes,
       premiumIncluded: props.premiumIncluded,
       nav: props.nav,
+      detailsHref: props.detailsHref ?? `/dashboard/events/${props.event.id}/details`,
+      advanced: Boolean(props.advanced),
       uploads,
       addUpload,
       gallery,

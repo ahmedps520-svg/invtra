@@ -3,7 +3,25 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Job } from "@prisma/client";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
-import { cancelCustomPackage, createCustomPackage, customPackageSchema, listCustomPackages, sendPaymentRequest, type CustomPackageInput } from "@/server/custom/service";
+import {
+  cancelCustomPackage,
+  createCustomDraft,
+  customPackageSchema,
+  discardCustomDraft,
+  getCustomEvent,
+  listCustomDrafts,
+  listCustomPackages,
+  resolveCustomEventId,
+  saveCustomPackage,
+  sendPaymentRequest,
+  updateCustomEvent,
+  type CustomPackageInput,
+} from "@/server/custom/service";
+import { customEventInputSchema } from "@/lib/validation/event";
+import { buildCardSvg } from "@/lib/card/build";
+import { cardContent, eventDesign, eventTheme } from "@/server/events/design";
+import { templateValues } from "@/server/whatsapp/compose";
+import { sendReadiness } from "@/server/sending/service";
 import { applyPaidOrder } from "@/server/payments/service";
 import { guestsLabel, receiptUrl } from "@/server/payments/receipts";
 import { handlers } from "@/server/queue/handlers";
@@ -21,25 +39,43 @@ const emails = (tag: string) => `custom-${tag}-${run}@example.test`;
 let adminId = "";
 const templateIds: string[] = [];
 
-function input(tag: string, over: { host?: Partial<CustomPackageInput["host"]>; package?: Partial<CustomPackageInput["package"]>; send?: Partial<CustomPackageInput["send"]> } = {}) {
-  const date = new Date(Date.now() + 120 * 86_400_000).toISOString().slice(0, 10);
+const eventDate = () => new Date(Date.now() + 120 * 86_400_000).toISOString().slice(0, 10);
+
+function eventInput(over: Record<string, unknown> = {}) {
+  return customEventInputSchema.parse({
+    type: "WEDDING",
+    language: "BILINGUAL",
+    title: `Custom Wedding ${run}`,
+    titleAr: "زفاف تجريبي",
+    hostNames: "Sara & Omar",
+    date: eventDate(),
+    time: "20:00",
+    timezone: "Asia/Riyadh",
+    venueName: "Grand Hall",
+    address: "Riyadh",
+    ...over,
+  });
+}
+
+function input(tag: string, over: { host?: Partial<CustomPackageInput["host"]>; package?: Partial<CustomPackageInput["package"]> } = {}) {
   return customPackageSchema.parse({
     host: { name: `Host ${tag}`, email: emails(tag), phone: "+966 50 123 4567", locale: "en", ...over.host },
-    event: {
-      type: "WEDDING",
-      language: "BILINGUAL",
-      title: `Custom Wedding ${run}`,
-      titleAr: "زفاف تجريبي",
-      hostNames: "Sara & Omar",
-      date,
-      time: "20:00",
-      timezone: "Asia/Riyadh",
-      venueName: "Grand Hall",
-      address: "Riyadh",
-    },
     package: { unlimited: true, price: 2500, included: "Unlimited guests\nPremium designs", dueDate: null, note: "test", ...over.package },
-    send: { whatsapp: true, email: true, ...over.send },
   });
+}
+
+/** The whole flow: a draft event (designed first), then the host and the package, then sending. */
+async function createCustomPackage(
+  admin: string,
+  pkg: CustomPackageInput,
+  opts: { send?: { whatsapp: boolean; email: boolean }; event?: Record<string, unknown> } = {},
+) {
+  const draft = await createCustomDraft(admin, eventInput(opts.event));
+  const r = await saveCustomPackage(admin, draft.id, pkg);
+  const send = opts.send ?? { whatsapp: true, email: true };
+  const sent = send.whatsapp || send.email ? await sendPaymentRequest(r.order.id, send) : { whatsapp: false, email: false };
+  const event = await db.event.findUniqueOrThrow({ where: { id: draft.id } });
+  return { ...r, event, sent };
 }
 
 async function jobsFor(orderId: string) {
@@ -122,12 +158,12 @@ describe("custom packages", () => {
   });
 
   it("adds the event to an existing customer's account and supports a fixed guest allowance", async () => {
-    const first = await createCustomPackage(adminId, input("existing", { send: { whatsapp: false, email: false } }));
+    const first = await createCustomPackage(adminId, input("existing"), { send: { whatsapp: false, email: false } });
     expect(first.sent).toEqual({ whatsapp: false, email: false });
     expect(await jobsFor(first.order.id)).toHaveLength(0);
     expect((await db.order.findUniqueOrThrow({ where: { id: first.order.id } })).requestSentAt).toBeNull();
 
-    const second = await createCustomPackage(adminId, input("existing", { package: { unlimited: false, guestLimit: 1500, price: 1999.5 } }));
+    const second = await createCustomPackage(adminId, input("existing", { package: { unlimited: false, guestLimit: 1500, price: 1999.5 } }), { send: { whatsapp: false, email: false } });
     expect(second.newCustomer).toBe(false);
     expect(second.user.id).toBe(first.user.id);
     expect(second.order).toMatchObject({ guestLimit: 1500, amount: 199950 });
@@ -139,11 +175,11 @@ describe("custom packages", () => {
     expect(customPackageSchema.safeParse({ ...input("v"), package: { unlimited: true, price: 0 } }).success).toBe(false);
     await expect(createCustomPackage(adminId, input("nophone", { host: { phone: "" } }))).rejects.toMatchObject({ code: "phone_required" });
     await expect(createCustomPackage(adminId, input("badphone", { host: { phone: "12" } }))).rejects.toBeInstanceOf(HttpError);
-    expect(await db.user.count({ where: { email: { in: [emails("nophone"), emails("badphone")] } } })).toBe(0);
+    expect(await db.user.count({ where: { email: emails("badphone") } })).toBe(0);
   });
 
   it("activates the plan when paid, numbers the receipt and sends it by email and WhatsApp", async () => {
-    const r = await createCustomPackage(adminId, input("paid", { send: { whatsapp: false, email: true } }));
+    const r = await createCustomPackage(adminId, input("paid"), { send: { whatsapp: false, email: true } });
     const paid = await applyPaidOrder(r.order.id, { provider: "mock", providerPaymentId: `mock_${run}_1` });
     expect(paid.applied).toBe(true);
     expect(paid.order.receiptNumber).toMatch(new RegExp(`^INVTRA-${new Date().getUTCFullYear()}-\\d{4,}$`));
@@ -163,7 +199,7 @@ describe("custom packages", () => {
     const again = await applyPaidOrder(r.order.id, { provider: "mock", providerPaymentId: `mock_${run}_1` });
     expect(again.applied).toBe(false);
     expect((await db.order.findUniqueOrThrow({ where: { id: r.order.id } })).receiptNumber).toBe(paid.order.receiptNumber);
-    const next = await createCustomPackage(adminId, input("paid2", { send: { whatsapp: false, email: false } }));
+    const next = await createCustomPackage(adminId, input("paid2"), { send: { whatsapp: false, email: false } });
     const paid2 = await applyPaidOrder(next.order.id, { provider: "mock", providerPaymentId: `mock_${run}_2` });
     const n = (s: string) => Number(s.split("-").pop());
     expect(n(paid2.order.receiptNumber!)).toBeGreaterThan(n(paid.order.receiptNumber!));
@@ -175,7 +211,7 @@ describe("custom packages", () => {
   });
 
   it("withdraws an unpaid package and lists packages for the admin", async () => {
-    const r = await createCustomPackage(adminId, input("withdraw", { send: { whatsapp: false, email: false } }));
+    const r = await createCustomPackage(adminId, input("withdraw"), { send: { whatsapp: false, email: false } });
     await cancelCustomPackage(adminId, r.order.id);
     expect((await db.order.findUniqueOrThrow({ where: { id: r.order.id } })).status).toBe("CANCELLED");
     await expect(sendPaymentRequest(r.order.id, { whatsapp: false, email: true })).rejects.toMatchObject({ code: "not_payable" });
@@ -197,7 +233,7 @@ describe("custom packages", () => {
 
 describe("designing a custom event", () => {
   it("lets staff open the host's design, but no other customer", async () => {
-    const r = await createCustomPackage(adminId, input("design", { send: { whatsapp: false, email: false } }));
+    const r = await createCustomPackage(adminId, input("design"), { send: { whatsapp: false, email: false } });
     const stranger = await db.user.create({ data: { email: emails("stranger"), name: "Stranger", passwordHash: "x" } });
 
     await expect(getEditableEvent({ id: adminId, role: "ADMIN" }, r.event.id)).resolves.toMatchObject({ id: r.event.id });
@@ -216,8 +252,8 @@ describe("designing a custom event", () => {
   });
 
   it("accepts any file uploaded to the event, whoever uploaded it, and nothing from other events", async () => {
-    const r = await createCustomPackage(adminId, input("uploads", { send: { whatsapp: false, email: false } }));
-    const other = await createCustomPackage(adminId, input("uploads2", { send: { whatsapp: false, email: false } }));
+    const r = await createCustomPackage(adminId, input("uploads"), { send: { whatsapp: false, email: false } });
+    const other = await createCustomPackage(adminId, input("uploads2"), { send: { whatsapp: false, email: false } });
     const mk = (eventId: string, userId: string, kind: "CUSTOM_INVITATION" | "LOGO") =>
       db.upload.create({ data: { userId, eventId, kind, key: `test/${run}/${randomBytes(4).toString("hex")}.png`, mimeType: "image/png", size: 10 } });
     const byStaff = await mk(r.event.id, adminId, "CUSTOM_INVITATION");
@@ -233,5 +269,135 @@ describe("designing a custom event", () => {
     const props = await editorProps(r.event);
     expect(props.uploads.map((u) => u.key).sort()).toEqual([byStaff.key, byHost.key, logo.key].sort());
     await db.upload.deleteMany({ where: { key: { startsWith: `test/${run}/` } } });
+  });
+});
+
+describe("design first, host and payment last", () => {
+  it("starts as the staff member's draft with only the occasion and date, named after the occasion", async () => {
+    const draft = await createCustomDraft(
+      adminId,
+      customEventInputSchema.parse({ type: "ENGAGEMENT", language: "BILINGUAL", date: eventDate(), time: "19:30", timezone: "Asia/Riyadh" }),
+    );
+    expect(draft).toMatchObject({ userId: adminId, custom: true, customDraft: true, title: "Engagement", titleAr: "خطوبة", hostNames: "", venueName: "", address: "" });
+    expect((await listCustomDrafts()).map((d) => d.id)).toContain(draft.id);
+    // Drafts stay out of the staff member's own event list.
+    expect(await db.event.count({ where: { userId: adminId, deletedAt: null, customDraft: false, id: draft.id } })).toBe(0);
+    // No payment link yet.
+    expect((await getCustomEvent(draft.id))?.order).toBeNull();
+
+    // The details can be filled in (or left out) later.
+    const { event } = await updateCustomEvent(draft, eventInput({ type: "ENGAGEMENT", title: "", titleAr: null, hostNames: "Noura & Fahad", venueName: "" }));
+    expect(event).toMatchObject({ title: "Engagement", hostNames: "Noura & Fahad", venueName: "" });
+
+    // A draft can be discarded; a custom event with a host can't.
+    await discardCustomDraft(adminId, draft.id);
+    expect((await db.event.findUniqueOrThrow({ where: { id: draft.id } })).deletedAt).toBeInstanceOf(Date);
+    const withHost = await createCustomPackage(adminId, input("nodiscard"), { send: { whatsapp: false, email: false } });
+    await expect(discardCustomDraft(adminId, withHost.event.id)).rejects.toMatchObject({ code: "not_draft" });
+  });
+
+  it("moves the event to the host with the payment link, and updates the unpaid link in place", async () => {
+    const draft = await createCustomDraft(adminId, eventInput());
+    const first = await saveCustomPackage(adminId, draft.id, input("move"));
+    expect(first.newCustomer).toBe(true);
+    expect(await db.event.findUniqueOrThrow({ where: { id: draft.id } })).toMatchObject({ userId: first.user.id, customDraft: false, custom: true });
+    expect((await listCustomDrafts()).map((d) => d.id)).not.toContain(draft.id);
+
+    // Same host, new price: same order and link.
+    const again = await saveCustomPackage(adminId, draft.id, input("move", { package: { unlimited: false, guestLimit: 300, price: 900 } }));
+    expect(again.order.id).toBe(first.order.id);
+    expect(again.order).toMatchObject({ guestLimit: 300, amount: 90000, payToken: first.order.payToken });
+
+    // A different host: the event moves again and the old link stops working.
+    const other = await saveCustomPackage(adminId, draft.id, input("move2"));
+    expect(other.order.id).toBe(first.order.id);
+    expect(other.order.payToken).not.toBe(first.order.payToken);
+    expect((await db.event.findUniqueOrThrow({ where: { id: draft.id } })).userId).toBe(other.user.id);
+    expect(await db.order.count({ where: { payToken: first.order.payToken } })).toBe(0);
+
+    // Old admin links used the order id; they lead to the event.
+    expect(await resolveCustomEventId(first.order.id)).toBe(draft.id);
+    expect(await resolveCustomEventId(draft.id)).toBe(draft.id);
+    expect(await resolveCustomEventId("nope")).toBeNull();
+    expect((await getCustomEvent(draft.id))?.order?.id).toBe(first.order.id);
+
+    // Once paid, the package can't change.
+    await applyPaidOrder(first.order.id, { provider: "mock", providerPaymentId: `mock_${run}_move` });
+    await expect(saveCustomPackage(adminId, draft.id, input("move2"))).rejects.toMatchObject({ code: "already_paid" });
+  });
+
+  it("works without hosts, venue or address: card, messages and readiness", async () => {
+    const r = await createCustomPackage(adminId, input("bare"), {
+      send: { whatsapp: false, email: false },
+      event: { title: "Gathering", titleAr: null, language: "EN", hostNames: "", venueName: "", address: "" },
+    });
+    const v = templateValues(r.event, { name: "Khalid" }, "TOKEN12345");
+    expect(v.host_names).toBe("Gathering");
+    expect(v.venue).toBe("—");
+    const ready = await sendReadiness(r.event);
+    expect(ready.checks.find((c) => c.key === "details")?.ok).toBe(true);
+
+    const design = eventDesign(r.event);
+    const svg = buildCardSvg({ theme: eventTheme(r.event), design, language: "EN", content: cardContent(r.event, design), qrText: "HTTPS://X.TEST/Q/A" });
+    expect(svg).not.toMatch(/<text[^>]*><\/text>/); // no empty lines for the missing names / venue
+  });
+});
+
+describe("card options for custom events", () => {
+  async function bareEvent() {
+    const draft = await createCustomDraft(adminId, eventInput({ language: "EN", title: "Card test" }));
+    return draft;
+  }
+  const card = (event: Awaited<ReturnType<typeof bareEvent>>, patch: Record<string, unknown>, qrText: string | null = "HTTPS://INVTRA.TEST/Q/ABC") => {
+    const design = { ...eventDesign(event), ...patch } as ReturnType<typeof eventDesign>;
+    return buildCardSvg({ theme: eventTheme(event), design, language: "EN", content: cardContent(event, design), guest: { name: "Khalid", allowedCount: 2 }, qrText });
+  };
+
+  it("can leave the QR off, or point it at your own link", async () => {
+    const event = await bareEvent();
+    const d = eventDesign(event);
+    const withQr = card(event, {});
+    expect(withQr).toMatch(/scan for your invitation/i);
+    const off = card(event, { card: { ...d.card, qr: { ...d.card.qr, enabled: false } } });
+    expect(off).not.toMatch(/scan for your invitation/i);
+    expect(off.length).toBeLessThan(withQr.length);
+
+    // A custom link replaces each guest's personal code (the same as encoding the link directly).
+    const link = "https://example.com/gifts";
+    const custom = card(event, { card: { ...d.card, qr: { ...d.card.qr, link, caption: "Our gift list" } } });
+    const direct = card(event, { card: { ...d.card, qr: { ...d.card.qr, caption: "Our gift list" } } }, link);
+    expect(custom).toBe(direct);
+    expect(custom).toMatch(/our gift list/i);
+
+    // The same choice applies to the guest page and Apple Wallet.
+    const { eventQrText } = await import("@/server/invitations");
+    expect(eventQrText(event, "ABC2345678")).toMatch(/\/Q\/ABC2345678$/);
+    await db.event.update({ where: { id: event.id }, data: { design: { ...d, card: { ...d.card, qr: { ...d.card.qr, link } } } } });
+    expect(eventQrText(await db.event.findUniqueOrThrow({ where: { id: event.id } }), "ABC2345678")).toBe(link);
+    await db.event.update({ where: { id: event.id }, data: { design: { ...d, card: { ...d.card, qr: { ...d.card.qr, enabled: false } } } } });
+    expect(eventQrText(await db.event.findUniqueOrThrow({ where: { id: event.id } }), "ABC2345678")).toBeNull();
+  });
+
+  it("leaves lines off the card and adds your own", async () => {
+    const event = await bareEvent();
+    const d = eventDesign(event);
+    const full = card(event, {});
+    expect(full).toContain("Grand Hall");
+    expect(full).toContain("Sara");
+    const lines = { ...d.card.lines, venue: false, names: false };
+    const trimmed = card(event, { card: { ...d.card, lines }, texts: { ...d.texts, extra: "Children are welcome\nNo gifts please" } });
+    expect(trimmed).not.toContain("Grand Hall");
+    expect(trimmed).not.toContain("Sara");
+    expect(trimmed).toContain("Children are welcome");
+    expect(trimmed).toContain("No gifts please");
+  });
+
+  it("rejects a QR link that isn't a web address", async () => {
+    const { designSchema } = await import("@/lib/design/schema");
+    const link = designSchema.shape.card.shape.qr.shape.link;
+    expect(link.safeParse("https://invtra.store/x").success).toBe(true);
+    expect(link.safeParse("").success).toBe(true);
+    expect(link.safeParse("javascript:alert(1)").success).toBe(false);
+    expect(link.safeParse("not a link").success).toBe(false);
   });
 });

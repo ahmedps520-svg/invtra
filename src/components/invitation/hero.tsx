@@ -22,6 +22,7 @@ function Names({ className }: { className?: string }) {
   const upper = theme.page.namesUppercase;
   const en = vm.event.hostNames;
   const ar = vm.event.hostNamesAr || "";
+  if (!en.trim() && !ar.trim()) return null;
   const render = (names: string, arabic: boolean, size: string) => {
     const pair = splitNames(names);
     const cls = cn(s.display, size, upper && !arabic && "uppercase tracking-[0.08em]");
@@ -93,6 +94,7 @@ function Motif() {
 
 function HeroText({ light }: { light?: boolean }) {
   const { vm } = useInvitation();
+  const { extra, extraAr } = vm.design.texts;
   return (
     <div className={cn("relative z-10 mx-auto flex max-w-xl flex-col items-center px-10 text-center sm:px-6", light && "text-white")}>
       {vm.event.logoUrl ? (
@@ -111,12 +113,22 @@ function HeroText({ light }: { light?: boolean }) {
       />
       <Divider className={cn("mt-8", light && "text-white/80")} />
       <Txt en={vm.event.date.en} ar={vm.event.date.ar} as="p" className="mt-6 text-sm font-medium uppercase tracking-[0.2em]" inline={false} />
-      <Txt
-        en={vm.event.venueName}
-        ar={vm.event.venueNameAr}
-        as="p"
-        className={cn("mt-2 text-sm", light ? "text-white/80" : s.muted)}
-      />
+      {vm.event.venueName || vm.event.venueNameAr ? (
+        <Txt
+          en={vm.event.venueName || vm.event.venueNameAr}
+          ar={vm.event.venueNameAr}
+          as="p"
+          className={cn("mt-2 text-sm", light ? "text-white/80" : s.muted)}
+        />
+      ) : null}
+      {extra || extraAr ? (
+        <Txt
+          en={extra || extraAr}
+          ar={extra ? extraAr : null}
+          as="p"
+          className={cn("mt-6 max-w-md whitespace-pre-line text-[15px] leading-relaxed", light ? "text-white/85" : s.muted)}
+        />
+      ) : null}
     </div>
   );
 }

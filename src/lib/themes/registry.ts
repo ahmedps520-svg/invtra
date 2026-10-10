@@ -18,10 +18,11 @@ const baseCard: InvitationDesign["card"] = {
   showBranding: true,
   showGuestName: true,
   showVenueAddress: true,
-  qr: { position: "bottom-center", size: "md", style: "rounded", showLogo: true },
+  lines: { eyebrow: true, names: true, intro: true, date: true, time: true, venue: true },
+  qr: { enabled: true, link: "", caption: "", position: "bottom-center", size: "md", style: "rounded", showLogo: true },
 };
 
-const emptyTexts: InvitationDesign["texts"] = { eyebrow: "", intro: "", closing: "", eyebrowAr: "", introAr: "", closingAr: "" };
+const emptyTexts: InvitationDesign["texts"] = { eyebrow: "", intro: "", closing: "", eyebrowAr: "", introAr: "", closingAr: "", extra: "", extraAr: "" };
 
 function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" | "monogram" | "customQr" | "background" | "digits"> &
   Partial<Pick<InvitationDesign, "card" | "background" | "digits">>): InvitationDesign {

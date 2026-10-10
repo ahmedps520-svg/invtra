@@ -2,7 +2,7 @@ import type { Event, GalleryImage, Guest, ScheduleItem } from "@prisma/client";
 import { mediaUrl } from "@/server/storage";
 import { eventDesign } from "@/server/events/design";
 import { rsvpDeadlinePassed } from "@/server/rsvp";
-import { invitationQrText, invitationUrl } from "@/server/invitations";
+import { eventQrText, invitationUrl } from "@/server/invitations";
 import { eventForGuest, sectionInfo } from "@/server/events/sections";
 import { googleCalendarUrl } from "@/server/invitations/calendar";
 import { walletConfig } from "@/server/apple/config";
@@ -10,7 +10,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { formatDate, formatTime, formatWallTime } from "@/lib/format";
 import { copyFor } from "@/lib/invitation-copy";
-import { normalizeDesign, type InvitationDesign } from "@/lib/design/schema";
+import { cardQrText, normalizeDesign, type InvitationDesign } from "@/lib/design/schema";
 import { getTheme, type ThemeKey } from "@/lib/themes/registry";
 import { qrSvg } from "@/lib/qr";
 import { en } from "@/lib/i18n/dictionaries/en";
@@ -25,10 +25,17 @@ export function pageLang(event: Pick<Event, "language">, guest?: Pick<Guest, "lo
 }
 
 export function mapsLinks(event: Pick<Event, "mapsUrl" | "venueName" | "address" | "latitude" | "longitude">) {
-  const q = event.latitude && event.longitude ? `${event.latitude},${event.longitude}` : `${event.venueName}, ${event.address}`;
+  const q =
+    event.latitude && event.longitude
+      ? `${event.latitude},${event.longitude}`
+      : [event.venueName, event.address]
+          .map((v) => v.trim())
+          .filter(Boolean)
+          .join(", ");
   return {
     mapsUrl: event.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,
     mapsEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`,
+    hasLocation: Boolean(event.mapsUrl || q),
   };
 }
 
@@ -53,7 +60,7 @@ export async function buildInvitationVM(opts: {
   const digits = design.digits;
   const now = new Date();
   const lang = pageLang(event, guest);
-  const qrText = opts.qrText ?? (opts.token && guest?.rsvpStatus === "ACCEPTED" ? invitationQrText(opts.token) : null);
+  const qrText = opts.qrText !== undefined ? cardQrText(design, opts.qrText) : opts.token && guest?.rsvpStatus === "ACCEPTED" ? eventQrText(event, opts.token) : null;
   const textColor = design.palette.text;
   const plate = design.palette.surface;
 

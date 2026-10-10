@@ -7,7 +7,7 @@ import { appUrl, env } from "@/server/env";
 import { hmac, safeEqual } from "@/server/security/tokens";
 import { eventDesign } from "@/server/events/design";
 import { eventForGuest, sectionInfo } from "@/server/events/sections";
-import { invitationQrText, invitationUrl } from "@/server/invitations";
+import { eventQrText, invitationUrl } from "@/server/invitations";
 import { mapsLinks } from "@/server/invitations/view-model";
 import { eventIsActive } from "@/server/rsvp";
 import { utcToZoned, zoneOffsetMs } from "@/lib/time";
@@ -100,6 +100,7 @@ export async function buildWalletPass(inv: PassInvitation, cfg?: WalletConfig | 
   const view = eventForGuest(event, guest);
   const section = sectionInfo(event, guest);
   const palette = eventDesign(event).palette;
+  const qrText = eventQrText(event, inv.token);
   const tz = event.timezone;
   const ar: Record<string, string> = { ...AR_LABELS };
   const tr = (en: string | null | undefined, arText: string | null | undefined) => {
@@ -145,24 +146,25 @@ export async function buildWalletPass(inv: PassInvitation, cfg?: WalletConfig | 
   pass.headerFields.push({ key: "date", label: "Date", value: isoInZone(view.startsAt, tz), dateStyle: "PKDateStyleMedium", ignoresTimeZone: true, changeMessage: "New time: %@" });
   pass.primaryFields.push({ key: "event", label: "Event", value: title });
   pass.secondaryFields.push({ key: "guest", label: "Guest", value: guest.name }, { key: "people", label: "Guests", value: String(people), textAlignment: "PKTextAlignmentRight" });
-  pass.auxiliaryFields.push(
-    { key: "time", label: "Time", value: isoInZone(view.startsAt, tz), timeStyle: "PKDateStyleShort", ignoresTimeZone: true, changeMessage: "New time: %@" },
-    { key: "venue", label: "Venue", value: tr(view.venueName, view.venueNameAr), changeMessage: "New venue: %@" },
-  );
+  pass.auxiliaryFields.push({ key: "time", label: "Time", value: isoInZone(view.startsAt, tz), timeStyle: "PKDateStyleShort", ignoresTimeZone: true, changeMessage: "New time: %@" });
+  // Custom events can leave out the venue, the address or the hosts.
+  if (view.venueName.trim() || view.venueNameAr?.trim()) pass.auxiliaryFields.push({ key: "venue", label: "Venue", value: tr(view.venueName, view.venueNameAr), changeMessage: "New venue: %@" });
   if (section) pass.auxiliaryFields.push({ key: "section", label: "Section", value: tr(section.label.en, section.label.ar) });
   if (guest.checkedInAt) pass.headerFields.unshift({ key: "status", label: "Status", value: tr("Checked in", AR_LABELS["Checked in"]), changeMessage: "Welcome! %@" });
   if (voided) pass.headerFields.unshift({ key: "status", label: "Status", value: tr("Invitation cancelled", AR_LABELS["Invitation cancelled"]) });
 
   const back = pass.backFields;
-  back.push({ key: "note", value: tr("Please show this QR code at the entrance.", AR_LABELS["Please show this QR code at the entrance."]) });
-  back.push({ key: "address", label: "Address", value: tr(view.address, view.addressAr) });
-  back.push({ key: "map", label: "Directions", value: mapsLinks(view).mapsUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] });
+  if (qrText) back.push({ key: "note", value: tr("Please show this QR code at the entrance.", AR_LABELS["Please show this QR code at the entrance."]) });
+  if (view.address.trim() || view.addressAr?.trim()) back.push({ key: "address", label: "Address", value: tr(view.address, view.addressAr) });
+  const maps = mapsLinks(view);
+  if (maps.hasLocation) back.push({ key: "map", label: "Directions", value: maps.mapsUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] });
   if (section && (section.note || section.noteAr)) back.push({ key: "entrance", label: "Entrance", value: tr(section.note ?? section.noteAr, section.noteAr) });
-  back.push({ key: "hosts", label: "Hosts", value: tr(event.hostNames, event.hostNamesAr) });
+  if (event.hostNames.trim() || event.hostNamesAr?.trim()) back.push({ key: "hosts", label: "Hosts", value: tr(event.hostNames, event.hostNamesAr) });
   back.push({ key: "invitation", label: "Your invitation", value: invitationUrl(inv.token), dataDetectorTypes: ["PKDataDetectorTypeLink"] });
   back.push({ key: "brand", value: tr("Sent with INVTRA · invtra.store", AR_LABELS["Sent with INVTRA · invtra.store"]) });
 
-  pass.setBarcodes({ format: "PKBarcodeFormatQR", message: invitationQrText(inv.token), messageEncoding: "iso-8859-1" });
+  // The same code as the card: none when the event's card has no QR.
+  if (qrText) pass.setBarcodes({ format: "PKBarcodeFormatQR", message: qrText, messageEncoding: "iso-8859-1" });
   pass.setRelevantDate(view.startsAt);
   pass.setExpirationDate(new Date(end.getTime() + 24 * 3600_000));
   if (view.latitude != null && view.longitude != null) pass.setLocations({ latitude: view.latitude, longitude: view.longitude, relevantText: title });

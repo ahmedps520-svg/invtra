@@ -17,7 +17,7 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
   if (!event) notFound();
   return (
     <div className="mx-auto max-w-5xl">
-      <EventForm mode="edit" eventId={event.id} initial={eventToInput(event)} />
+      <EventForm mode="edit" eventId={event.id} initial={eventToInput(event)} relaxed={event.custom} />
     </div>
   );
 }

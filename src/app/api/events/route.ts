@@ -9,7 +9,7 @@ import { eventInputSchema } from "@/lib/validation/event";
 export const GET = route("events.list", async () => {
   const user = await requireApiUser();
   const events = await db.event.findMany({
-    where: { userId: user.id, deletedAt: null },
+    where: { userId: user.id, deletedAt: null, customDraft: false },
     orderBy: { startsAt: "asc" },
     select: { id: true, title: true, hostNames: true, startsAt: true, timezone: true, themeKey: true, type: true, plan: true },
   });

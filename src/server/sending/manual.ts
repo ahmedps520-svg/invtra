@@ -45,8 +45,10 @@ export function sectionLine(event: Partial<Pick<Event, "sectionsEnabled" | "sect
 export function manualMessage(event: MessageEvent, guest: Pick<Guest, "name" | "locale"> & Partial<Pick<Guest, "section">>, token: string): string {
   const v = templateValues(event, guest, token);
   const link = invitationUrl(token);
-  const ar = `السلام عليكم ${v.guest_name}،\n\nيتشرّف ${v.host_names_ar} بدعوتكم لحضور ${v.event_name_ar}.\n📅 ${v.event_date_ar} · ${v.event_time_ar}\n📍 ${v.venue_ar}${sectionLine(event, guest, "ar")}`;
-  const en = `Dear ${v.guest_name},\n\n${v.host_names} would be delighted to welcome you to ${v.event_name}.\n📅 ${v.event_date} · ${v.event_time}\n📍 ${v.venue}${sectionLine(event, guest, "en")}`;
+  // A custom event without a venue has no 📍 line.
+  const place = (venue: string) => (venue && venue !== "—" ? `\n📍 ${venue}` : "");
+  const ar = `السلام عليكم ${v.guest_name}،\n\nيتشرّف ${v.host_names_ar} بدعوتكم لحضور ${v.event_name_ar}.\n📅 ${v.event_date_ar} · ${v.event_time_ar}${place(v.venue_ar)}${sectionLine(event, guest, "ar")}`;
+  const en = `Dear ${v.guest_name},\n\n${v.host_names} would be delighted to welcome you to ${v.event_name}.\n📅 ${v.event_date} · ${v.event_time}${place(v.venue)}${sectionLine(event, guest, "en")}`;
   const lang = messageLang(event, guest);
   if (lang === "ar") return `${ar}\n\nدعوتك الخاصة وتأكيد الحضور:\n${link}`;
   if (lang === "en") return `${en}\n\nYour personal invitation and RSVP:\n${link}`;

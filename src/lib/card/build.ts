@@ -1,5 +1,5 @@
 import type { EventType } from "@prisma/client";
-import type { InvitationDesign } from "@/lib/design/schema";
+import { cardQrText, type InvitationDesign } from "@/lib/design/schema";
 import { FONTS } from "@/lib/design/fonts";
 import type { ThemeDefinition } from "@/lib/themes/types";
 import { CARD_PHRASES, copyFor } from "@/lib/invitation-copy";
@@ -104,6 +104,27 @@ function textBlock(
   };
 }
 
+/** Sample code drawn in the editor before there's a guest. */
+const SAMPLE_QR = "HTTPS://INVTRA.STORE/Q/SAMPLE0000";
+
+/**
+ * What the card's QR encodes: nothing when the QR is turned off, else the design's own link
+ * when one is set, else the guest's personal link (or the sample in the editor).
+ */
+function effectiveQrText(design: InvitationDesign, qrText: string | null | undefined, placeholder: boolean | undefined): string | null {
+  if (!qrText && !placeholder) return null;
+  return cardQrText(design, qrText || SAMPLE_QR);
+}
+
+/** Extra lines typed in the editor: one per line, at most four. */
+function splitExtra(text: string | undefined): string[] {
+  return (text ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
 function splitNames(names: string): [string, string] | null {
   const m = names.split(/\s+(?:&|and|و)\s+|\s*&\s*/i);
   if (m.length === 2 && m[0].trim() && m[1].trim()) return [m[0].trim(), m[1].trim()];
@@ -119,9 +140,12 @@ export function buildCardSvg(input: CardInput): string {
   const bi = language === "BILINGUAL";
   const qrSizes = { sm: 210, md: 250, lg: 300 } as const;
   const qrSize = qrSizes[design.card.qr.size];
-  const hasQr = Boolean(input.qrText) || Boolean(input.qrPlaceholder);
+  const qrText = effectiveQrText(design, input.qrText, input.qrPlaceholder);
+  const hasQr = Boolean(qrText);
+  const lines = design.card.lines;
   const showGuest = Boolean(guest) && design.card.showGuestName;
   const phrases = isAr ? CARD_PHRASES.ar : CARD_PHRASES.en;
+  const scanText = design.card.qr.caption || phrases.scan;
   const footerLang: "en" | "ar" = isAr ? "ar" : "en";
 
   // ── Footer geometry ────────────────────────────────────────────────────────
@@ -185,8 +209,10 @@ export function buildCardSvg(input: CardInput): string {
       uppercase: theme.card.eyebrowUppercase,
     };
     const eyebrowStyleAr: TextStyle = { family: arBody, weight: 400, size: 32 * k };
-    if (isAr || bi) push(textBlock(arCopy.eyebrow, eyebrowStyleAr, cw, 2, cx, p.accent), bi ? 10 : BASE_GAPS.afterEyebrow);
-    if (!isAr) push(textBlock(enCopy.eyebrow, eyebrowStyleEn, cw, 2, cx, p.accent), BASE_GAPS.afterEyebrow);
+    if (lines.eyebrow) {
+      if (isAr || bi) push(textBlock(arCopy.eyebrow, eyebrowStyleAr, cw, 2, cx, p.accent), bi ? 10 : BASE_GAPS.afterEyebrow);
+      if (!isAr) push(textBlock(enCopy.eyebrow, eyebrowStyleEn, cw, 2, cx, p.accent), BASE_GAPS.afterEyebrow);
+    }
 
     // Names
     const nameSize = 116 * theme.card.nameScale * k * nk;
@@ -219,29 +245,47 @@ export function buildCardSvg(input: CardInput): string {
           textEl(pair[1], cx, top + asc + ampH + lh1 * 0.92, s, p.text),
       };
     };
-    if (isAr) push(namesFor(content.hostNamesAr || content.hostNames, Boolean(content.hostNamesAr) || isArabic(content.hostNames)), BASE_GAPS.afterNames);
+    const namesEn = content.hostNames.trim();
+    const namesAr = (content.hostNamesAr ?? "").trim();
+    if (!lines.names || (!namesEn && !namesAr)) {
+      // Left off the card (or not given).
+    } else if (isAr) push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn)), BASE_GAPS.afterNames);
     else if (bi) {
-      push(namesFor(content.hostNamesAr || content.hostNames, true, 0.78), 6);
-      push(textBlock(content.hostNames, { family: latinDisplay, weight: displayWeight, size: nameSize * 0.6, uppercase: theme.card.namesUppercase, letterSpacing: theme.card.namesUppercase ? 0.08 : 0 }, cw, 1, cx, p.text), BASE_GAPS.afterNames);
-    } else push(namesFor(content.hostNames, false), BASE_GAPS.afterNames);
+      push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn), 0.78), namesAr && namesEn ? 6 : BASE_GAPS.afterNames);
+      if (namesAr && namesEn)
+        push(textBlock(namesEn, { family: latinDisplay, weight: displayWeight, size: nameSize * 0.6, uppercase: theme.card.namesUppercase, letterSpacing: theme.card.namesUppercase ? 0.08 : 0 }, cw, 1, cx, p.text), BASE_GAPS.afterNames);
+    } else if (namesEn) push(namesFor(namesEn, false), BASE_GAPS.afterNames);
 
     // Intro line
     const introEn: TextStyle = { family: latinBody, weight: 400, italic: bodyItalic, size: 33 * k };
     const introAr: TextStyle = { family: arBody, weight: 400, size: 36 * k };
-    if (isAr || bi) push(textBlock(arCopy.intro, introAr, cw * 0.9, 2, cx, p.text, 1.45, 0.85), bi ? 6 : BASE_GAPS.afterIntro);
-    if (!isAr) push(textBlock(enCopy.intro, introEn, cw * (bi ? 0.9 : 0.86), bi ? 2 : 3, cx, p.text, 1.3, 0.85), BASE_GAPS.afterIntro);
+    if (lines.intro) {
+      if (isAr || bi) push(textBlock(arCopy.intro, introAr, cw * 0.9, 2, cx, p.text, 1.45, 0.85), bi ? 6 : BASE_GAPS.afterIntro);
+      if (!isAr) push(textBlock(enCopy.intro, introEn, cw * (bi ? 0.9 : 0.86), bi ? 2 : 3, cx, p.text, 1.3, 0.85), BASE_GAPS.afterIntro);
+    }
 
-    // Divider
-    push({ height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) }, BASE_GAPS.afterDivider);
+    // Divider (between the greeting and the practical details, when there are both)
+    const venueEnText = content.venueName.trim();
+    const venueArText = (content.venueNameAr || (isAr ? content.venueName : "")).trim();
+    const addrText = design.card.showVenueAddress ? ((isAr ? content.addressAr || content.address : content.address) ?? "").trim() : "";
+    const extraEn = splitExtra(design.texts.extra);
+    const extraAr = splitExtra(design.texts.extraAr);
+    const hasVenue = lines.venue && Boolean(isAr ? venueArText : venueEnText || (bi && venueArText));
+    const below = lines.date || lines.time || hasVenue || Boolean(addrText) || extraEn.length > 0 || extraAr.length > 0;
+    if (blocks.length && below) push({ height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) }, BASE_GAPS.afterDivider);
 
     // Date & time
     const dateEn: TextStyle = { family: latinBody, weight: 500, size: 31 * k, uppercase: true, letterSpacing: 0.14 };
     const dateAr: TextStyle = { family: arBody, weight: 700, size: 36 * k };
     const timeEn: TextStyle = { family: latinBody, weight: 400, size: 28 * k, letterSpacing: 0.06 };
     const timeAr: TextStyle = { family: arBody, weight: 400, size: 32 * k };
-    if (isAr || bi) push(textBlock(content.date.ar, dateAr, cw, 1, cx, p.text), BASE_GAPS.afterDate);
-    if (!isAr) push(textBlock(content.date.en, dateEn, cw, 1, cx, p.text), BASE_GAPS.afterDate);
-    if (isAr) push(textBlock(`${CARD_PHRASES.ar.at} ${content.time.ar}`, timeAr, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
+    if (lines.date) {
+      if (isAr || bi) push(textBlock(content.date.ar, dateAr, cw, 1, cx, p.text), lines.time ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
+      if (!isAr) push(textBlock(content.date.en, dateEn, cw, 1, cx, p.text), lines.time ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
+    }
+    if (!lines.time) {
+      // Left off the card.
+    } else if (isAr) push(textBlock(`${CARD_PHRASES.ar.at} ${content.time.ar}`, timeAr, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
     else if (bi) push(textBlock(`${content.time.en}  ·  ${content.time.ar}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
     else push(textBlock(`${CARD_PHRASES.en.at} ${content.time.en}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
 
@@ -250,14 +294,19 @@ export function buildCardSvg(input: CardInput): string {
     const venueAr: TextStyle = { family: arBody, weight: 700, size: 36 * k };
     const addrEn: TextStyle = { family: latinBody, weight: 400, size: 25 * k };
     const addrAr: TextStyle = { family: arBody, weight: 400, size: 28 * k };
-    const venueArText = content.venueNameAr || (isAr ? content.venueName : "");
-    if ((isAr || bi) && venueArText) push(textBlock(venueArText, venueAr, cw, 2, cx, p.text), bi ? 4 : BASE_GAPS.afterVenue);
-    if (!isAr) push(textBlock(content.venueName, venueEn, cw, 2, cx, p.text), BASE_GAPS.afterVenue);
-    if (design.card.showVenueAddress) {
-      const addr = isAr ? content.addressAr || content.address : content.address;
-      if (addr) push(textBlock(addr, isAr ? addrAr : addrEn, cw * 0.92, 2, cx, p.muted), 0);
+    if (lines.venue) {
+      if ((isAr || bi) && venueArText) push(textBlock(venueArText, venueAr, cw, 2, cx, p.text), bi && venueEnText ? 4 : BASE_GAPS.afterVenue);
+      if (!isAr && venueEnText) push(textBlock(venueEnText, venueEn, cw, 2, cx, p.text), BASE_GAPS.afterVenue);
     }
-    gaps[gaps.length - 1] = 0;
+    if (addrText) push(textBlock(addrText, isAr ? addrAr : addrEn, cw * 0.92, 2, cx, p.muted), 0);
+
+    // Your own extra lines (custom events), Arabic first on bilingual cards like the rest.
+    const extraStyleEn: TextStyle = { family: latinBody, weight: 400, italic: bodyItalic, size: 26 * k };
+    const extraStyleAr: TextStyle = { family: arBody, weight: 400, size: 29 * k };
+    const extras = [...(isAr || bi ? (extraAr.length ? extraAr : isAr ? extraEn : []) : []), ...(!isAr ? extraEn : [])];
+    if (extras.length && blocks.length) gaps[gaps.length - 1] = Math.max(gaps[gaps.length - 1], 22 * k);
+    for (const line of extras) push(textBlock(line, isArabic(line) ? extraStyleAr : extraStyleEn, cw * 0.92, 2, cx, p.text, 1.3, 0.85), 8);
+    if (gaps.length) gaps[gaps.length - 1] = 0;
     return { blocks, gaps };
   };
 
@@ -302,11 +351,7 @@ export function buildCardSvg(input: CardInput): string {
     footerLang === "ar" ? { family: arBody, weight: 700, size: 30 } : { family: latinBody, weight: 500, size: 26, letterSpacing: 0.02 };
   const qrColors = { fg: p.text, bg: p.surface };
   const qr = (x: number, yy: number) =>
-    input.qrText
-      ? qrSvgGroup({ text: input.qrText, size: qrSize, style: design.card.qr.style, fg: qrColors.fg, bg: qrColors.bg, logo: design.card.qr.showLogo }, x, yy)
-      : input.qrPlaceholder
-        ? qrSvgGroup({ text: "HTTPS://INVTRA.STORE/Q/SAMPLE0000", size: qrSize, style: design.card.qr.style, fg: qrColors.fg, bg: qrColors.bg, logo: design.card.qr.showLogo }, x, yy)
-        : "";
+    qrText ? qrSvgGroup({ text: qrText, size: qrSize, style: design.card.qr.style, fg: qrColors.fg, bg: qrColors.bg, logo: design.card.qr.showLogo }, x, yy) : "";
   const plate = (x: number, yy: number) =>
     `<rect x="${x - 12}" y="${yy - 12}" width="${qrSize + 24}" height="${qrSize + 24}" rx="22" fill="none" stroke="${p.accent}" stroke-width="1.4" opacity="0.7"/>`;
 
@@ -320,7 +365,8 @@ export function buildCardSvg(input: CardInput): string {
     if (hasQr) {
       const qx = (W - qrSize) / 2;
       footer += plate(qx, fy + 4) + qr(qx, fy + 4);
-      footer += textEl(phrases.scan, W / 2, fy + qrSize + 48, capStyle, p.muted);
+      const cap = fit(scanText, capStyle, cw + 80, { maxLines: 1 });
+      footer += textEl(cap.lines[0] ?? scanText, W / 2, fy + qrSize + 48, cap.style, p.muted);
     }
   } else {
     // QR to one side, guest details beside it. "start" follows reading direction.
@@ -348,7 +394,7 @@ export function buildCardSvg(input: CardInput): string {
       );
       ty += 44;
     }
-    footer += textEl(phrases.scan, tx, ty, fit(phrases.scan, capStyle, colW, { maxLines: 1 }).style, p.accent, anchor);
+    footer += textEl(scanText, tx, ty, fit(scanText, capStyle, colW, { maxLines: 1 }).style, p.accent, anchor);
   }
 
   if (design.card.showBranding) {
@@ -391,23 +437,24 @@ export function buildCustomCardSvg(input: {
   const { x, y, size } = input.design.customQr;
   const q = Math.round(W * size);
   const pad = Math.round(q * 0.08);
-  const capH = input.caption ? Math.round(q * 0.16) : 0;
+  const capH = input.caption && effectiveQrText(input.design, input.qrText, input.qrPlaceholder) ? Math.round(q * 0.16) : 0;
   const plateW = q + pad * 2;
   const plateH = q + pad * 2 + capH;
   const px = Math.min(Math.max(0, x * W - plateW / 2), W - plateW);
   const py = Math.min(Math.max(0, y * H - plateH / 2), H - plateH);
-  const text = input.qrText ?? (input.qrPlaceholder ? "HTTPS://INVTRA.STORE/Q/SAMPLE0000" : null);
+  const text = effectiveQrText(input.design, input.qrText, input.qrPlaceholder);
   let overlay = "";
   if (text) {
     overlay =
       `<rect x="${px}" y="${py}" width="${plateW}" height="${plateH}" rx="${Math.round(q * 0.09)}" fill="#FFFFFF" fill-opacity="0.96"/>` +
       qrSvgGroup({ text, size: q, style: input.design.card.qr.style, fg: "#141210", bg: "#FFFFFF", logo: input.design.card.qr.showLogo, quietZone: 2 }, px + pad, py + pad);
-    if (input.caption) {
-      const st: TextStyle = isArabic(input.caption)
+    const caption = input.caption ? input.design.card.qr.caption || input.caption : "";
+    if (caption) {
+      const st: TextStyle = isArabic(caption)
         ? { family: "IBM Plex Sans Arabic", weight: 500, size: capH * 0.62 }
         : { family: "Jost", weight: 500, size: capH * 0.5, uppercase: true, letterSpacing: 0.12 };
-      const fitted = fit(input.caption, st, q, { maxLines: 1 });
-      overlay += textEl(fitted.lines[0] ?? input.caption, px + plateW / 2, py + pad + q + capH * 0.62, fitted.style, "#3A332C");
+      const fitted = fit(caption, st, q, { maxLines: 1 });
+      overlay += textEl(fitted.lines[0] ?? caption, px + plateW / 2, py + pad + q + capH * 0.62, fitted.style, "#3A332C");
     }
   }
   const svg =

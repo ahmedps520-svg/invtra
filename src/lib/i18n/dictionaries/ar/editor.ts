@@ -42,6 +42,7 @@ export const editor: typeof en = {
   },
 
   summary: {
+    qrOff: "بدون رمز QR",
     generated: "تصميم INVTRA",
     custom: "صورتك الخاصة",
     defaultWording: "الصياغة المقترحة",
@@ -116,6 +117,13 @@ export const editor: typeof en = {
     useSuggestion: "استخدم {value}",
     clear: "مسح",
     restore: "عدّل الصياغة المقترحة",
+    onCard: "على صورة الدعوة",
+    onCardHint: "ألغِ تحديد ما تفضّل عدم طباعته على الدعوة.",
+    lines: { eyebrow: "السطر الافتتاحي", names: "الأسماء", intro: "سطر الدعوة", date: "التاريخ", time: "الوقت", venue: "المكان" },
+    extra: "أسطر إضافية",
+    extraHint: "أي شيء آخر تريد طباعته — سطر لكل معلومة، حتى أربعة أسطر. يظهر أيضًا في صفحة الضيف.",
+    extraPlaceholder: "e.g. Children are welcome",
+    extraPlaceholderAr: "مثال: الأطفال مرحَّب بهم",
   },
 
   colours: {
@@ -260,6 +268,17 @@ export const editor: typeof en = {
     branding: "توقيع INVTRA",
     brandingHint: "اسم INVTRA بخط صغير وهادئ أسفل الدعوة.",
     customNote: "في صورتك المرفوعة، يُحدَّد موضع الرمز وحجمه من قسم «صورة الدعوة» أعلاه.",
+    show: "طباعة رمز QR",
+    showHint: "أوقفه لدعوة بدون رمز. يمكن تسجيل دخول الضيوف بالاسم من رابط الباب.",
+    target: "يفتح الرمز",
+    targetGuest: "دعوة كل ضيف الخاصة",
+    targetGuestHint: "مُستحسن — يُمسح عند الباب لتسجيل دخول الضيف.",
+    targetLink: "رابطًا تختاره",
+    targetLinkHint: "الرابط نفسه على كل الدعوات — موقع، أو موقع على الخريطة، أو قائمة هدايا… سجّل دخول الضيوف بالاسم عند الباب.",
+    link: "الرابط",
+    linkError: "أدخل رابطًا كاملًا مثل https://example.com",
+    caption: "السطر تحت الرمز",
+    captionHint: "اتركه فارغًا لعرض «امسح الرمز لعرض دعوتك».",
   },
 
   website: {

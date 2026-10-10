@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo, useState } from "react";
 import { ScanLine } from "lucide-react";
 import { Switch } from "@/components/ui/toggle";
+import { Field, Input } from "@/components/ui/input";
 import { useI18n } from "@/components/i18n/provider";
-import { QR_POSITIONS, QR_SIZES, QR_STYLES, type InvitationDesign } from "@/lib/design/schema";
+import { designSchema, QR_POSITIONS, QR_SIZES, QR_STYLES, type InvitationDesign } from "@/lib/design/schema";
 import { qrSvgGroup } from "@/lib/qr";
 import { ChoiceGroup, GroupLabel, Hint, Note } from "./controls";
 import { useEditor } from "./editor-context";
@@ -34,8 +35,9 @@ function PositionDiagram({ side }: { side: Side }) {
 export function QrPanel() {
   const { dict } = useI18n();
   const t = dict.editor.qr;
-  const { event, draft, setDesign } = useEditor();
+  const { event, draft, setDesign, advanced } = useEditor();
   const card = draft.design.card;
+  const off = card.qr.enabled === false;
   const custom = draft.imageMode === "CUSTOM";
   // On an Arabic card, "start" is the right-hand side.
   const rtlCard = event.language === "AR";
@@ -62,71 +64,77 @@ export function QrPanel() {
 
   return (
     <div className="space-y-8">
-      <Note icon={<ScanLine />}>{t.explainer}</Note>
+      {advanced ? <QrChoice /> : null}
 
-      {custom ? (
-        <p className="text-[13px] leading-relaxed text-ink-faint">{t.customNote}</p>
-      ) : (
+      {off ? null : (
         <>
+          <Note icon={<ScanLine />}>{t.explainer}</Note>
+
+          {custom ? (
+            <p className="text-[13px] leading-relaxed text-ink-faint">{t.customNote}</p>
+          ) : (
+            <>
+              <div>
+                <GroupLabel>{t.position}</GroupLabel>
+                <ChoiceGroup<Qr["position"]>
+                  name="qr-position"
+                  label={t.position}
+                  value={card.qr.position}
+                  onChange={(position) => setQr({ position })}
+                  columns={3}
+                  tileClassName="items-center text-center"
+                  options={QR_POSITIONS.map((p) => ({ value: p, label: t.positions[sideOf(p)], visual: <PositionDiagram side={sideOf(p)} /> }))}
+                />
+                <Hint>{t.positionHint}</Hint>
+              </div>
+
+              <div>
+                <GroupLabel>{t.size}</GroupLabel>
+                <ChoiceGroup<Qr["size"]>
+                  name="qr-size"
+                  label={t.size}
+                  value={card.qr.size}
+                  onChange={(size) => setQr({ size })}
+                  columns={3}
+                  layout="row"
+                  options={QR_SIZES.map((s) => ({
+                    value: s,
+                    label: t.sizes[s],
+                    visual: (
+                      <span className="flex size-7 items-center justify-center">
+                        <span className="rounded-[3px] border-2 border-ink/70" style={{ width: { sm: 14, md: 20, lg: 26 }[s], height: { sm: 14, md: 20, lg: 26 }[s] }} />
+                      </span>
+                    ),
+                  }))}
+                />
+                <Hint>{t.sizeHint}</Hint>
+              </div>
+            </>
+          )}
+
           <div>
-            <GroupLabel>{t.position}</GroupLabel>
-            <ChoiceGroup<Qr["position"]>
-              name="qr-position"
-              label={t.position}
-              value={card.qr.position}
-              onChange={(position) => setQr({ position })}
+            <GroupLabel>{t.style}</GroupLabel>
+            <ChoiceGroup<Qr["style"]>
+              name="qr-style"
+              label={t.style}
+              value={card.qr.style}
+              onChange={(style) => setQr({ style })}
               columns={3}
               tileClassName="items-center text-center"
-              options={QR_POSITIONS.map((p) => ({ value: p, label: t.positions[sideOf(p)], visual: <PositionDiagram side={sideOf(p)} /> }))}
-            />
-            <Hint>{t.positionHint}</Hint>
-          </div>
-
-          <div>
-            <GroupLabel>{t.size}</GroupLabel>
-            <ChoiceGroup<Qr["size"]>
-              name="qr-size"
-              label={t.size}
-              value={card.qr.size}
-              onChange={(size) => setQr({ size })}
-              columns={3}
-              layout="row"
-              options={QR_SIZES.map((s) => ({
+              options={QR_STYLES.map((s) => ({
                 value: s,
-                label: t.sizes[s],
-                visual: (
-                  <span className="flex size-7 items-center justify-center">
-                    <span className="rounded-[3px] border-2 border-ink/70" style={{ width: { sm: 14, md: 20, lg: 26 }[s], height: { sm: 14, md: 20, lg: 26 }[s] }} />
-                  </span>
-                ),
+                label: t.styles[s],
+                visual: <span aria-hidden="true" className="mx-auto block size-16 [&>svg]:size-full" dangerouslySetInnerHTML={{ __html: styleArt[s] }} />,
               }))}
             />
-            <Hint>{t.sizeHint}</Hint>
+            <Hint>{t.styleHint}</Hint>
           </div>
         </>
       )}
 
-      <div>
-        <GroupLabel>{t.style}</GroupLabel>
-        <ChoiceGroup<Qr["style"]>
-          name="qr-style"
-          label={t.style}
-          value={card.qr.style}
-          onChange={(style) => setQr({ style })}
-          columns={3}
-          tileClassName="items-center text-center"
-          options={QR_STYLES.map((s) => ({
-            value: s,
-            label: t.styles[s],
-            visual: <span aria-hidden="true" className="mx-auto block size-16 [&>svg]:size-full" dangerouslySetInnerHTML={{ __html: styleArt[s] }} />,
-          }))}
-        />
-        <Hint>{t.styleHint}</Hint>
-      </div>
-
       <div className="space-y-5 border-t border-line pt-6">
         {toggles
-          .filter((x) => !(custom && x.hideCustom))
+          .filter((x) => !(custom && x.hideCustom) && !(off && x.key === "showLogo"))
           .map((x) => (
             <Switch
               key={x.key}
@@ -138,6 +146,85 @@ export function QrPanel() {
             />
           ))}
       </div>
+    </div>
+  );
+}
+
+const linkSchema = designSchema.shape.card.shape.qr.shape.link;
+
+/** Custom events: print a QR or not, and what it opens (each guest's invitation or one link). */
+function QrChoice() {
+  const { dict } = useI18n();
+  const t = dict.editor.qr;
+  const { draft, setDesign } = useEditor();
+  const qr = draft.design.card.qr;
+  const uid = useId();
+  const [ownLink, setOwnLink] = useState(Boolean(qr.link));
+  // The link is saved once it's a valid web address; until then it's only kept here.
+  const [link, setLink] = useState(qr.link);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const setQr = (patch: Partial<Qr>) => setDesign({ card: { qr: patch } });
+
+  function changeLink(value: string) {
+    setLink(value);
+    const ok = linkSchema.safeParse(value.trim()).success && value.trim() !== "";
+    setLinkError(ok || !value.trim() ? null : t.linkError);
+    if (ok) setQr({ link: value.trim() });
+  }
+
+  return (
+    <div className="space-y-6 rounded-2xl border border-line bg-ivory/70 p-5">
+      <Switch id={`${uid}-on`} checked={qr.enabled !== false} onChange={(v) => setQr({ enabled: v })} label={t.show} description={t.showHint} />
+      {qr.enabled !== false ? (
+        <>
+          <div>
+            <GroupLabel>{t.target}</GroupLabel>
+            <ChoiceGroup<"guest" | "link">
+              name="qr-target"
+              label={t.target}
+              value={ownLink ? "link" : "guest"}
+              onChange={(v) => {
+                setOwnLink(v === "link");
+                if (v === "guest") {
+                  setQr({ link: "" });
+                  setLinkError(null);
+                } else if (link.trim() && linkSchema.safeParse(link.trim()).success) setQr({ link: link.trim() });
+              }}
+              columns={2}
+              options={[
+                {
+                  value: "guest",
+                  label: t.targetGuest,
+                  hint: t.targetGuestHint,
+                },
+                {
+                  value: "link",
+                  label: t.targetLink,
+                  hint: t.targetLinkHint,
+                },
+              ]}
+            />
+          </div>
+          {ownLink ? (
+            <Field id={`${uid}-link`} label={t.link} error={linkError}>
+              <Input
+                id={`${uid}-link`}
+                type="url"
+                inputMode="url"
+                dir="ltr"
+                maxLength={500}
+                placeholder="https://"
+                value={link}
+                onChange={(e) => changeLink(e.target.value)}
+                aria-invalid={Boolean(linkError)}
+              />
+            </Field>
+          ) : null}
+          <Field id={`${uid}-caption`} label={t.caption} hint={t.captionHint}>
+            <Input id={`${uid}-caption`} dir="auto" maxLength={60} value={qr.caption} onChange={(e) => setQr({ caption: e.target.value })} />
+          </Field>
+        </>
+      ) : null}
     </div>
   );
 }

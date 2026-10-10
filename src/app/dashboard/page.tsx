@@ -23,7 +23,7 @@ export default async function DashboardHome() {
   const d = dict.dashboard;
 
   const events = await db.event.findMany({
-    where: { userId: user.id, deletedAt: null },
+    where: { userId: user.id, deletedAt: null, customDraft: false },
     orderBy: { startsAt: "asc" },
   });
 

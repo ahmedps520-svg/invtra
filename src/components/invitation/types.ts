@@ -33,6 +33,8 @@ export interface InvitationVM {
     addressAr: string | null;
     mapsUrl: string;
     mapsEmbedUrl: string;
+    /** There's a place to show on a map (custom events can leave the venue out). */
+    hasLocation: boolean;
     dressCode: string | null;
     dressCodeAr: string | null;
     notes: string | null;

@@ -67,7 +67,8 @@ export function DataTable<T>({
 }) {
   return (
     <div className={cn("overflow-hidden rounded-2xl border border-line bg-paper shadow-soft", className)}>
-      <div className="overflow-x-auto">
+      {/* relative: keeps screen-reader-only headers inside the scroll area on phones */}
+      <div className="relative overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead>

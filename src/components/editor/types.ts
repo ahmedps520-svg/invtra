@@ -71,6 +71,13 @@ export interface EditorProps {
   staleAccepted: number;
   /** Where the footer's Back / Continue go (default: the host's Details and Guests steps). */
   nav?: { back: { href: string; label: string }; next: { href: string; label: string } };
+  /** Where "Edit details" goes (default: the host's Details step). */
+  detailsHref?: string;
+  /**
+   * Custom-event options: the QR can be turned off or point to any link, and any printed line
+   * can be left off or extra lines added (INVTRA staff, and hosts on a custom package).
+   */
+  advanced?: boolean;
 }
 
 export interface DesignSaveResponse {

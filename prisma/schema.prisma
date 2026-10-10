@@ -171,6 +171,12 @@ model Event {
   // INVTRA sends accepted guests a reminder with the location the day before.
   autoReminder Boolean @default(true)
 
+  // Custom events prepared by INVTRA staff (Admin → Custom events): hosts, venue and address are
+  // optional and the card can drop its QR or any line. A draft is still being designed and belongs
+  // to the staff member until the host and payment link are added.
+  custom      Boolean @default(false)
+  customDraft Boolean @default(false)
+
   // Design
   themeKey          String
   design            Json // see src/lib/design/schema.ts

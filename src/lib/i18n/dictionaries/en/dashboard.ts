@@ -119,6 +119,7 @@ export const dashboard = {
     editIntro:
       "Changes to the name, date, time or venue update the invitation image. Guests who already accepted can receive the updated version.",
     optional: "Optional",
+    customTitleHint: "Leave empty to use the occasion, e.g. “Wedding”.",
     sections: {
       occasion: { title: "The occasion", description: "What you're celebrating, and the language of your invitation." },
       when: { title: "Date & time", description: "Shown on the invitation in your event's time zone." },

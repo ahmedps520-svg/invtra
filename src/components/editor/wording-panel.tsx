@@ -8,7 +8,8 @@ import { Input, Textarea } from "@/components/ui/input";
 import { useI18n } from "@/components/i18n/provider";
 import { fmt } from "@/lib/i18n/config";
 import { copyFor } from "@/lib/invitation-copy";
-import type { InvitationDesign } from "@/lib/design/schema";
+import { CARD_LINE_KEYS, type InvitationDesign } from "@/lib/design/schema";
+import { Checkbox } from "@/components/ui/toggle";
 import { monogramOf } from "@/lib/utils";
 import { GroupLabel, Hint } from "./controls";
 import { useEditor } from "./editor-context";
@@ -32,7 +33,7 @@ export function eventLangs(language: "EN" | "AR" | "BILINGUAL"): Lang[] {
 export function DetailsSummary() {
   const { dict } = useI18n();
   const t = dict.editor.wording;
-  const { event, content } = useEditor();
+  const { event, content, detailsHref } = useEditor();
   const langs = eventLangs(event.language);
   const both = (en: ReactNode, ar: ReactNode | null | undefined) => (
     <>
@@ -65,7 +66,7 @@ export function DetailsSummary() {
           <p className="text-sm font-medium text-ink">{t.detailsTitle}</p>
           <p className="mt-0.5 text-[12px] text-ink-faint">{t.detailsHint}</p>
         </div>
-        <Link href={`/dashboard/events/${event.id}/details`} className={buttonClasses("outline", "sm")}>
+        <Link href={detailsHref} className={buttonClasses("outline", "sm")}>
           <PencilLine className="size-3.5" />
           {t.editDetails}
         </Link>
@@ -85,7 +86,7 @@ export function DetailsSummary() {
 export function WordingPanel() {
   const { dict } = useI18n();
   const t = dict.editor.wording;
-  const { event, draft, setDesign } = useEditor();
+  const { event, draft, setDesign, advanced } = useEditor();
   const langs = eventLangs(event.language);
   const monoId = useId();
   const uid = useId();
@@ -176,6 +177,59 @@ export function WordingPanel() {
           ) : null}
         </div>
         <Hint id={`${monoId}-hint`}>{t.monogramHint}</Hint>
+      </div>
+
+      {advanced ? <CardLinesControls /> : null}
+    </div>
+  );
+}
+
+/** Custom events: leave any printed line off the card, and add lines of your own. */
+function CardLinesControls() {
+  const { dict } = useI18n();
+  const t = dict.editor.wording;
+  const { event, draft, setDesign } = useEditor();
+  const langs = eventLangs(event.language);
+  const uid = useId();
+  const lines = draft.design.card.lines;
+  const custom = draft.imageMode === "CUSTOM";
+  return (
+    <div className="space-y-8 border-t border-line pt-6">
+      {!custom ? (
+        <fieldset>
+          <legend className="mb-1 text-[13px] font-medium text-ink-soft">{t.onCard}</legend>
+          <p className="mb-3 text-[12px] text-ink-faint">{t.onCardHint}</p>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+            {CARD_LINE_KEYS.map((k) => (
+              <Checkbox key={k} checked={lines[k]} onChange={(v) => setDesign({ card: { lines: { [k]: v } } })} label={t.lines[k]} />
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
+      <div>
+        <GroupLabel htmlFor={`${uid}-extra-${langs[0]}`} className="mb-1 text-[13px] font-medium normal-case tracking-normal text-ink-soft">
+          {t.extra}
+        </GroupLabel>
+        <p className="mb-2.5 text-[12px] text-ink-faint">{t.extraHint}</p>
+        <div className="space-y-2.5">
+          {langs.map((lang) => {
+            const key = lang === "ar" ? "extraAr" : "extra";
+            return (
+              <Textarea
+                key={lang}
+                id={`${uid}-extra-${lang}`}
+                rows={3}
+                maxLength={300}
+                dir={lang === "ar" ? "rtl" : "ltr"}
+                lang={lang}
+                value={draft.design.texts[key]}
+                placeholder={lang === "ar" ? t.extraPlaceholderAr : t.extraPlaceholder}
+                aria-label={langs.length > 1 ? `${t.extra} — ${lang === "ar" ? t.arabic : t.english}` : undefined}
+                onChange={(e) => setDesign({ texts: { [key]: e.target.value } })}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -97,16 +97,30 @@ Refunds are issued in the Tap dashboard, then recorded in *Admin → Payments*.
 
 ### Custom events (staff-priced packages)
 
-**Admin → Custom events → New custom event** walks staff through the host, occasion, date and
-venue, then the package: unlimited guests (or a fixed number), your own price in
-`PAYMENT_CURRENCY`, and what's included. INVTRA creates the host's account if needed and the
-event; staff then design the invitation in the same editor customers use (any design, premium
-included, or their own artwork, plus wording, colours and fonts), and finally send the secret
-payment link (`/pay/<token>`, no sign-in needed) by email and — once the
-`invtra_payment_request` template is approved — WhatsApp. The host pays on the same Tap
-checkout (Apple Pay, Google Pay, mada, cards); the plan is activated and a numbered receipt
-(`INVTRA-2026-0001`, sequential per year) is emailed and sent on WhatsApp. The payment page then
-shows the printable receipt. Unpaid packages can be re-sent or withdrawn from the list.
+**Admin → Custom events → New custom event** goes in four steps, design first:
+
+1. **Event** — only the occasion and the date are required. The name defaults to the occasion
+   ("Wedding"); the host names, venue and address can be left out; sections, programme, dress
+   code, notes, parking and a contact can all be added. Until a host is added the event is a
+   *draft* owned by the staff member (listed under *Drafts*, where it can be discarded).
+2. **Design** — the same editor customers use (any design, premium included, or your own
+   artwork) plus custom-event options: print a QR code or not, point it at each guest's own
+   invitation (needed to scan guests in at the door) or at any web link, change the line under
+   it, leave any line off the card (opening line, names, invitation line, date, time, venue) and
+   add up to four lines of your own (also shown on the guest page). Guests of an event without
+   a personal QR are checked in by name from the door link.
+3. **Host & payment** — the host's name, email and WhatsApp number, unlimited guests (or a fixed
+   number), your own price in `PAYMENT_CURRENCY` and what's included. Saving creates the secret
+   payment link (`/pay/<token>`, no sign-in needed) and moves the event into the host's account
+   (created if new). Until it's paid the host and price can be changed here; a different host
+   gets a new link and the old one stops working.
+4. **Send link** — by email and, once the `invtra_payment_request` template is approved,
+   WhatsApp.
+
+The host pays on the same Tap checkout (Apple Pay, Google Pay, mada, cards); the plan is
+activated and a numbered receipt (`INVTRA-2026-0001`, sequential per year) is emailed and sent on
+WhatsApp. The payment page then shows the printable receipt. Unpaid packages can be re-sent or
+withdrawn from the list, and a withdrawn package can be replaced with a new one.
 
 Set `LEGAL_ENTITY_NAME`, `LEGAL_CR_NUMBER`, `LEGAL_VAT_NUMBER` and `LEGAL_ADDRESS` so they appear
 on receipts. INVTRA's receipts are payment confirmations, not ZATCA e-invoices — a

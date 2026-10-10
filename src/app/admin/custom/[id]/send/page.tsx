@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Palette, Receipt } from "lucide-react";
+import { redirect } from "next/navigation";
+import { ArrowLeft, Palette, Receipt, UserPen } from "lucide-react";
 import { requireAdmin } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
-import { getCustomPackage } from "@/server/custom/service";
+import { customStepLinks, customStepPage } from "@/server/custom/pages";
 import { cardPreviewProps } from "@/server/events/preview";
 import { guestsLabel } from "@/server/payments/receipts";
 import { CardPreview } from "@/components/invitation/card-preview";
@@ -23,7 +23,7 @@ import { buttonClasses } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Send link · Custom event" };
 
-/** Step 7 of a custom event: check the invitation and package, then send the payment link. */
+/** Step 4 of a custom event: check the invitation and package, then send the payment link. */
 export default async function CustomSendPage({
   params,
 }: {
@@ -31,15 +31,15 @@ export default async function CustomSendPage({
 }) {
   await requireAdmin();
   const { id } = await params;
-  const pkg = await getCustomPackage(id);
-  if (!pkg) notFound();
+  const { event, order: pkg } = await customStepPage(id, "send");
+  // No payment link yet: the host and the price come first.
+  if (!pkg) redirect(`/admin/custom/${event.id}/host`);
   const [preview, approved] = await Promise.all([
-    cardPreviewProps(pkg.event),
+    cardPreviewProps(event),
     db.messageTemplate.count({
       where: { purpose: "PAYMENT_REQUEST", status: "APPROVED", isActive: true },
     }),
   ]);
-  const event = pkg.event;
 
   return (
     <>
@@ -55,10 +55,7 @@ export default async function CustomSendPage({
         title="Send the payment link"
         description="Check the invitation and the package, then send the host their secure payment link."
       />
-      <CustomSteps
-        current={6}
-        links={{ 5: `/admin/custom/${pkg.id}/design` }}
-      />
+      <CustomSteps current={3} links={customStepLinks(event.id, true)} />
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
         <section aria-label="Invitation">
@@ -74,13 +71,24 @@ export default async function CustomSendPage({
               title={`Invitation design for ${event.title}`}
             />
           </div>
-          <Link
-            href={`/admin/custom/${pkg.id}/design`}
-            className={buttonClasses("outline", "sm", "mt-3")}
-          >
-            <Palette className="size-3.5" />
-            Edit design
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`/admin/custom/${event.id}/design`}
+              className={buttonClasses("outline", "sm")}
+            >
+              <Palette className="size-3.5" />
+              Edit design
+            </Link>
+            {pkg.status === "PENDING" ? (
+              <Link
+                href={`/admin/custom/${event.id}/host`}
+                className={buttonClasses("outline", "sm")}
+              >
+                <UserPen className="size-3.5" />
+                Edit host & price
+              </Link>
+            ) : null}
+          </div>
         </section>
 
         <div className="space-y-8">
@@ -167,9 +175,21 @@ export default async function CustomSendPage({
               ) : null}
             </div>
           ) : (
-            <p className="rounded-2xl border border-line bg-sand/40 px-5 py-4 text-[14px] text-ink-soft">
-              This package was withdrawn — its payment link no longer works.
-            </p>
+            <div className="rounded-2xl border border-line bg-sand/40 px-5 py-4 text-[14px] text-ink-soft">
+              <p>
+                This package was {pkg.status === "REFUNDED" ? "refunded" : "withdrawn"} — its
+                payment link no longer works.
+              </p>
+              {pkg.status === "CANCELLED" ? (
+                <Link
+                  href={`/admin/custom/${event.id}/host`}
+                  className={buttonClasses("outline", "sm", "mt-3")}
+                >
+                  <UserPen className="size-3.5" />
+                  Offer a new package
+                </Link>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

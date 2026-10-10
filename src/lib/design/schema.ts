@@ -9,6 +9,15 @@ import { FONTS, type FontKey } from "./fonts";
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #84664A");
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]]);
 const shortText = z.string().trim().max(160);
+/** Extra lines printed on the card (custom events): up to a few short lines. */
+const extraText = z.string().trim().max(300).default("");
+/** Where a QR can point instead of the guest's own invitation: any web link. */
+const qrLink = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === "" || /^https?:\/\/[^\s]+\.[^\s]+$/i.test(v), "Use a full web link, like https://example.com")
+  .default("");
 
 export const QR_POSITIONS = ["bottom-center", "bottom-start", "bottom-end"] as const;
 export const QR_SIZES = ["sm", "md", "lg"] as const;
@@ -37,6 +46,9 @@ export const designSchema = z.object({
     eyebrowAr: shortText.default(""),
     introAr: shortText.default(""),
     closingAr: shortText.default(""),
+    /** Your own extra lines on the card and the guest page (e.g. "Children are welcome"). */
+    extra: extraText,
+    extraAr: extraText,
   }),
   monogram: z.string().trim().max(8).default(""),
   sections: z.object({
@@ -59,7 +71,17 @@ export const designSchema = z.object({
     showBranding: z.boolean(),
     showGuestName: z.boolean(),
     showVenueAddress: z.boolean(),
+    /** Which of the event's lines are printed on the card (any can be left off). */
+    lines: z
+      .object({ eyebrow: z.boolean(), names: z.boolean(), intro: z.boolean(), date: z.boolean(), time: z.boolean(), venue: z.boolean() })
+      .default({ eyebrow: true, names: true, intro: true, date: true, time: true, venue: true }),
     qr: z.object({
+      /** Print a QR code at all. */
+      enabled: z.boolean().default(true),
+      /** Encode this link instead of the guest's personal invitation link ("" = the guest's own). */
+      link: qrLink,
+      /** Line under the code ("" = "Scan for your invitation"). */
+      caption: z.string().trim().max(60).default(""),
       position: z.enum(QR_POSITIONS),
       size: z.enum(QR_SIZES),
       style: z.enum(QR_STYLES),
@@ -76,6 +98,20 @@ export const designSchema = z.object({
 });
 
 export type InvitationDesign = z.infer<typeof designSchema>;
+export type CardLines = InvitationDesign["card"]["lines"];
+
+/** Card lines that can be left off, in the order they are printed. */
+export const CARD_LINE_KEYS = ["eyebrow", "names", "intro", "date", "time", "venue"] as const satisfies readonly (keyof CardLines)[];
+
+/**
+ * What the card's QR encodes: nothing when the QR is turned off, the custom link when one is
+ * set, otherwise the guest's personal link (`personal`, null on non-personal cards).
+ */
+export function cardQrText(design: Pick<InvitationDesign, "card">, personal: string | null | undefined): string | null {
+  const qr = design.card.qr;
+  if (qr.enabled === false || !personal) return null;
+  return qr.link || personal;
+}
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? (T[K] extends unknown[] ? T[K] : DeepPartial<T[K]>) : T[K] };
 

@@ -20,7 +20,7 @@ import { fmt } from "@/lib/i18n/config";
 import { COMMON_TIME_ZONES, zoneOffsetMs } from "@/lib/time";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
 import { CardPreview } from "@/components/invitation/card-preview";
-import { eventInputSchema, type EventInput } from "@/lib/validation/event";
+import { customEventInputSchema, eventInputSchema, type EventInput } from "@/lib/validation/event";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural, themeName } from "./i18n";
 import { ScheduleEditor, type ScheduleRow } from "./schedule-editor";
@@ -218,6 +218,8 @@ export function EventForm({
   initial,
   themeKey,
   occasion,
+  relaxed: relaxedProp = false,
+  custom,
 }: {
   mode: "create" | "edit";
   eventId?: string;
@@ -226,7 +228,15 @@ export function EventForm({
   themeKey?: string | null;
   /** Occasion preselected from a landing page (/dashboard/events/new?occasion=…). */
   occasion?: EventType | null;
+  /** A custom event: the name, hosts, venue and address may be left out. */
+  relaxed?: boolean;
+  /**
+   * Admin → Custom events: save to the admin API, then continue to `next` (":id" is replaced
+   * with the event id). The page shows its own heading.
+   */
+  custom?: { saveUrl: string; next: string; submitLabel: string };
 }) {
+  const relaxed = relaxedProp || Boolean(custom);
   const { dict, locale } = useI18n();
   const d = dict.dashboard.form;
   const router = useRouter();
@@ -315,7 +325,7 @@ export function EventForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const payload = toPayload(form, tz);
-    const parsed = eventInputSchema.safeParse(payload);
+    const parsed = (relaxed ? customEventInputSchema : eventInputSchema).safeParse(payload);
     if (!parsed.success) {
       const next: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -329,6 +339,18 @@ export function EventForm({
     }
     setSaving(true);
     try {
+      if (custom) {
+        const next = (id: string) => custom.next.replace(":id", id);
+        if (mode === "edit" && !dirty) {
+          setLeaving(true);
+          router.push(next(eventId!));
+          return;
+        }
+        const res = await api<{ event: { id: string } }>(custom.saveUrl, { method: mode === "create" ? "POST" : "PATCH", body: payload });
+        setLeaving(true);
+        router.push(next(res.event.id));
+        return;
+      }
       if (mode === "create") {
         const res = await api<{ event: { id: string } }>("/api/events", {
           method: "POST",
@@ -437,7 +459,7 @@ export function EventForm({
 
   return (
     <form onSubmit={submit} noValidate className="animate-fade-up">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
+      <div className={cn("mb-8 flex flex-wrap items-end justify-between gap-6", custom && "hidden")}>
         <div className="max-w-2xl">
           <p className="eyebrow">{mode === "create" ? d.createEyebrow : d.editEyebrow}</p>
           <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">{mode === "create" ? d.createTitle : d.editTitle}</h2>
@@ -524,13 +546,19 @@ export function EventForm({
             <p className="mt-2.5 text-[13px] text-ink-faint">{f.languageHint}</p>
           </fieldset>
 
-          {pair("title", "titleAr", { single: arOnly ? f.title : f.title, en: f.titleEn, ar: f.titleAr }, { en: f.titlePh, ar: f.titleArPh })}
+          {pair(
+            "title",
+            "titleAr",
+            { single: arOnly ? f.title : f.title, en: f.titleEn, ar: f.titleAr },
+            { en: f.titlePh, ar: f.titleArPh },
+            { optional: relaxed, hint: relaxed ? d.customTitleHint : undefined },
+          )}
           {pair(
             "hostNames",
             "hostNamesAr",
             { single: f.hostNames, en: f.hostNamesEn, ar: f.hostNamesAr },
             { en: f.hostNamesPh, ar: f.hostNamesArPh },
-            { hint: f.hostNamesHint },
+            { hint: f.hostNamesHint, optional: relaxed },
           )}
         </Section>
 
@@ -560,8 +588,8 @@ export function EventForm({
 
         {/* Venue */}
         <Section title={d.sections.where.title} description={d.sections.where.description}>
-          {pair("venueName", "venueNameAr", { single: f.venueName, en: f.venueNameEn, ar: f.venueNameAr }, { en: f.venuePh, ar: f.venueArPh })}
-          {pair("address", "addressAr", { single: f.address, en: f.addressEn, ar: f.addressAr }, { en: f.addressPh, ar: f.addressArPh })}
+          {pair("venueName", "venueNameAr", { single: f.venueName, en: f.venueNameEn, ar: f.venueNameAr }, { en: f.venuePh, ar: f.venueArPh }, { optional: relaxed })}
+          {pair("address", "addressAr", { single: f.address, en: f.addressEn, ar: f.addressAr }, { en: f.addressPh, ar: f.addressArPh }, { optional: relaxed })}
           <Field id="ev-mapsUrl" label={f.mapsUrl} optional={d.optional} error={err("mapsUrl")}>
             {input("mapsUrl", { type: "url", inputMode: "url", dir: "ltr", placeholder: f.mapsUrlPh })}
           </Field>
@@ -710,8 +738,8 @@ export function EventForm({
               </motion.span>
             ) : null}
           </AnimatePresence>
-          <Button type="submit" size="lg" loading={saving} disabled={mode === "edit" && !dirty}>
-            {saving ? (mode === "create" ? d.creating : d.saving) : mode === "create" ? d.create : d.save}
+          <Button type="submit" size="lg" loading={saving} disabled={mode === "edit" && !dirty && !custom}>
+            {custom ? custom.submitLabel : saving ? (mode === "create" ? d.creating : d.saving) : mode === "create" ? d.create : d.save}
           </Button>
         </div>
       </div>

@@ -16,7 +16,7 @@ import type { EditorProps } from "@/components/editor/types";
  */
 export async function editorProps(
   event: Event,
-  opts: { premiumIncluded?: boolean; nav?: EditorProps["nav"] } = {},
+  opts: { premiumIncluded?: boolean; nav?: EditorProps["nav"]; detailsHref?: string; advanced?: boolean } = {},
 ): Promise<EditorProps> {
   const [
     preview,
@@ -111,5 +111,7 @@ export async function editorProps(
     premiumIncluded: opts.premiumIncluded ?? planAllowsTheme(event.plan, true),
     staleAccepted,
     nav: opts.nav,
+    detailsHref: opts.detailsHref,
+    advanced: opts.advanced ?? (event.custom || event.plan === "CUSTOM"),
   };
 }

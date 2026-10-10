@@ -4,20 +4,12 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** The custom-event flow: questions (wizard), then the invitation design, then sending the link. */
-export const CUSTOM_STEPS = [
-  "Host",
-  "Occasion",
-  "Date & venue",
-  "Package & price",
-  "Review",
-  "Design",
-  "Send link",
-] as const;
+/** The custom-event flow: the event, its design, then the host and price, then sending the link. */
+export const CUSTOM_STEPS = ["Event", "Design", "Host & payment", "Send link"] as const;
 
 /**
- * Step bar for Admin → Custom events. In the wizard, earlier steps can be revisited with
- * `onSelect`; once the event exists, the Design and Send steps are links (`links`).
+ * Step bar for Admin → Custom events. Once the event exists, every step is a link (`links`);
+ * `onSelect` lets a single-page form revisit earlier steps.
  */
 export function CustomSteps({
   current,

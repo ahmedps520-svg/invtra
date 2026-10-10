@@ -76,3 +76,14 @@ export const eventInputSchema = z.object({
 });
 
 export type EventInput = z.infer<typeof eventInputSchema>;
+
+/**
+ * Custom events (prepared by INVTRA staff): only the occasion, language, date and time are
+ * needed — the name defaults to the occasion, and hosts, venue and address can be left out.
+ */
+export const customEventInputSchema = eventInputSchema.extend({
+  title: z.string().trim().max(140).default(""),
+  hostNames: z.string().trim().max(120).default(""),
+  venueName: z.string().trim().max(160).default(""),
+  address: z.string().trim().max(300).default(""),
+});

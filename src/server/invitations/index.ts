@@ -3,6 +3,8 @@ import { db } from "@/server/db";
 import { appUrl, env } from "@/server/env";
 import { generateInvitationToken, sha256 } from "@/server/security/tokens";
 import { qrTargetUrl } from "@/lib/qr";
+import { cardQrText } from "@/lib/design/schema";
+import { eventDesign } from "@/server/events/design";
 
 /** Public invitation page for a guest. */
 export function invitationUrl(token: string) {
@@ -12,6 +14,14 @@ export function invitationUrl(token: string) {
 /** What the guest's QR encodes (scan-tracking redirect to the invitation page). */
 export function invitationQrText(token: string) {
   return qrTargetUrl(env().APP_URL, token);
+}
+
+/**
+ * The QR a guest is given for this event (card, guest page, Apple Wallet): null when the
+ * design turns the QR off, the design's own link when one is set, else their personal link.
+ */
+export function eventQrText(event: Pick<Event, "themeKey" | "design">, token: string): string | null {
+  return cardQrText(eventDesign(event), invitationQrText(token));
 }
 
 /** Create the guest's invitation (unique random token) if it doesn't exist yet. */

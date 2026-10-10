@@ -50,11 +50,14 @@ export function CopyLinkButton({
 /** Row actions for an unpaid custom package: copy / open / resend the link, or withdraw it. */
 export function CustomPackageActions({
   id,
+  eventId,
   payUrl,
   pending,
   hasPhone,
 }: {
   id: string;
+  /** The custom event (null if it was deleted). */
+  eventId: string | null;
   payUrl: string;
   pending: boolean;
   hasPhone: boolean;
@@ -90,14 +93,16 @@ export function CustomPackageActions({
 
   return (
     <div className="flex flex-wrap justify-end gap-1.5">
-      <Link
-        href={`/admin/custom/${id}/design`}
-        className={buttonClasses("outline", "sm")}
-        title="Choose the design and wording"
-      >
-        <Palette className="size-3.5" />
-        Design
-      </Link>
+      {eventId ? (
+        <Link
+          href={`/admin/custom/${eventId}/design`}
+          className={buttonClasses("outline", "sm")}
+          title="Choose the design and wording"
+        >
+          <Palette className="size-3.5" />
+          Design
+        </Link>
+      ) : null}
       <CopyLinkButton url={payUrl} label="Copy" />
       <a
         href={payUrl}

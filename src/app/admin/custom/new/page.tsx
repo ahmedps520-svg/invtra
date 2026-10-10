@@ -2,26 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requireAdmin } from "@/server/auth/guards";
-import { lookupCustomer } from "@/server/custom/service";
-import { env } from "@/server/env";
-import { planPrice } from "@/lib/plans";
 import { str, type SearchParams } from "@/server/admin/params";
+import { pickNamespaces } from "@/lib/i18n";
+import { I18nProvider } from "@/components/i18n/provider";
+import { EventForm } from "@/components/dashboard/event-form";
+import { CustomSteps } from "@/components/admin/custom-steps";
 import { PageHeader } from "@/components/admin/ui";
-import { CustomEventWizard } from "@/components/admin/custom-wizard";
 
 export const metadata: Metadata = { title: "New custom event" };
 
-export default async function NewCustomEventPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
+/** Step 1 of a custom event: the occasion and whatever details you have (most are optional). */
+export default async function NewCustomEventPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await requireAdmin();
+  // From a customer's page (/admin/custom/new?email=…): prefill the host when the design is done.
   const email = str(await searchParams, "email", 160);
-  const e = env();
-  const initialCustomer = email.includes("@")
-    ? await lookupCustomer(email)
-    : null;
+  const forHost = email.includes("@") ? `?for=${encodeURIComponent(email)}` : "";
   return (
     <>
       <Link
@@ -34,17 +29,16 @@ export default async function NewCustomEventPage({
       <PageHeader
         eyebrow="Business"
         title="New custom event"
-        description="Set up an event for a host with your own price and guest allowance, design their invitation, then send them a secure payment link."
+        description="Start with the occasion and the date — everything else is optional and can be filled in later. Next you design the invitation; the host, the price and the payment link come last."
       />
-      <CustomEventWizard
-        initialEmail={email.includes("@") ? email : ""}
-        initialCustomer={initialCustomer}
-        currency={e.PAYMENT_CURRENCY}
-        planPrices={{
-          standard: planPrice("BASIC", e.PAYMENT_CURRENCY),
-          premium: planPrice("PREMIUM", e.PAYMENT_CURRENCY),
-        }}
-      />
+      <CustomSteps current={0} />
+      {/* The form's copy is English in the admin area. */}
+      <I18nProvider locale="en" dict={pickNamespaces("en", ["common", "dashboard", "themes"])}>
+        <EventForm
+          mode="create"
+          custom={{ saveUrl: "/api/admin/custom/events", next: `/admin/custom/:id/design${forHost}`, submitLabel: "Create & design the invitation" }}
+        />
+      </I18nProvider>
     </>
   );
 }

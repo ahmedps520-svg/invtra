@@ -43,12 +43,13 @@ export function templateValues(event: EventForValues, guest: Pick<Guest, "name">
   };
   const sec = event.sectionsEnabled && guest.section ? parseSections(event.sections)[guest.section] : null;
   const startsAt = sec?.time ? sectionStartsAt(event, sec.time) : event.startsAt;
-  const venue = sec?.venueName || sec?.venueNameAr ? sec.venueName || sec.venueNameAr! : pick("venue", event.venueName);
-  const venueAr = sec?.venueName || sec?.venueNameAr ? sec.venueNameAr || sec.venueName! : pick("venue_ar", event.venueNameAr || event.venueName);
+  // WhatsApp rejects empty template values, and custom events can leave the venue or hosts out.
+  const venue = sec?.venueName || sec?.venueNameAr ? sec.venueName || sec.venueNameAr! : pick("venue", event.venueName || event.venueNameAr || "—");
+  const venueAr = sec?.venueName || sec?.venueNameAr ? sec.venueNameAr || sec.venueName! : pick("venue_ar", event.venueNameAr || event.venueName || "—");
   return {
     guest_name: guest.name,
-    host_names: pick("host_names", event.hostNames),
-    host_names_ar: pick("host_names_ar", event.hostNamesAr || event.hostNames),
+    host_names: pick("host_names", event.hostNames || event.hostNamesAr || event.title),
+    host_names_ar: pick("host_names_ar", event.hostNamesAr || event.hostNames || event.titleAr || event.title),
     event_name: pick("event_name", event.title),
     event_name_ar: pick("event_name_ar", event.titleAr || event.title),
     event_date: formatDate(startsAt, { locale: "en", timeZone: event.timezone, style: "full" }),
