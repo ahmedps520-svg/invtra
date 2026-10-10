@@ -10,6 +10,7 @@ import {
 import { audit } from "@/server/log";
 import {
   cancelCustomPackage,
+  markPaymentRequestSent,
   sendPaymentRequest,
 } from "@/server/custom/service";
 import { undoTestPayment } from "@/server/payments/service";
@@ -27,6 +28,7 @@ const schema = z.discriminatedUnion("action", [
     reason: z.string().trim().max(500).default(""),
   }),
   z.object({ action: z.literal("undo_test") }),
+  z.object({ action: z.literal("mark_sent") }),
 ]);
 
 /** Admin: resend a payment link (WhatsApp / email) or withdraw the package. */
@@ -47,6 +49,11 @@ export const POST = route<Ctx>(
             .filter(Boolean)
             .join(" · ") || "Nothing was sent",
       });
+    }
+    if (input.action === "mark_sent") {
+      await markPaymentRequestSent(id);
+      await audit(admin.id, "admin.custom.sent_own_whatsapp", "order", id);
+      return ok({ message: "Noted as sent" });
     }
     if (input.action === "undo_test") {
       await undoTestPayment(id);

@@ -20,7 +20,9 @@ const schema = z
     APP_SECRET: z.string().min(32, "APP_SECRET must be at least 32 characters"),
 
     // WhatsApp Business Platform (Cloud API)
-    WHATSAPP_PROVIDER: z.enum(["cloud", "mock"]).default("mock"),
+    // cloud: INVTRA's own WhatsApp number (Cloud API). off: not connected — hosts send from their
+    // own WhatsApp and INVTRA never messages anyone. mock: development only (simulated sends).
+    WHATSAPP_PROVIDER: z.enum(["cloud", "off", "mock"]).default("mock"),
     WHATSAPP_ACCESS_TOKEN: z.string().optional(),
     WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
     WHATSAPP_BUSINESS_ACCOUNT_ID: z.string().optional(),
@@ -104,28 +106,34 @@ const schema = z
     if (env.PAYMENT_PROVIDER === "tap" && !env.TAP_SECRET_KEY) {
       ctx.addIssue({ code: "custom", path: ["TAP_SECRET_KEY"], message: "TAP_SECRET_KEY is required when PAYMENT_PROVIDER=tap" });
     }
-    if (env.NODE_ENV === "production") {
-      if (env.WHATSAPP_PROVIDER === "mock" && process.env.ALLOW_MOCK_IN_PRODUCTION !== "true") {
-        ctx.addIssue({ code: "custom", path: ["WHATSAPP_PROVIDER"], message: "The mock WhatsApp provider cannot be used in production" });
-      }
-      if (env.PAYMENT_PROVIDER === "mock" && process.env.ALLOW_MOCK_IN_PRODUCTION !== "true") {
-        ctx.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER"], message: "The mock payment provider cannot be used in production" });
-      }
-    }
   });
 
 export type Env = z.infer<typeof schema>;
 
-let cached: Env | null = null;
-
-export function env(): Env {
-  if (cached) return cached;
-  const parsed = schema.safeParse(process.env);
+/**
+ * Parse a configuration. The live site never runs in test mode: simulated WhatsApp sends become
+ * "off" (hosts send from their own WhatsApp) and test payments become manual bank transfers.
+ * LOCAL_TEST_MODE=true keeps the simulations for a production build on a developer's machine.
+ */
+export function parseEnv(source: NodeJS.ProcessEnv): Env {
+  const parsed = schema.safeParse(source);
   if (!parsed.success) {
     const details = parsed.error.issues.map((i) => `  • ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid INVTRA configuration:\n${details}\nSee .env.example for every supported variable.`);
   }
-  cached = parsed.data;
+  const e = parsed.data;
+  if (e.NODE_ENV !== "production" || source.LOCAL_TEST_MODE === "true") return e;
+  return {
+    ...e,
+    WHATSAPP_PROVIDER: e.WHATSAPP_PROVIDER === "mock" ? "off" : e.WHATSAPP_PROVIDER,
+    PAYMENT_PROVIDER: e.PAYMENT_PROVIDER === "mock" ? "manual" : e.PAYMENT_PROVIDER,
+  };
+}
+
+let cached: Env | null = null;
+
+export function env(): Env {
+  if (!cached) cached = parseEnv(process.env);
   return cached;
 }
 

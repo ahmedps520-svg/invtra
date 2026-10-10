@@ -482,7 +482,7 @@ describe("National Day offer (96 SAR for up to 96 guests)", async () => {
     const { order } = await service.createOrderForEvent(user, event, "BASIC", { offer: offer.key });
     const currency = service.paymentCurrency();
     expect(order).toMatchObject({ plan: "BASIC", guestLimit: 96, amount: offer.prices[currency], promo: "national-day-96" });
-    expect(service.serializeCustomerOrder({ ...order, event: null }).promo).toBe("national-day-96");
+    expect(service.serializeCustomerOrder({ ...order, event: null }, "").promo).toBe("national-day-96");
 
     await service.applyPaidOrder(order.id, { provider: "mock", providerPaymentId: `offer_${run}` });
     const paid = await db.event.findUniqueOrThrow({ where: { id: event.id } });

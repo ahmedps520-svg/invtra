@@ -11,6 +11,7 @@ import { planAllowsTheme, TEST_SEND_LIMIT } from "@/lib/plans";
 import { getTheme } from "@/lib/themes/registry";
 import { defaultCountryFor } from "@/server/guests/service";
 import { cancelBatch } from "./batch";
+import { assertWhatsAppOn, whatsappOff } from "@/server/whatsapp";
 
 export type ReadinessCheck = {
   key: "details" | "date" | "design" | "guests" | "template" | "plan" | "theme_plan" | "whatsapp";
@@ -29,7 +30,8 @@ export async function sendReadiness(event: Event) {
   const premiumTheme = themeRow?.isPremium ?? getTheme(event.themeKey).premium;
   const e = env();
   const whatsappReady =
-    e.WHATSAPP_PROVIDER === "mock" || Boolean(e.WHATSAPP_ACCESS_TOKEN && e.WHATSAPP_PHONE_NUMBER_ID && e.WHATSAPP_APP_SECRET);
+    e.WHATSAPP_PROVIDER === "mock" ||
+    (e.WHATSAPP_PROVIDER === "cloud" && Boolean(e.WHATSAPP_ACCESS_TOKEN && e.WHATSAPP_PHONE_NUMBER_ID && e.WHATSAPP_APP_SECRET));
   const checks: ReadinessCheck[] = [
     // Custom events (prepared by INVTRA) may leave the hosts, venue or address out on purpose.
     { key: "details", ok: Boolean(event.title && (event.custom || (event.hostNames && event.venueName && event.address))) },
@@ -45,7 +47,9 @@ export async function sendReadiness(event: Event) {
     { key: "theme_plan", ok: planAllowsTheme(event.plan, premiumTheme) || !event.plan },
     { key: "whatsapp", ok: whatsappReady },
   ];
-  return { ready: checks.every((c) => c.ok), checks, unsent, guestCount, template };
+  // Hosts send from their own WhatsApp while INVTRA's isn't connected: no template or number needed.
+  const applicable = whatsappOff() ? checks.filter((c) => c.key !== "template" && c.key !== "whatsapp") : checks;
+  return { ready: applicable.every((c) => c.ok), checks: applicable, unsent, guestCount, template };
 }
 
 /**
@@ -53,6 +57,7 @@ export async function sendReadiness(event: Event) {
  * Messages are sent by the background worker — never from the browser.
  */
 export async function startInitialBatch(userId: string, event: Event) {
+  assertWhatsAppOn();
   const readiness = await sendReadiness(event);
   if (!readiness.ready) throw badRequest("not_ready", "This event isn't ready to send yet.", Object.fromEntries(readiness.checks.filter((c) => !c.ok).map((c) => [c.key, "not_ready"])));
   const running = await db.sendBatch.findFirst({ where: { eventId: event.id, status: { in: ["QUEUED", "RUNNING"] }, kind: { in: ["INITIAL", "RESEND"] } } });
@@ -92,6 +97,7 @@ async function createRequestBatch(userId: string, event: Event, guests: Pick<Gue
  *  - declined → skipped (they've answered; the host can change it manually)
  */
 export async function resendToGuests(userId: string, event: Event, guestIds: string[]) {
+  assertWhatsAppOn();
   if (!event.plan) throw badRequest("no_plan", "Choose a plan before sending invitations.");
   const guests = await db.guest.findMany({ where: { eventId: event.id, id: { in: guestIds }, isTest: false } });
   const cooldown = Date.now() - 10 * 60_000;
@@ -107,6 +113,7 @@ export async function resendToGuests(userId: string, event: Event, guestIds: str
 
 /** After the host edits the event: send the updated invitation to everyone who accepted. */
 export async function sendUpdateToAccepted(userId: string, event: Event) {
+  assertWhatsAppOn();
   const guests = await db.guest.findMany({
     where: {
       eventId: event.id,
@@ -123,7 +130,8 @@ export async function sendUpdateToAccepted(userId: string, event: Event) {
 }
 
 export async function staleAcceptedCount(event: Pick<Event, "id" | "contentVersion" | "firstSentAt">) {
-  if (!event.firstSentAt) return 0;
+  // Without INVTRA's WhatsApp there's nothing to re-send (guests' pages are always up to date).
+  if (!event.firstSentAt || whatsappOff()) return 0;
   return db.guest.count({
     where: { eventId: event.id, isTest: false, rsvpStatus: "ACCEPTED", invitationSentAt: { not: null }, invitationSentVersion: { lt: event.contentVersion } },
   });
@@ -134,6 +142,7 @@ export async function staleAcceptedCount(event: Pick<Event, "id" | "contentVersi
  * number, using a hidden test guest. Limited per event before a plan is purchased.
  */
 export async function sendTest(userId: string, event: Event, rawPhone: string, name: string) {
+  assertWhatsAppOn();
   const phone = normalizePhone(rawPhone, defaultCountryFor(event.timezone));
   if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number.", { phone: "Enter a valid number" });
   if (!event.plan && event.testSendsUsed >= TEST_SEND_LIMIT) {

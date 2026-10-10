@@ -8,6 +8,7 @@ import { eventForGuest } from "@/server/events/sections";
 import { mapsLinks } from "@/server/invitations/view-model";
 import { guestLocale, pickTemplate, templateValues } from "@/server/whatsapp/compose";
 import { sectionLine, whatsappLink } from "@/server/sending/manual";
+import { assertWhatsAppOn, whatsappOff } from "@/server/whatsapp";
 
 /**
  * Reminders.
@@ -55,6 +56,8 @@ export function reminderDue(event: Event, guest: Pick<Guest, "section" | "rsvpAt
  * events starting soon. Each guest is reminded once (per start time).
  */
 export async function queueDueReminders(now = new Date()) {
+  // Without INVTRA's WhatsApp the host sends reminders themselves (the follow-up list).
+  if (whatsappOff()) return 0;
   const events = await db.event.findMany({
     where: {
       autoReminder: true,
@@ -108,6 +111,7 @@ function repliesOpen(event: Event, now = new Date()) {
 
 /** The host asks INVTRA to remind everyone who hasn't replied yet. */
 export async function startNudges(event: Event) {
+  assertWhatsAppOn();
   if (!repliesOpen(event)) throw badRequest("replies_closed", "Replies for this event are closed.");
   const guests = await nudgeable(event);
   if (!guests.length) throw badRequest("nothing_to_send", "There is no one to remind right now.");
@@ -144,10 +148,10 @@ export async function reminderOverview(event: Event) {
     accepted: accepted.length,
     reminded: accepted.filter((g) => g.reminderSentAt).length,
     /** Accepted guests INVTRA will remind (the rest are the host's to remind). */
-    autoCount: accepted.filter((g) => viaInvtra(g)).length,
+    autoCount: whatsappOff() ? 0 : accepted.filter((g) => viaInvtra(g)).length,
     waiting: pending.filter(invited).length,
     nudgeTemplate: Boolean(nudgeTemplate),
-    canNudge: repliesOpen(event) ? canNudge.length : 0,
+    canNudge: repliesOpen(event) && !whatsappOff() ? canNudge.length : 0,
     repliesOpen: repliesOpen(event),
     past: start < Date.now(),
   };

@@ -1,13 +1,30 @@
 import { env } from "@/server/env";
 import { CloudWhatsAppProvider } from "./cloud";
 import { MockWhatsAppProvider } from "./mock";
+import { OffWhatsAppProvider } from "./off";
+import { badRequest } from "@/server/http";
 import type { WhatsAppProvider } from "./types";
 
 let provider: WhatsAppProvider | null = null;
 
 export function whatsapp(): WhatsAppProvider {
-  if (!provider) provider = env().WHATSAPP_PROVIDER === "cloud" ? new CloudWhatsAppProvider() : new MockWhatsAppProvider();
+  if (!provider) {
+    const kind = env().WHATSAPP_PROVIDER;
+    provider = kind === "cloud" ? new CloudWhatsAppProvider() : kind === "off" ? new OffWhatsAppProvider() : new MockWhatsAppProvider();
+  }
   return provider;
+}
+
+/** INVTRA's own WhatsApp isn't connected: hosts send from their own WhatsApp, INVTRA sends nothing. */
+export function whatsappOff() {
+  return env().WHATSAPP_PROVIDER === "off";
+}
+
+/** Refuse anything that would make INVTRA send a WhatsApp message while it isn't connected. */
+export function assertWhatsAppOn() {
+  if (whatsappOff()) {
+    throw badRequest("whatsapp_off", "INVTRA's WhatsApp isn't connected yet — send from your own WhatsApp instead.");
+  }
 }
 
 export function isMockWhatsApp() {

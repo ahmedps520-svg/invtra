@@ -83,6 +83,8 @@ export type ReviewData = {
   premiumTheme: boolean;
   test: { phone: string; country: string; used: number; limit: number };
   mock: boolean;
+  /** INVTRA's WhatsApp isn't connected: no test message from INVTRA. */
+  whatsappOff?: boolean;
   checkout: "success" | "cancelled" | null;
 };
 
@@ -232,248 +234,253 @@ export function ReviewStep(props: ReviewData) {
         </ul>
       </Card>
 
-      {/* The invitation message */}
-      <section aria-labelledby="msg-h">
-        <SectionTitle
-          id="msg-h"
-          title={d.message.title}
-          description={d.message.description}
-        />
-        <Card className="overflow-hidden">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="space-y-7 px-6 py-7 sm:px-8">
-              <p className="flex gap-3 rounded-2xl bg-sand/70 px-4 py-3.5 text-[13px] leading-relaxed text-ink-soft">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-bronze-600" />
-                {d.message.approvedNote}
-              </p>
-              {templates.length ? (
-                <>
-                  <fieldset>
-                    <legend className="mb-2.5 text-[13px] font-medium text-ink-soft">
-                      {d.message.style}
-                    </legend>
-                    <div className="grid gap-2.5" role="radiogroup">
-                      {templates.map((t) => {
-                        const active = t.id === templateId;
-                        return (
-                          <button
-                            key={t.id}
-                            type="button"
-                            role="radio"
-                            aria-checked={active}
-                            onClick={() => setTemplateId(t.id)}
-                            className={cn(
-                              "flex items-start gap-3 rounded-xl border px-4 py-3 text-start transition-all duration-300 ease-luxe",
-                              active
-                                ? "border-bronze-400 bg-bronze-50 shadow-soft"
-                                : "border-line bg-paper hover:border-line-strong",
-                            )}
-                          >
-                            <span
+      {/* INVTRA's WhatsApp messages (not shown while hosts send from their own WhatsApp) */}
+      {props.whatsappOff ? null : (
+        <>
+        {/* The invitation message */}
+        <section aria-labelledby="msg-h">
+          <SectionTitle
+            id="msg-h"
+            title={d.message.title}
+            description={d.message.description}
+          />
+          <Card className="overflow-hidden">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="space-y-7 px-6 py-7 sm:px-8">
+                <p className="flex gap-3 rounded-2xl bg-sand/70 px-4 py-3.5 text-[13px] leading-relaxed text-ink-soft">
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-bronze-600" />
+                  {d.message.approvedNote}
+                </p>
+                {templates.length ? (
+                  <>
+                    <fieldset>
+                      <legend className="mb-2.5 text-[13px] font-medium text-ink-soft">
+                        {d.message.style}
+                      </legend>
+                      <div className="grid gap-2.5" role="radiogroup">
+                        {templates.map((t) => {
+                          const active = t.id === templateId;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              role="radio"
+                              aria-checked={active}
+                              onClick={() => setTemplateId(t.id)}
                               className={cn(
-                                "mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border",
+                                "flex items-start gap-3 rounded-xl border px-4 py-3 text-start transition-all duration-300 ease-luxe",
                                 active
-                                  ? "border-bronze-600 bg-bronze-600"
-                                  : "border-line-strong",
+                                  ? "border-bronze-400 bg-bronze-50 shadow-soft"
+                                  : "border-line bg-paper hover:border-line-strong",
                               )}
                             >
-                              {active ? (
-                                <span className="size-1.5 rounded-full bg-white" />
-                              ) : null}
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block font-medium text-ink">
-                                {locale === "ar" && t.nameAr
-                                  ? t.nameAr
-                                  : t.name}
+                              <span
+                                className={cn(
+                                  "mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border",
+                                  active
+                                    ? "border-bronze-600 bg-bronze-600"
+                                    : "border-line-strong",
+                                )}
+                              >
+                                {active ? (
+                                  <span className="size-1.5 rounded-full bg-white" />
+                                ) : null}
                               </span>
-                              {t.description && locale === "en" ? (
-                                <span className="mt-0.5 block text-[13px] text-ink-faint">
-                                  {t.description}
+                              <span className="min-w-0">
+                                <span className="block font-medium text-ink">
+                                  {locale === "ar" && t.nameAr
+                                    ? t.nameAr
+                                    : t.name}
                                 </span>
-                              ) : null}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </fieldset>
-                  {editable.length ? (
-                    <fieldset>
-                      <legend className="mb-1 text-[13px] font-medium text-ink-soft">
-                        {d.message.wording}
-                      </legend>
-                      <p className="mb-3.5 text-[13px] text-ink-faint">
-                        {d.message.wordingHint}
-                      </p>
-                      <div className="grid gap-4">
-                        {editable.map((v) => {
-                          const ar = v.endsWith("_ar");
-                          return (
-                            <Field
-                              key={v}
-                              id={`var-${v}`}
-                              label={
-                                (d.message.vars as Record<string, string>)[v] ??
-                                v
-                              }
-                            >
-                              <Input
-                                id={`var-${v}`}
-                                value={overrides[v] ?? ""}
-                                placeholder={props.defaults[v]}
-                                dir={ar ? "rtl" : "auto"}
-                                lang={ar ? "ar" : undefined}
-                                maxLength={120}
-                                onChange={(e) =>
-                                  setOverrides((o) => ({
-                                    ...o,
-                                    [v]: e.target.value,
-                                  }))
-                                }
-                              />
-                            </Field>
+                                {t.description && locale === "en" ? (
+                                  <span className="mt-0.5 block text-[13px] text-ink-faint">
+                                    {t.description}
+                                  </span>
+                                ) : null}
+                              </span>
+                            </button>
                           );
                         })}
                       </div>
                     </fieldset>
-                  ) : null}
-                  <div className="flex flex-wrap items-center gap-4">
-                    <Button
-                      variant="primary"
-                      onClick={saveMessage}
-                      loading={saving}
-                      disabled={!dirty}
-                    >
-                      {d.message.save}
-                    </Button>
-                    <AnimatePresence>
-                      {dirty ? (
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center gap-2 text-[13px] text-ink-faint"
-                        >
-                          <span className="size-1.5 rounded-full bg-ochre" />
-                          {d.message.unsaved}
-                        </motion.span>
-                      ) : null}
-                    </AnimatePresence>
-                  </div>
-                </>
-              ) : (
-                <p className="rounded-2xl border border-ochre/25 bg-ochre-soft px-4 py-3.5 text-sm text-ink-soft">
-                  {d.message.none}
-                </p>
-              )}
-            </div>
-            <div className="border-t border-line bg-ivory/60 px-5 py-7 sm:px-8 lg:border-s lg:border-t-0">
-              <p className="mb-3 text-center text-[11px] uppercase tracking-[0.16em] text-ink-faint">
-                {fmt(d.message.previewFor, { name: props.guestName })}
-              </p>
-              <ChatFrame
-                title={dict.dashboard.whatsapp.business}
-                subtitle={dict.dashboard.whatsapp.verified}
-                className="mx-auto max-w-sm"
-              >
-                <ChatNote>{d.message.today}</ChatNote>
-                {template ? (
-                  <Bubble
-                    header={
-                      template.headerType === "IMAGE" ? (
-                        <CardPreview
-                          {...preview}
-                          guest={null}
-                          qrPlaceholder={false}
-                          className="rounded-lg"
-                          title={dict.dashboard.whatsapp.image}
-                        />
-                      ) : undefined
-                    }
-                    body={body}
-                    footer={template.footer}
-                    buttons={template.buttons.map((b) => ({
-                      text: b.text,
-                      url: b.type === "URL" ? "#" : undefined,
-                    }))}
-                  />
-                ) : (
-                  <Bubble body={d.message.none} />
-                )}
-              </ChatFrame>
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      {/* After they accept */}
-      <section aria-labelledby="after-h">
-        <SectionTitle
-          id="after-h"
-          title={d.after.title}
-          description={d.after.description}
-        />
-        <Card className="overflow-hidden">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="paper-grain flex flex-col items-center justify-center gap-5 bg-sand px-6 py-9">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-ink-faint">
-                {d.after.personal}
-              </p>
-              <CardPreview
-                {...preview}
-                className="w-full max-w-[300px] rounded-[3px] shadow-lift ring-1 ring-ink/5"
-                title={d.after.personal}
-              />
-              <a
-                href={`/api/events/${eventId}/card?sample=1&download=1`}
-                className={buttonClasses("outline", "sm")}
-                download
-              >
-                <Download className="size-3.5" />
-                {d.after.download}
-              </a>
-            </div>
-            <div className="bg-ivory/60 px-5 py-7 sm:px-8">
-              <ChatFrame
-                title={dict.dashboard.whatsapp.business}
-                subtitle={dict.dashboard.whatsapp.verified}
-                className="mx-auto max-w-sm"
-              >
-                {acceptText ? (
-                  <>
-                    <ChatNote>
-                      {fmt(d.after.tapped, { button: acceptText })}
-                    </ChatNote>
-                    <Bubble side="out" body={acceptText} />
+                    {editable.length ? (
+                      <fieldset>
+                        <legend className="mb-1 text-[13px] font-medium text-ink-soft">
+                          {d.message.wording}
+                        </legend>
+                        <p className="mb-3.5 text-[13px] text-ink-faint">
+                          {d.message.wordingHint}
+                        </p>
+                        <div className="grid gap-4">
+                          {editable.map((v) => {
+                            const ar = v.endsWith("_ar");
+                            return (
+                              <Field
+                                key={v}
+                                id={`var-${v}`}
+                                label={
+                                  (d.message.vars as Record<string, string>)[v] ??
+                                  v
+                                }
+                              >
+                                <Input
+                                  id={`var-${v}`}
+                                  value={overrides[v] ?? ""}
+                                  placeholder={props.defaults[v]}
+                                  dir={ar ? "rtl" : "auto"}
+                                  lang={ar ? "ar" : undefined}
+                                  maxLength={120}
+                                  onChange={(e) =>
+                                    setOverrides((o) => ({
+                                      ...o,
+                                      [v]: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </Field>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-4">
+                      <Button
+                        variant="primary"
+                        onClick={saveMessage}
+                        loading={saving}
+                        disabled={!dirty}
+                      >
+                        {d.message.save}
+                      </Button>
+                      <AnimatePresence>
+                        {dirty ? (
+                          <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-2 text-[13px] text-ink-faint"
+                          >
+                            <span className="size-1.5 rounded-full bg-ochre" />
+                            {d.message.unsaved}
+                          </motion.span>
+                        ) : null}
+                      </AnimatePresence>
+                    </div>
                   </>
-                ) : null}
-                <Bubble
-                  header={
-                    <CardPreview
-                      {...preview}
-                      className="rounded-lg"
-                      title={d.after.personal}
-                    />
-                  }
-                  body={delivery.body}
-                  footer={delivery.footer}
-                  buttons={[{ text: delivery.button, url: "#" }]}
-                />
-              </ChatFrame>
-              <div className="mx-auto mt-5 max-w-sm rounded-2xl border border-line bg-paper px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-ink-faint">
-                  {d.after.ifDecline}
+                ) : (
+                  <p className="rounded-2xl border border-ochre/25 bg-ochre-soft px-4 py-3.5 text-sm text-ink-soft">
+                    {d.message.none}
+                  </p>
+                )}
+              </div>
+              <div className="border-t border-line bg-ivory/60 px-5 py-7 sm:px-8 lg:border-s lg:border-t-0">
+                <p className="mb-3 text-center text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+                  {fmt(d.message.previewFor, { name: props.guestName })}
                 </p>
-                <MessageText
-                  text={props.declineText}
-                  className="mt-1 text-sm text-ink-soft"
-                />
+                <ChatFrame
+                  title={dict.dashboard.whatsapp.business}
+                  subtitle={dict.dashboard.whatsapp.verified}
+                  className="mx-auto max-w-sm"
+                >
+                  <ChatNote>{d.message.today}</ChatNote>
+                  {template ? (
+                    <Bubble
+                      header={
+                        template.headerType === "IMAGE" ? (
+                          <CardPreview
+                            {...preview}
+                            guest={null}
+                            qrPlaceholder={false}
+                            className="rounded-lg"
+                            title={dict.dashboard.whatsapp.image}
+                          />
+                        ) : undefined
+                      }
+                      body={body}
+                      footer={template.footer}
+                      buttons={template.buttons.map((b) => ({
+                        text: b.text,
+                        url: b.type === "URL" ? "#" : undefined,
+                      }))}
+                    />
+                  ) : (
+                    <Bubble body={d.message.none} />
+                  )}
+                </ChatFrame>
               </div>
             </div>
-          </div>
-        </Card>
-      </section>
+          </Card>
+        </section>
+
+        {/* After they accept */}
+        <section aria-labelledby="after-h">
+          <SectionTitle
+            id="after-h"
+            title={d.after.title}
+            description={d.after.description}
+          />
+          <Card className="overflow-hidden">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="paper-grain flex flex-col items-center justify-center gap-5 bg-sand px-6 py-9">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+                  {d.after.personal}
+                </p>
+                <CardPreview
+                  {...preview}
+                  className="w-full max-w-[300px] rounded-[3px] shadow-lift ring-1 ring-ink/5"
+                  title={d.after.personal}
+                />
+                <a
+                  href={`/api/events/${eventId}/card?sample=1&download=1`}
+                  className={buttonClasses("outline", "sm")}
+                  download
+                >
+                  <Download className="size-3.5" />
+                  {d.after.download}
+                </a>
+              </div>
+              <div className="bg-ivory/60 px-5 py-7 sm:px-8">
+                <ChatFrame
+                  title={dict.dashboard.whatsapp.business}
+                  subtitle={dict.dashboard.whatsapp.verified}
+                  className="mx-auto max-w-sm"
+                >
+                  {acceptText ? (
+                    <>
+                      <ChatNote>
+                        {fmt(d.after.tapped, { button: acceptText })}
+                      </ChatNote>
+                      <Bubble side="out" body={acceptText} />
+                    </>
+                  ) : null}
+                  <Bubble
+                    header={
+                      <CardPreview
+                        {...preview}
+                        className="rounded-lg"
+                        title={d.after.personal}
+                      />
+                    }
+                    body={delivery.body}
+                    footer={delivery.footer}
+                    buttons={[{ text: delivery.button, url: "#" }]}
+                  />
+                </ChatFrame>
+                <div className="mx-auto mt-5 max-w-sm rounded-2xl border border-line bg-paper px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-ink-faint">
+                    {d.after.ifDecline}
+                  </p>
+                  <MessageText
+                    text={props.declineText}
+                    className="mt-1 text-sm text-ink-soft"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+        </>
+      )}
 
       {/* Plan */}
       <section id="plan" aria-labelledby="plan-h" className="scroll-mt-24">
@@ -487,18 +494,20 @@ export function ReviewStep(props: ReviewData) {
         />
       </section>
 
-      {/* Test */}
-      <section aria-label={d.test.title}>
-        <TestSend
-          eventId={eventId}
-          defaultPhone={props.test.phone}
-          defaultCountry={props.test.country}
-          hasPlan={Boolean(props.plan)}
-          used={props.test.used}
-          limit={props.test.limit}
-          mock={props.mock}
-        />
-      </section>
+      {/* Test (only when INVTRA sends the messages) */}
+      {props.whatsappOff ? null : (
+        <section aria-label={d.test.title}>
+          <TestSend
+            eventId={eventId}
+            defaultPhone={props.test.phone}
+            defaultCountry={props.test.country}
+            hasPlan={Boolean(props.plan)}
+            used={props.test.used}
+            limit={props.test.limit}
+            mock={props.mock}
+          />
+        </section>
+      )}
 
       <div className="sticky bottom-0 z-30 -mx-4 border-t border-line bg-ivory/90 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">

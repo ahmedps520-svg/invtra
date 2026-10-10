@@ -31,6 +31,8 @@ import {
 } from "@/components/admin/ui";
 import { dt, guestLimit, money, num, plural } from "@/components/admin/format";
 import { cn, truncate } from "@/lib/utils";
+import { BankForm } from "@/components/admin/bank-form";
+import { bankDetails } from "@/server/payments/bank";
 
 export const metadata: Metadata = { title: "Payments & orders" };
 
@@ -76,6 +78,12 @@ export default async function PaymentsPage({
         title="Payments & orders"
         description={`Checkout provider: ${PROVIDER_LABEL[env().PAYMENT_PROVIDER]} · prices in ${env().PAYMENT_CURRENCY}. Manual payments are confirmed here.`}
       />
+
+      {env().PAYMENT_PROVIDER === "manual" ? (
+        <div className="mb-8">
+          <BankForm initial={await bankDetails()} />
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile

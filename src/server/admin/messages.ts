@@ -6,6 +6,7 @@ import { enqueue } from "@/server/queue/queue";
 import { updateGuest } from "@/server/guests/status";
 import { eventIsActive } from "@/server/rsvp";
 import { dateParam, paging, phoneDigits, type SearchParams, oneOf, str } from "./params";
+import { assertWhatsAppOn } from "@/server/whatsapp";
 
 export const MESSAGE_STATUSES: MessageStatus[] = ["QUEUED", "SENT", "DELIVERED", "READ", "FAILED", "RECEIVED"];
 export const MESSAGE_PURPOSES: MessagePurpose[] = ["INVITATION_REQUEST", "INVITATION_DELIVERY", "DECLINE_ACK", "UPDATE", "REPLY", "OTHER"];
@@ -81,6 +82,7 @@ export function canRetry(m: { status: MessageStatus; purpose: MessagePurpose; di
  * `invitation.request` job is enqueued (the worker re-checks everything before sending).
  */
 export async function retryInvitationRequest(actorId: string, messageId: string) {
+  assertWhatsAppOn();
   const msg = await db.whatsAppMessage.findUnique({ where: { id: messageId }, include: { guest: { include: { event: true } } } });
   if (!msg) throw notFound("Message");
   if (msg.status !== "FAILED" || msg.purpose !== "INVITATION_REQUEST" || msg.direction !== "OUTBOUND") {

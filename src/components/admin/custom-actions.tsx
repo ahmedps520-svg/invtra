@@ -54,8 +54,11 @@ export function CustomPackageActions({
   payUrl,
   pending,
   hasPhone,
+  sendHref = null,
 }: {
   id: string;
+  /** Send from the event's Send page instead (staff's own WhatsApp while INVTRA's isn't connected). */
+  sendHref?: string | null;
   /** The custom event (null if it was deleted). */
   eventId: string | null;
   payUrl: string;
@@ -116,14 +119,21 @@ export function CustomPackageActions({
       </a>
       {pending ? (
         <>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<Send className="size-3.5" />}
-            onClick={() => setResend(true)}
-          >
-            Resend
-          </Button>
+          {sendHref ? (
+            <Link href={sendHref} className={buttonClasses("outline", "sm")}>
+              <Send className="size-3.5" />
+              Send
+            </Link>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Send className="size-3.5" />}
+              onClick={() => setResend(true)}
+            >
+              Resend
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

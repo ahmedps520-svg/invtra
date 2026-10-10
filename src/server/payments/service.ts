@@ -9,8 +9,8 @@ import { activeOffer, findOffer, isOfferActive, offerInfo, offerName } from "@/l
 import { nextReceiptNumber } from "./receipts";
 import { enqueue } from "@/server/queue/queue";
 import { paymentProvider, providerFor } from "./index";
-import { manualInstructions } from "./manual";
 import type { CheckoutUrls, PaidDetails } from "./types";
+import { whatsappOff } from "@/server/whatsapp";
 
 /**
  * Orders & payments.
@@ -232,7 +232,7 @@ export async function applyPaidOrder(orderId: string, details: PaidDetails): Pro
     });
     // The receipt goes out by email (and WhatsApp for payment-link orders) once this commits.
     await enqueue("payment.receipt", { orderId, channel: "email" }, { tx, eventId: order.eventId ?? undefined });
-    if (order.payToken) {
+    if (order.payToken && !whatsappOff()) {
       const phone = await tx.user.findUnique({ where: { id: order.userId }, select: { phone: true } });
       if (phone?.phone) await enqueue("payment.receipt", { orderId, channel: "whatsapp" }, { tx, eventId: order.eventId ?? undefined });
     }
@@ -434,7 +434,7 @@ export type CustomerOrder = {
   promo: string | null;
 };
 
-export function serializeCustomerOrder(order: Order & { event: { title: string } | null }): CustomerOrder {
+export function serializeCustomerOrder(order: Order & { event: { title: string } | null }, instructions: string): CustomerOrder {
   return {
     id: order.id,
     eventId: order.eventId,
@@ -448,7 +448,7 @@ export function serializeCustomerOrder(order: Order & { event: { title: string }
     createdAt: order.createdAt.toISOString(),
     paidAt: order.paidAt?.toISOString() ?? null,
     promo: order.promo,
-    ...(order.provider === "manual" && order.status === "PENDING" ? { instructions: manualInstructions() } : {}),
+    ...(order.provider === "manual" && order.status === "PENDING" ? { instructions } : {}),
     ...(order.payToken && order.status === "PENDING" ? { payUrl: `/pay/${order.payToken}` } : {}),
     ...(order.status === "PAID" || order.status === "REFUNDED"
       ? { receiptUrl: order.payToken ? `/pay/${order.payToken}` : `/receipt/${order.id}`, receiptNumber: order.receiptNumber }

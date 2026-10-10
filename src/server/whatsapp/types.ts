@@ -40,7 +40,7 @@ export interface SendResult {
 }
 
 export interface WhatsAppProvider {
-  readonly name: "cloud" | "mock";
+  readonly name: "cloud" | "mock" | "off";
   sendTemplate(p: SendTemplateParams): Promise<SendResult>;
   sendCtaUrl(p: SendCtaParams): Promise<SendResult>;
   sendText(p: SendTextParams): Promise<SendResult>;

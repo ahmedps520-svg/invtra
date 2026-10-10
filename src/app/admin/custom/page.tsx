@@ -343,6 +343,11 @@ export default async function CustomEventsPage({
                 <CustomPackageActions
                   id={o.id}
                   eventId={o.event?.id ?? null}
+                  sendHref={
+                    env().WHATSAPP_PROVIDER === "off" && o.event
+                      ? `/admin/custom/${o.event.id}/send`
+                      : null
+                  }
                   payUrl={o.payUrl}
                   pending={o.status === "PENDING"}
                   hasPhone={Boolean(o.user.phone)}

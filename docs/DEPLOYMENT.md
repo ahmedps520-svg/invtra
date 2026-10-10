@@ -33,18 +33,29 @@ for the persistent disk) and Postgres `0.1c-256mb` — both can be resized later
 
 Every push to the deployed branch redeploys automatically (`autoDeploy: true`).
 
-**Preview mode.** The Blueprint starts with `WHATSAPP_PROVIDER=mock`,
-`PAYMENT_PROVIDER=mock` and `ALLOW_MOCK_IN_PRODUCTION=true`, so you can explore everything
-— landing page, designs, dashboard, and the full guest journey via `/dev/whatsapp` — without
-sending real WhatsApp messages or taking payments. A demo account is seeded
-(`demo@invtra.store` / `demo-password-2026`). **Before inviting real customers:**
+**No test mode on the live site.** The Blueprint starts with `WHATSAPP_PROVIDER=off` and
+`PAYMENT_PROVIDER=manual`, and a production server never uses the simulated (`mock`) providers —
+if they're still set, they're treated as `off` / `manual` (only `LOCAL_TEST_MODE=true`, for a
+production build on your own machine, keeps the simulations). Until things are connected:
+
+- **WhatsApp off** — hosts send invitations from their own WhatsApp (a wa.me link with the
+  message typed in, per guest); INVTRA never messages anyone, and the follow-up list tells hosts
+  whom to remind. Staff send payment links from their own WhatsApp too (Custom events → Send link).
+- **Bank transfer** — payment links and the billing page show the bank details from
+  *Admin → Payments → Bank transfer details*, with a reference (`INV-…`) and a button to send the
+  transfer receipt on WhatsApp. When the money arrives, press **Mark as paid** (on the custom
+  event's Send link page, or in Admin → Payments): the plan switches on and a receipt is issued.
+- **Email** — set `EMAIL_PROVIDER=smtp` and `SMTP_URL`; until then emails are only written to
+  the logs and the email options say so.
+
+The demo account isn't created on the live site (and is switched off if it exists).
+
+To go fully automatic later:
 1. connect WhatsApp ([WHATSAPP.md](WHATSAPP.md)): set `WHATSAPP_PROVIDER=cloud` and the
    `WHATSAPP_*` credentials (replace the generated `WHATSAPP_APP_SECRET` with your Meta App
    Secret), then point Meta's webhook to `https://invtra.store/api/webhooks/whatsapp`;
-2. connect payments — see **Payments (Apple Pay, Google Pay, mada)** below — or use `manual`
-   (+ `PAYMENT_MANUAL_INSTRUCTIONS`) for bank transfers;
-3. configure email (`EMAIL_PROVIDER=smtp`, `SMTP_URL`);
-4. delete `ALLOW_MOCK_IN_PRODUCTION` and `SEED_DEMO` (and remove the demo account in /admin).
+2. connect card payments — see **Payments (Apple Pay, Google Pay, mada)** below;
+3. configure email (`EMAIL_PROVIDER=smtp`, `SMTP_URL`).
 
 ## No downtime during deploys
 
@@ -82,8 +93,8 @@ Apple Pay and Google Pay need no extra setup on the hosted page.
    IBAN). Ask Tap to enable mada, Apple Pay and Google Pay on the account.
 2. Tap dashboard → *goSell → API Credentials* → copy the **secret key** (`sk_live_…`; use
    `sk_test_…` first to try test cards).
-3. Render → invtra → Environment: `PAYMENT_PROVIDER=tap`, `TAP_SECRET_KEY=sk_…`, and remove
-   `ALLOW_MOCK_IN_PRODUCTION` once WhatsApp is connected too. Save — the service redeploys.
+3. Render → invtra → Environment: `PAYMENT_PROVIDER=tap`, `TAP_SECRET_KEY=sk_…`. Save — the
+   service redeploys.
 4. Nothing to configure for webhooks: every charge tells Tap to notify
    `https://invtra.store/api/webhooks/payments/tap`. INVTRA verifies the `hashstring`
    signature **and** re-fetches the charge from Tap before activating a plan, and also

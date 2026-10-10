@@ -100,6 +100,7 @@ export default async function ReviewPage({
       premiumTheme={themeRow?.isPremium ?? getTheme(event.themeKey).premium}
       test={{ phone: user.phone ?? "", country: countryForTimezone(event.timezone), used: event.testSendsUsed, limit: TEST_SEND_LIMIT }}
       mock={env().WHATSAPP_PROVIDER === "mock"}
+      whatsappOff={env().WHATSAPP_PROVIDER === "off"}
       checkout={checkout}
     />
   );

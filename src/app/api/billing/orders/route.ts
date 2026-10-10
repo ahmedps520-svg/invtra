@@ -1,6 +1,7 @@
 import { db } from "@/server/db";
 import { ok, requireApiUser, route } from "@/server/http";
 import { serializeCustomerOrder } from "@/server/payments/service";
+import { manualInstructions } from "@/server/payments/manual";
 
 /** The signed-in customer's own orders, newest first. */
 export const GET = route("billing.orders", async () => {
@@ -11,5 +12,6 @@ export const GET = route("billing.orders", async () => {
     take: 100,
     include: { event: { select: { title: true } } },
   });
-  return ok({ orders: orders.map(serializeCustomerOrder) });
+  const instructions = await manualInstructions(user.locale === "ar" ? "ar" : "en");
+  return ok({ orders: orders.map((o) => serializeCustomerOrder(o, instructions)) });
 });

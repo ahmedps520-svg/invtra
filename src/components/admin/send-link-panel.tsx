@@ -25,6 +25,9 @@ export function SendLinkPanel({
   whatsappReady,
   testPayments,
   lastSent,
+  ownWhatsAppUrl = null,
+  whatsappOff = false,
+  emailReady = true,
 }: {
   orderId: string;
   payUrl: string;
@@ -35,14 +38,30 @@ export function SendLinkPanel({
   testPayments: boolean;
   /** When the link was last sent (already formatted), if ever. */
   lastSent: string | null;
+  /** INVTRA's WhatsApp isn't connected: staff send the link from their own WhatsApp (wa.me). */
+  ownWhatsAppUrl?: string | null;
+  whatsappOff?: boolean;
+  /** Email can actually be delivered (SMTP configured). */
+  emailReady?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
-  const canWhatsApp = hasPhone && whatsappReady;
+  const canWhatsApp = hasPhone && whatsappReady && !whatsappOff;
   const [channels, setChannels] = useState({
     whatsapp: canWhatsApp,
-    email: true,
+    email: emailReady,
   });
+
+  /** Opened the chat in the staff member's own WhatsApp: note it as sent. */
+  async function sentOwnWhatsApp() {
+    try {
+      await api(`/api/admin/custom/${orderId}`, { body: { action: "mark_sent" } });
+      setSent("Opened in your WhatsApp — press send there");
+      router.refresh();
+    } catch {
+      /* the chat still opened; the time just isn't recorded */
+    }
+  }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null);
@@ -51,7 +70,7 @@ export function SendLinkPanel({
     const body = {
       action: "send",
       whatsapp: channels.whatsapp && canWhatsApp,
-      email: channels.email,
+      email: channels.email && emailReady,
     };
     if (!body.whatsapp && !body.email) {
       setError("Choose WhatsApp, email or both — or just copy the link above.");
@@ -141,6 +160,31 @@ export function SendLinkPanel({
             Send it to the host by
           </p>
           <div className="space-y-3">
+            {whatsappOff ? (
+              <div>
+                {ownWhatsAppUrl ? (
+                  <a
+                    href={ownWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={sentOwnWhatsApp}
+                    className="inline-flex h-11 items-center gap-2 rounded-full bg-[#25D366] px-5 text-[14px] font-medium text-white shadow-soft transition hover:brightness-95"
+                  >
+                    <MessageCircle className="size-4" />
+                    Send from my WhatsApp
+                  </a>
+                ) : (
+                  <p className="text-[13px] text-ink-faint">
+                    Add the host&apos;s WhatsApp number in Host &amp; payment to
+                    send it from your WhatsApp.
+                  </p>
+                )}
+                <p className="mt-2 text-[12.5px] text-ink-faint">
+                  Opens a chat with the host with the message and link typed in
+                  — you press send.
+                </p>
+              </div>
+            ) : (
             <div>
               <Checkbox
                 checked={channels.whatsapp && canWhatsApp}
@@ -174,15 +218,24 @@ export function SendLinkPanel({
                 </p>
               ) : null}
             </div>
-            <Checkbox
-              checked={channels.email}
-              onChange={(v) => setChannels((c) => ({ ...c, email: v }))}
-              label={
-                <span className="inline-flex items-center gap-1.5 text-ink">
-                  <Mail className="size-4" /> Email
-                </span>
-              }
-            />
+            )}
+            <div>
+              <Checkbox
+                checked={channels.email && emailReady}
+                disabled={!emailReady}
+                onChange={(v) => setChannels((c) => ({ ...c, email: v }))}
+                label={
+                  <span className={cn("inline-flex items-center gap-1.5", emailReady ? "text-ink" : "text-ink-faint")}>
+                    <Mail className="size-4" /> Email
+                  </span>
+                }
+              />
+              {!emailReady ? (
+                <p className="ms-[26px] mt-1 text-[12.5px] text-ink-faint">
+                  Email isn&apos;t connected yet (SMTP_URL in Render).
+                </p>
+              ) : null}
+            </div>
           </div>
           {error ? (
             <p
@@ -196,14 +249,16 @@ export function SendLinkPanel({
             <p className="text-[12.5px] text-ink-faint">
               {lastSent ? `Last sent ${lastSent}.` : "Not sent yet."}
             </p>
-            <Button
-              variant="accent"
-              onClick={send}
-              loading={busy}
-              icon={<Send className="size-4" />}
-            >
-              {lastSent ? "Send again" : "Send payment link"}
-            </Button>
+            {canWhatsApp || emailReady ? (
+              <Button
+                variant="accent"
+                onClick={send}
+                loading={busy}
+                icon={<Send className="size-4" />}
+              >
+                {whatsappOff ? "Send by email" : lastSent ? "Send again" : "Send payment link"}
+              </Button>
+            ) : null}
           </div>
         </fieldset>
       )}

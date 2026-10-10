@@ -4,6 +4,7 @@ import path from "node:path";
 import type { MessageTemplate, TemplateStatus } from "@prisma/client";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
+import { badRequest } from "@/server/http";
 import { isTemplateButtons, type TemplateButton, type TemplateVariable } from "@/lib/whatsapp/templates";
 
 /**
@@ -179,6 +180,9 @@ export function mapMetaStatus(status: string | undefined | null): TemplateStatus
 export type SubmitResult = { template: MessageTemplate; simulated: boolean; edited: boolean };
 
 export async function submitTemplateToMeta(template: MessageTemplate): Promise<SubmitResult> {
+  if (env().WHATSAPP_PROVIDER === "off") {
+    throw badRequest("whatsapp_off", "Connect INVTRA's WhatsApp number first (WHATSAPP_PROVIDER=cloud), then submit templates to Meta.");
+  }
   if (env().WHATSAPP_PROVIDER === "mock") {
     const updated = await db.messageTemplate.update({
       where: { id: template.id },
@@ -252,6 +256,9 @@ export type SyncResult = {
 };
 
 export async function syncTemplatesFromMeta(): Promise<SyncResult> {
+  if (env().WHATSAPP_PROVIDER === "off") {
+    throw badRequest("whatsapp_off", "Connect INVTRA's WhatsApp number first (WHATSAPP_PROVIDER=cloud), then sync templates.");
+  }
   if (env().WHATSAPP_PROVIDER === "mock") {
     return { simulated: true, remote: 0, matched: 0, changed: [], remoteOnly: [], missingAtMeta: [] };
   }

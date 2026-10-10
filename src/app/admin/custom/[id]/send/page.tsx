@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Palette, Receipt, RotateCcw, UserPen } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Palette,
+  Receipt,
+  RotateCcw,
+  UserPen,
+} from "lucide-react";
 import { requireAdmin } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { customStepLinks, customStepPage } from "@/server/custom/pages";
 import { isTestPaid } from "@/server/payments/service";
+import { orderReference } from "@/server/payments/bank";
+import { paymentRequestWhatsAppUrl } from "@/server/custom/service";
 import { AdminAction } from "@/components/admin/actions";
 import { cardPreviewProps } from "@/server/events/preview";
 import { guestsLabel } from "@/server/payments/receipts";
@@ -153,12 +162,59 @@ export default async function CustomSendPage({
               hasPhone={Boolean(pkg.user.phone)}
               whatsappReady={approved > 0}
               testPayments={env().PAYMENT_PROVIDER === "mock"}
+              whatsappOff={env().WHATSAPP_PROVIDER === "off"}
+              ownWhatsAppUrl={
+                env().WHATSAPP_PROVIDER === "off"
+                  ? paymentRequestWhatsAppUrl({ ...pkg, event })
+                  : null
+              }
+              emailReady={
+                env().EMAIL_PROVIDER === "smtp" ||
+                env().NODE_ENV !== "production"
+              }
               lastSent={
                 pkg.requestSentAt
                   ? `${rel(pkg.requestSentAt)} (${dt(pkg.requestSentAt)} UTC)`
                   : null
               }
             />
+          ) : null}
+
+          {pkg.status === "PENDING" ? (
+            env().PAYMENT_PROVIDER === "manual" ? (
+              <div className="rounded-2xl border border-line bg-paper px-5 py-5 shadow-soft sm:px-6">
+                <p className="font-medium text-ink">Paid by bank transfer</p>
+                <p className="mt-1 text-[13.5px] leading-relaxed text-ink-soft">
+                  The host sees your bank details on the payment link and sends
+                  the transfer receipt on WhatsApp with the reference{" "}
+                  <span className="font-medium text-ink" dir="ltr">
+                    {orderReference(pkg.id)}
+                  </span>
+                  . Once the money is in your account, mark it paid: the plan
+                  switches on and the host gets a numbered receipt.
+                </p>
+                <AdminAction
+                  url={`/api/admin/orders/${pkg.id}`}
+                  body={{ action: "mark_paid" }}
+                  label="Mark as paid"
+                  variant="primary"
+                  className="mt-4"
+                  icon={<CheckCircle2 className="size-3.5" />}
+                  successMessage="Marked paid — the plan is active"
+                  confirm={{
+                    title: "Mark this package paid?",
+                    description: `Confirms ${money(pkg.amount, pkg.currency)} arrived in your account and activates the package.`,
+                    confirmLabel: "Mark as paid",
+                    reason: {
+                      label: "Transfer reference",
+                      placeholder:
+                        "e.g. bank transfer ref. or the date it arrived",
+                      required: true,
+                    },
+                  }}
+                />
+              </div>
+            ) : null
           ) : pkg.status === "PAID" ? (
             <div className="rounded-2xl border border-sage/25 bg-sage-soft px-5 py-5 text-[14px] text-ink-soft">
               <p className="font-medium text-ink">
@@ -205,7 +261,8 @@ export default async function CustomSendPage({
           ) : (
             <div className="rounded-2xl border border-line bg-sand/40 px-5 py-4 text-[14px] text-ink-soft">
               <p>
-                This package was {pkg.status === "REFUNDED" ? "refunded" : "withdrawn"} — its
+                This package was{" "}
+                {pkg.status === "REFUNDED" ? "refunded" : "withdrawn"} — its
                 payment link no longer works.
               </p>
               {pkg.status === "CANCELLED" ? (

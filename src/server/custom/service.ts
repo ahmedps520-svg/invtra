@@ -24,6 +24,7 @@ import { normalizePhone } from "@/lib/phone";
 import { formatMoney } from "@/lib/format";
 import { zonedToUtc } from "@/lib/time";
 import { oneOf, paging, str, type SearchParams } from "@/server/admin/params";
+import { assertWhatsAppOn } from "@/server/whatsapp";
 
 /**
  * Custom events, prepared by INVTRA staff (Admin → Custom events), in this order:
@@ -375,6 +376,35 @@ function eventName(order: Loaded, ar: boolean) {
   );
 }
 
+/**
+ * The payment-link message, in the host's language, for staff to send from their own WhatsApp
+ * (a wa.me link with the text typed in) while INVTRA's WhatsApp isn't connected.
+ */
+export function paymentRequestWhatsAppUrl(order: {
+  amount: number;
+  currency: string;
+  payToken: string | null;
+  user: { name: string; phone: string | null; locale: string };
+  event: { title: string; titleAr: string | null } | null;
+}): string | null {
+  if (!order.user.phone || !order.payToken) return null;
+  const ar = order.user.locale === "ar";
+  const amount = formatMoney(order.amount, order.currency, ar ? "ar" : "en");
+  const event = (ar ? order.event?.titleAr || order.event?.title : order.event?.title) ?? "INVTRA";
+  const link = payUrl(order.payToken);
+  const text = ar
+    ? `مرحبًا ${order.user.name}،\n\nباقة دعوات إنفترا لمناسبة ${event} جاهزة. الإجمالي: ${amount}.\n\nللمراجعة والدفع:\n${link}`
+    : `Hello ${order.user.name},\n\nYour INVTRA invitation package for ${event} is ready. Total: ${amount}.\n\nReview and pay here:\n${link}`;
+  return `https://wa.me/${order.user.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+}
+
+/** Staff sent the link themselves (their own WhatsApp): note when. */
+export async function markPaymentRequestSent(orderId: string) {
+  const order = await loadOrder(orderId);
+  if (order.status !== "PENDING") throw conflict("not_payable", "This order is not awaiting payment.");
+  await db.order.update({ where: { id: order.id }, data: { requestSentAt: new Date() } });
+}
+
 /** (Re)send the payment link: WhatsApp via the queue, email right away. */
 export async function sendPaymentRequest(
   orderId: string,
@@ -389,6 +419,7 @@ export async function sendPaymentRequest(
   const result = { whatsapp: false, email: false };
 
   if (channels.whatsapp) {
+    assertWhatsAppOn();
     if (!order.user.phone)
       throw badRequest(
         "phone_required",

@@ -42,17 +42,14 @@ services:
         generateValue: true # replace with your Meta App Secret when connecting WhatsApp
       - key: WHATSAPP_VERIFY_TOKEN
         generateValue: true
-      # ── Preview mode: no real WhatsApp messages or payments until you connect them ──
+      # ── Until INVTRA's WhatsApp number and a card gateway (Tap) are connected: hosts send from
+      # their own WhatsApp, and customers pay by bank transfer (Admin → Payments) ──
       - key: WHATSAPP_PROVIDER
-        value: mock
+        value: "off"
       - key: PAYMENT_PROVIDER
-        value: mock
+        value: manual
       - key: PAYMENT_CURRENCY # prices shown and charged in Saudi riyals
         value: SAR
-      - key: ALLOW_MOCK_IN_PRODUCTION
-        value: "true"
-      - key: SEED_DEMO
-        value: "true"
 
 databases:
   - name: invtra-db

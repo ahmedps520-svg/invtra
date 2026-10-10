@@ -67,6 +67,15 @@ export default async function SendPage({ params }: { params: Promise<{ id: strin
     />
   );
 
+  // INVTRA's own WhatsApp isn't connected: invitations go out from the host's WhatsApp only.
+  if (env().WHATSAPP_PROVIDER === "off") {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <ManualSendPanel eventId={event.id} ready={manualReady.ready} guests={manualGuests} />
+      </div>
+    );
+  }
+
   return (
     <SendModes
       defaultMode={previewMode || manualGuests.some((g) => g.manualSentAt) ? "manual" : "invtra"}

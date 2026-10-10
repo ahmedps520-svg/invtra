@@ -64,7 +64,16 @@ async function main() {
     }
   }
 
-  if (process.env.SEED_DEMO === "true") await seedDemo();
+  // The live site has no demo account (its password is public); it's switched off if it exists.
+  const live = process.env.NODE_ENV === "production" && process.env.LOCAL_TEST_MODE !== "true";
+  if (live) {
+    const demo = await db.user.findUnique({ where: { email: "demo@invtra.store" } });
+    if (demo && demo.status === "ACTIVE") {
+      await db.user.update({ where: { id: demo.id }, data: { status: "DEACTIVATED" } });
+      await db.session.deleteMany({ where: { userId: demo.id } });
+      console.log("Deactivated the demo account");
+    }
+  } else if (process.env.SEED_DEMO === "true") await seedDemo();
   console.log("Seed complete.");
 }
 

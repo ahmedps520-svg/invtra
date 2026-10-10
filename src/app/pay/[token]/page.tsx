@@ -24,6 +24,13 @@ import { Receipt, type ReceiptData } from "@/components/billing/receipt";
 import { AutoRefresh } from "@/components/billing/auto-refresh";
 import { cn } from "@/lib/utils";
 import { whenLabel } from "@/lib/event-when";
+import {
+  bankDetails,
+  formatIban,
+  orderReference,
+} from "@/server/payments/bank";
+import { supportChatUrl } from "@/lib/support";
+import { BankTransfer } from "@/components/billing/bank-transfer";
 
 export const metadata: Metadata = {
   title: "Payment",
@@ -195,6 +202,10 @@ export default async function PayPage({ params, searchParams }: Props) {
 
   const ev = order.event;
   const test = env().PAYMENT_PROVIDER === "mock";
+  // No card payments connected yet: the host pays by bank transfer and staff confirm it.
+  const transfer =
+    env().PAYMENT_PROVIDER === "manual" ? await bankDetails() : null;
+  const ref = orderReference(order.id);
   return shell(
     <>
       {note === "processing" ? <AutoRefresh /> : null}
@@ -243,11 +254,13 @@ export default async function PayPage({ params, searchParams }: Props) {
                   label={t.date}
                   value={whenLabel({ ...ev, timezone: tz }, locale)}
                 />
-                <Row
-                  icon={<MapPin />}
-                  label={t.venue}
-                  value={ar ? ev.venueNameAr || ev.venueName : ev.venueName}
-                />
+                {ev.venueName || ev.venueNameAr ? (
+                  <Row
+                    icon={<MapPin />}
+                    label={t.venue}
+                    value={ar ? ev.venueNameAr || ev.venueName : ev.venueName}
+                  />
+                ) : null}
               </>
             ) : null}
             <Row
@@ -262,7 +275,13 @@ export default async function PayPage({ params, searchParams }: Props) {
               <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-ink-faint rtl:tracking-normal">
                 {t.included}
               </p>
-              <p dir="auto" className={cn("mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink-soft", ar ? "text-right" : "text-left")}>
+              <p
+                dir="auto"
+                className={cn(
+                  "mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink-soft",
+                  ar ? "text-right" : "text-left",
+                )}
+              >
                 {order.title}
               </p>
             </div>
@@ -291,48 +310,102 @@ export default async function PayPage({ params, searchParams }: Props) {
             </p>
           ) : null}
 
-          <div className="mt-8">
-            <PayButton
-              token={token}
-              lang={lang}
-              label={fmt(test ? t.payTest : t.pay, { amount })}
-              redirecting={t.redirecting}
-              errorText={t.notCompleted}
-            />
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <span className="text-[12px] font-medium text-ink-soft">
-                {t.secure}
-              </span>
-              {METHODS.map((m) => (
-                <span
-                  key={m}
-                  lang="en"
-                  className="rounded-md border border-line bg-paper px-2 py-0.5 text-[11.5px] font-medium text-ink-soft"
-                >
-                  {m}
-                </span>
-              ))}
+          {transfer ? (
+            <div className="mt-8">
+              <BankTransfer
+                title={t.transferTitle}
+                intro={fmt(t.transferIntro, { amount })}
+                rtl={ar}
+                copyLabel={t.copy}
+                copiedLabel={t.copied}
+                rows={[
+                  {
+                    label: t.bank,
+                    value: ar
+                      ? transfer.bankAr || transfer.bank
+                      : transfer.bank,
+                  },
+                  {
+                    label: t.accountName,
+                    value: transfer.name,
+                    copy: transfer.name,
+                  },
+                  {
+                    label: t.iban,
+                    value: formatIban(transfer.iban),
+                    copy: transfer.iban,
+                    ltr: true,
+                  },
+                  ...(transfer.account
+                    ? [
+                        {
+                          label: t.accountNumber,
+                          value: transfer.account,
+                          copy: transfer.account,
+                          ltr: true,
+                        },
+                      ]
+                    : []),
+                  { label: t.reference, value: ref, copy: ref, ltr: true },
+                ]}
+                receipt={{
+                  label: t.sendReceipt,
+                  href: supportChatUrl(
+                    env().SUPPORT_WHATSAPP,
+                    fmt(t.receiptMessage, {
+                      amount,
+                      event:
+                        (ar ? ev?.titleAr || ev?.title : ev?.title) ?? "INVTRA",
+                      ref,
+                    }),
+                  ),
+                }}
+              />
             </div>
-            <p className="mt-3 text-center text-[12px] text-ink-faint">
-              {t.agree}{" "}
-              <Link
-                href={localePath(lang, "/terms")}
-                target="_blank"
-                className="underline underline-offset-2 hover:text-ink"
-              >
-                {t.terms}
-              </Link>{" "}
-              {t.and}{" "}
-              <Link
-                href={`${localePath(lang, "/terms")}#refunds`}
-                target="_blank"
-                className="underline underline-offset-2 hover:text-ink"
-              >
-                {t.refunds}
-              </Link>
-              .
-            </p>
-          </div>
+          ) : (
+            <div className="mt-8">
+              <PayButton
+                token={token}
+                lang={lang}
+                label={fmt(test ? t.payTest : t.pay, { amount })}
+                redirecting={t.redirecting}
+                errorText={t.notCompleted}
+              />
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <span className="text-[12px] font-medium text-ink-soft">
+                  {t.secure}
+                </span>
+                {METHODS.map((m) => (
+                  <span
+                    key={m}
+                    lang="en"
+                    className="rounded-md border border-line bg-paper px-2 py-0.5 text-[11.5px] font-medium text-ink-soft"
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-3 text-center text-[12px] text-ink-faint">
+                {t.agree}{" "}
+                <Link
+                  href={localePath(lang, "/terms")}
+                  target="_blank"
+                  className="underline underline-offset-2 hover:text-ink"
+                >
+                  {t.terms}
+                </Link>{" "}
+                {t.and}{" "}
+                <Link
+                  href={`${localePath(lang, "/terms")}#refunds`}
+                  target="_blank"
+                  className="underline underline-offset-2 hover:text-ink"
+                >
+                  {t.refunds}
+                </Link>
+                .
+              </p>
+            </div>
+          )}
         </div>
       </section>
       <p className="mt-6 text-center text-[12.5px] text-ink-faint">
