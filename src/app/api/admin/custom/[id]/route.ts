@@ -12,6 +12,7 @@ import {
   cancelCustomPackage,
   sendPaymentRequest,
 } from "@/server/custom/service";
+import { undoTestPayment } from "@/server/payments/service";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -25,6 +26,7 @@ const schema = z.discriminatedUnion("action", [
     action: z.literal("cancel"),
     reason: z.string().trim().max(500).default(""),
   }),
+  z.object({ action: z.literal("undo_test") }),
 ]);
 
 /** Admin: resend a payment link (WhatsApp / email) or withdraw the package. */
@@ -44,6 +46,13 @@ export const POST = route<Ctx>(
           [r.whatsapp && "WhatsApp message queued", r.email && "email sent"]
             .filter(Boolean)
             .join(" · ") || "Nothing was sent",
+      });
+    }
+    if (input.action === "undo_test") {
+      await undoTestPayment(id);
+      await audit(admin.id, "admin.custom.undo_test_payment", "order", id);
+      return ok({
+        message: "Test payment undone — the link is awaiting payment again",
       });
     }
     await cancelCustomPackage(admin.id, id);

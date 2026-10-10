@@ -224,6 +224,29 @@ describe("custom packages", () => {
     expect((await listCustomPackages({ q: emails("withdraw"), status: "PENDING" })).rows).toHaveLength(0);
   });
 
+  it("undoes a test payment so the real link can be sent, but never a real one", async () => {
+    const { isTestPaid, undoTestPayment } = await import("@/server/payments/service");
+    const r = await createCustomPackage(adminId, input("undo"), { send: { whatsapp: false, email: false } });
+    const paid = await applyPaidOrder(r.order.id, { provider: "mock", providerPaymentId: `mock_${r.order.id}` });
+    expect(await isTestPaid(r.order.id)).toBe(true);
+    const year = Number(paid.order.receiptNumber!.split("-")[1]);
+    const n = Number(paid.order.receiptNumber!.split("-")[2]);
+    await expect(sendPaymentRequest(r.order.id, { whatsapp: false, email: true })).rejects.toMatchObject({ code: "not_payable" });
+
+    const reopened = await undoTestPayment(r.order.id);
+    expect(reopened).toMatchObject({ status: "PENDING", paidAt: null, receiptNumber: null, payToken: r.order.payToken });
+    expect(await db.payment.count({ where: { orderId: r.order.id } })).toBe(0);
+    expect(await db.event.findUniqueOrThrow({ where: { id: r.event.id } })).toMatchObject({ plan: null, guestLimit: 0 });
+    // The receipt number is free again (it was the last one issued).
+    expect((await db.receiptCounter.findUniqueOrThrow({ where: { year } })).last).toBe(n - 1);
+    await expect(sendPaymentRequest(r.order.id, { whatsapp: false, email: true })).resolves.toMatchObject({ email: true });
+
+    // A real payment can't be undone here.
+    await applyPaidOrder(r.order.id, { provider: "tap", providerPaymentId: `chg_${run}` });
+    expect(await isTestPaid(r.order.id)).toBe(false);
+    await expect(undoTestPayment(r.order.id)).rejects.toMatchObject({ code: "real_payment" });
+  });
+
   it("labels unlimited and fixed allowances in both languages", () => {
     expect(guestsLabel(UNLIMITED_GUESTS, false)).toBe("Unlimited guests");
     expect(guestsLabel(UNLIMITED_GUESTS, true)).toBe("عدد غير محدود من الضيوف");

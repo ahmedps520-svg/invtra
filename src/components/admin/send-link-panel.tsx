@@ -105,7 +105,9 @@ export function SendLinkPanel({
         </div>
         {testPayments ? (
           <p className="mt-2 text-[12.5px] text-ochre">
-            Test mode: the link completes a test payment — no money is taken.
+            Test mode: no money is taken — pressing Pay on this link marks the
+            package paid straight away, for you or the host. Connect Tap to take
+            real payments (Apple Pay, mada, cards).
           </p>
         ) : null}
       </div>

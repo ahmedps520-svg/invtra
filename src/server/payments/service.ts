@@ -475,3 +475,48 @@ export function planCatalogue() {
     }),
   };
 }
+
+/** The order was paid only in test mode (the mock provider): no money was taken. */
+export async function isTestPaid(orderId: string): Promise<boolean> {
+  const payments = await db.payment.findMany({ where: { orderId, status: "SUCCEEDED" }, select: { provider: true } });
+  return payments.length > 0 && payments.every((p) => p.provider === "mock");
+}
+
+/**
+ * Undo a test payment (test mode — no money was taken) so the order can be paid for real:
+ * it is awaiting payment again with the same link, the test payment and receipt are removed
+ * (the receipt number is freed when it was the last one issued, keeping real receipts
+ * consecutive) and the event goes back to the plan its other paid orders give it.
+ * Real payments are refunded with the payment provider instead.
+ */
+export async function undoTestPayment(orderId: string): Promise<Order> {
+  return db.$transaction(async (tx) => {
+    const order = await lockOrder(tx, orderId);
+    if (order.status !== "PAID") throw conflict("not_paid", "This order isn't paid.");
+    const payments = await tx.payment.findMany({ where: { orderId } });
+    if (!payments.length || payments.some((p) => p.provider !== "mock")) {
+      throw conflict("real_payment", "This order was paid for real — refund it with the payment provider instead.");
+    }
+    await tx.payment.deleteMany({ where: { orderId } });
+    const n = order.receiptNumber?.match(/^INVTRA-(\d{4})-(\d+)$/);
+    if (n) await tx.receiptCounter.updateMany({ where: { year: Number(n[1]), last: Number(n[2]) }, data: { last: Number(n[2]) - 1 } });
+    const reopened = await tx.order.update({
+      where: { id: orderId },
+      data: { status: "PENDING", paidAt: null, receiptNumber: null, providerRef: null, note: appendNote(order.note, "Test payment undone") },
+    });
+    // Receipts for the test payment that haven't gone out yet are dropped.
+    await tx.job.updateMany({
+      where: { type: "payment.receipt", status: "PENDING", payload: { path: ["orderId"], equals: orderId } },
+      data: { status: "CANCELLED", completedAt: new Date() },
+    });
+    if (order.eventId) {
+      const others = await tx.order.findMany({ where: { eventId: order.eventId, status: "PAID", id: { not: orderId } } });
+      const plan = others.reduce<PlanTier | null>((p, o) => higherPlan(p, o.plan), null);
+      await tx.event.update({
+        where: { id: order.eventId },
+        data: { plan, guestLimit: others.reduce((m, o) => Math.max(m, o.guestLimit), 0) },
+      });
+    }
+    return reopened;
+  });
+}
