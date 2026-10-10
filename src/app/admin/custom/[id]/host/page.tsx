@@ -73,7 +73,7 @@ export default async function CustomHostPage({ params, searchParams }: { params:
         initial={initial}
         initialCustomer={customer}
         existing={Boolean(pending)}
-        eventDate={utcToZoned(event.startsAt, event.timezone).date}
+        eventDate={event.dateTbd ? "" : utcToZoned(event.startsAt, event.timezone).date}
         currency={e.PAYMENT_CURRENCY}
         planPrices={{ standard: planPrice("BASIC", e.PAYMENT_CURRENCY), premium: planPrice("PREMIUM", e.PAYMENT_CURRENCY) }}
       />

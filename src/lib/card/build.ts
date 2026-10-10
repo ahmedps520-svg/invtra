@@ -1,6 +1,6 @@
 import type { EventType } from "@prisma/client";
 import { cardQrText, type InvitationDesign } from "@/lib/design/schema";
-import { FONTS } from "@/lib/design/fonts";
+import { FONTS, displayWeight } from "@/lib/design/fonts";
 import type { ThemeDefinition } from "@/lib/themes/types";
 import { CARD_PHRASES, copyFor } from "@/lib/invitation-copy";
 import { fmt } from "@/lib/i18n/config";
@@ -168,9 +168,15 @@ export function buildCardSvg(input: CardInput): string {
   const latinBody = family(design.fonts.body);
   const arDisplay = family(design.fonts.arabicDisplay);
   const arBody = family(design.fonts.arabicBody);
-  const displayWeight = design.fonts.display === "jost" ? 300 : design.fonts.display === "quicksand" ? 600 : 500;
   const bodyItalic = ["cormorant", "playfair"].includes(design.fonts.body);
-  const amp = ["cormorant", "playfair"].includes(design.fonts.display);
+  // The names can have their own typeface and colour (else the display typefaces and text colour).
+  const namesKey = design.names?.font ?? design.fonts.display;
+  const namesLatin = family(namesKey);
+  const namesArabic = family(design.names?.fontAr ?? design.fonts.arabicDisplay);
+  const namesWeight = displayWeight(namesKey);
+  const namesColor = design.names?.color ?? p.text;
+  const namesUpper = theme.card.namesUppercase && FONTS[namesKey].kind !== "script";
+  const amp = ["cormorant", "playfair"].includes(namesKey);
 
   const enCopy = copyFor(content.eventType, "en", { eyebrow: design.texts.eyebrow, intro: design.texts.intro });
   const arCopy = copyFor(content.eventType, "ar", { eyebrow: design.texts.eyebrowAr, intro: design.texts.introAr });
@@ -218,31 +224,31 @@ export function buildCardSvg(input: CardInput): string {
     const nameSize = 116 * theme.card.nameScale * k * nk;
     const namesFor = (names: string, arabic: boolean, scale = 1): Block => {
       const st: TextStyle = arabic
-        ? { family: arDisplay, weight: 400, size: nameSize * 0.95 * scale }
+        ? { family: namesArabic, weight: 400, size: nameSize * 0.95 * scale }
         : {
-            family: latinDisplay,
-            weight: displayWeight,
+            family: namesLatin,
+            weight: namesWeight,
             size: nameSize * scale,
-            uppercase: theme.card.namesUppercase,
-            letterSpacing: theme.card.namesUppercase ? 0.08 : 0,
+            uppercase: namesUpper,
+            letterSpacing: namesUpper ? 0.08 : 0,
           };
       const pair = theme.card.stackNames ? splitNames(names) : null;
-      if (!pair) return textBlock(names, st, cw, 2, cx, p.text, 1.05);
+      if (!pair) return textBlock(names, st, cw, 2, cx, namesColor, 1.05);
       const a1 = fit(pair[0], st, cw, { maxLines: 1 });
       const a2 = fit(pair[1], st, cw, { maxLines: 1 });
       const s = { ...st, size: Math.min(a1.style.size, a2.style.size) };
       const ampStyle: TextStyle = arabic
-        ? { family: arDisplay, weight: 400, size: s.size * 0.5 }
-        : { family: amp ? latinDisplay : "Cormorant Garamond", weight: 400, italic: true, size: s.size * 0.7 };
+        ? { family: namesArabic, weight: 400, size: s.size * 0.5 }
+        : { family: amp ? namesLatin : "Cormorant Garamond", weight: 400, italic: true, size: s.size * 0.7 };
       const asc = s.size * 0.86;
       const lh1 = s.size * 1.02;
       const ampH = ampStyle.size * (arabic ? 1.05 : 0.95);
       return {
         height: asc + lh1 + ampH + s.size * 0.3,
         render: (top) =>
-          textEl(pair[0], cx, top + asc, s, p.text) +
+          textEl(pair[0], cx, top + asc, s, namesColor) +
           textEl(arabic ? "و" : "&", cx, top + asc + ampH * 0.95, ampStyle, p.accent) +
-          textEl(pair[1], cx, top + asc + ampH + lh1 * 0.92, s, p.text),
+          textEl(pair[1], cx, top + asc + ampH + lh1 * 0.92, s, namesColor),
       };
     };
     const namesEn = content.hostNames.trim();
@@ -253,7 +259,7 @@ export function buildCardSvg(input: CardInput): string {
     else if (bi) {
       push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn), 0.78), namesAr && namesEn ? 6 : BASE_GAPS.afterNames);
       if (namesAr && namesEn)
-        push(textBlock(namesEn, { family: latinDisplay, weight: displayWeight, size: nameSize * 0.6, uppercase: theme.card.namesUppercase, letterSpacing: theme.card.namesUppercase ? 0.08 : 0 }, cw, 1, cx, p.text), BASE_GAPS.afterNames);
+        push(textBlock(namesEn, { family: namesLatin, weight: namesWeight, size: nameSize * 0.6, uppercase: namesUpper, letterSpacing: namesUpper ? 0.08 : 0 }, cw, 1, cx, namesColor), BASE_GAPS.afterNames);
     } else if (namesEn) push(namesFor(namesEn, false), BASE_GAPS.afterNames);
 
     // Intro line
@@ -271,7 +277,7 @@ export function buildCardSvg(input: CardInput): string {
     const extraEn = splitExtra(design.texts.extra);
     const extraAr = splitExtra(design.texts.extraAr);
     const hasVenue = lines.venue && Boolean(isAr ? venueArText : venueEnText || (bi && venueArText));
-    const below = lines.date || lines.time || hasVenue || Boolean(addrText) || extraEn.length > 0 || extraAr.length > 0;
+    const below = lines.date || (lines.time && Boolean(content.time.en || content.time.ar)) || hasVenue || Boolean(addrText) || extraEn.length > 0 || extraAr.length > 0;
     if (blocks.length && below) push({ height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) }, BASE_GAPS.afterDivider);
 
     // Date & time
@@ -279,11 +285,13 @@ export function buildCardSvg(input: CardInput): string {
     const dateAr: TextStyle = { family: arBody, weight: 700, size: 36 * k };
     const timeEn: TextStyle = { family: latinBody, weight: 400, size: 28 * k, letterSpacing: 0.06 };
     const timeAr: TextStyle = { family: arBody, weight: 400, size: 32 * k };
+    // An unknown time ("to be announced") has no line.
+    const showTime = lines.time && Boolean(content.time.en || content.time.ar);
     if (lines.date) {
-      if (isAr || bi) push(textBlock(content.date.ar, dateAr, cw, 1, cx, p.text), lines.time ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
-      if (!isAr) push(textBlock(content.date.en, dateEn, cw, 1, cx, p.text), lines.time ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
+      if (isAr || bi) push(textBlock(content.date.ar, dateAr, cw, 1, cx, p.text), showTime ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
+      if (!isAr) push(textBlock(content.date.en, dateEn, cw, 1, cx, p.text), showTime ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
     }
-    if (!lines.time) {
+    if (!showTime) {
       // Left off the card.
     } else if (isAr) push(textBlock(`${CARD_PHRASES.ar.at} ${content.time.ar}`, timeAr, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
     else if (bi) push(textBlock(`${content.time.en}  ·  ${content.time.ar}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime);

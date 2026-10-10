@@ -30,8 +30,12 @@ export const eventInputSchema = z.object({
   titleAr: optionalText(140),
   hostNames: z.string().trim().min(2, "Who is hosting?").max(120),
   hostNamesAr: optionalText(120),
-  date: dateStr,
-  time: timeStr,
+  /** Empty when not decided yet (`dateTbd` / `timeTbd`). */
+  date: z.union([dateStr, z.literal("")]).default(""),
+  time: z.union([timeStr, z.literal("")]).default(""),
+  /** The date / time is "to be announced" (e.g. a baby's arrival). */
+  dateTbd: z.boolean().default(false),
+  timeTbd: z.boolean().default(false),
   endTime: z.union([timeStr, z.literal("")]).optional().nullable(),
   timezone: z.string().refine(isValidTimeZone, "Unknown time zone"),
   venueName: z.string().trim().min(2, "Where is it?").max(160),
@@ -87,3 +91,14 @@ export const customEventInputSchema = eventInputSchema.extend({
   venueName: z.string().trim().max(160).default(""),
   address: z.string().trim().max(300).default(""),
 });
+
+/**
+ * The date and the time are needed unless they're marked "to be announced". Apply to the event
+ * schemas where they're parsed (kept apart so the schemas can still be extended).
+ */
+export function withDateRules<O extends { date: string; time: string; dateTbd: boolean; timeTbd: boolean }, I>(schema: z.ZodType<O, z.ZodTypeDef, I>) {
+  return schema.superRefine((v, ctx) => {
+    if (!v.dateTbd && !v.date) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["date"], message: "Choose a date" });
+    if (!v.timeTbd && !v.time) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["time"], message: "Choose a time" });
+  });
+}

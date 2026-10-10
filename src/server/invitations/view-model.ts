@@ -9,6 +9,7 @@ import { walletConfig } from "@/server/apple/config";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { formatDate, formatTime, formatWallTime } from "@/lib/format";
+import { TBA } from "@/lib/event-when";
 import { copyFor } from "@/lib/invitation-copy";
 import { cardQrText, normalizeDesign, type InvitationDesign } from "@/lib/design/schema";
 import { getTheme, type ThemeKey } from "@/lib/themes/registry";
@@ -89,13 +90,20 @@ export async function buildInvitationVM(opts: {
       hostNamesAr: event.hostNamesAr,
       startsAt: event.startsAt.toISOString(),
       endsAt: event.endsAt?.toISOString() ?? null,
+      // "To be announced" while the date or time isn't decided.
+      dateTbd: event.dateTbd,
+      timeTbd: event.timeTbd,
       date: {
-        en: formatDate(event.startsAt, { locale: "en", timeZone: tz }),
-        ar: formatDate(event.startsAt, { locale: "ar", timeZone: tz, digits }),
+        en: event.dateTbd ? TBA.date.en : formatDate(event.startsAt, { locale: "en", timeZone: tz }),
+        ar: event.dateTbd ? TBA.date.ar : formatDate(event.startsAt, { locale: "ar", timeZone: tz, digits }),
       },
       time: {
-        en: formatTime(event.startsAt, { locale: "en", timeZone: tz }) + (event.endsAt ? ` – ${formatTime(event.endsAt, { locale: "en", timeZone: tz })}` : ""),
-        ar: formatTime(event.startsAt, { locale: "ar", timeZone: tz, digits }) + (event.endsAt ? ` – ${formatTime(event.endsAt, { locale: "ar", timeZone: tz, digits })}` : ""),
+        en: event.timeTbd
+          ? TBA.time.en
+          : formatTime(event.startsAt, { locale: "en", timeZone: tz }) + (event.endsAt ? ` – ${formatTime(event.endsAt, { locale: "en", timeZone: tz })}` : ""),
+        ar: event.timeTbd
+          ? TBA.time.ar
+          : formatTime(event.startsAt, { locale: "ar", timeZone: tz, digits }) + (event.endsAt ? ` – ${formatTime(event.endsAt, { locale: "ar", timeZone: tz, digits })}` : ""),
       },
       venueName: event.venueName,
       venueNameAr: event.venueNameAr,
@@ -121,9 +129,9 @@ export async function buildInvitationVM(opts: {
       rsvpOpen: !rsvpDeadlinePassed(main, now) && (main.endsAt ?? main.startsAt) > now,
       // Guests invited from the host's own WhatsApp have no reply buttons, so they reply here.
       allowWebRsvp: event.allowWebRsvp || Boolean(guest?.manualSentAt),
-      past: (main.endsAt ?? new Date(main.startsAt.getTime() + 6 * 3600_000)) < now,
+      past: !main.dateTbd && (main.endsAt ?? new Date(main.startsAt.getTime() + 6 * 3600_000)) < now,
       googleCalendarUrl:
-        opts.token && (opts.mode === "guest" || opts.mode === "host") ? googleCalendarUrl(event, { lang, url: invitationUrl(opts.token), section }) : null,
+        opts.token && (opts.mode === "guest" || opts.mode === "host") && !event.dateTbd ? googleCalendarUrl(event, { lang, url: invitationUrl(opts.token), section }) : null,
       schedule: event.scheduleItems.map((s) => ({
         time: { en: formatWallTime(s.time, "en"), ar: formatWallTime(s.time, "ar", digits) },
         title: s.title,

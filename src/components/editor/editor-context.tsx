@@ -69,6 +69,7 @@ export function withTheme(d: Draft, key: ThemeKey): Draft {
       ...d.design,
       palette: t.palette,
       fonts: t.fonts,
+      names: t.names,
       animation: t.animation,
       card: { ...d.design.card, qr: { ...d.design.card.qr, style: t.card.qr.style } },
     },

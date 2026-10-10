@@ -99,12 +99,15 @@ Refunds are issued in the Tap dashboard, then recorded in *Admin → Payments*.
 
 **Admin → Custom events → New custom event** goes in four steps, design first:
 
-1. **Event** — only the occasion and the date are required. The name defaults to the occasion
-   ("Wedding"); the host names, venue and address can be left out; sections, programme, dress
-   code, notes, parking and a contact can all be added. Until a host is added the event is a
+1. **Event** — only the occasion is required. The name defaults to the occasion ("Wedding");
+   the date and the time can be marked *to be announced* (also for hosts' own events — e.g. a
+   baby who hasn't arrived yet: guests see "Date to be announced", reminders, the countdown and
+   calendar links wait for the real date); the host names, venue and address can be left out;
+   sections, programme, dress code, notes, parking and a contact can all be added. Until a host is added the event is a
    *draft* owned by the staff member (listed under *Drafts*, where it can be discarded).
 2. **Design** — the same editor customers use (any design, premium included, or your own
-   artwork) plus custom-event options: print a QR code or not, point it at each guest's own
+   artwork; the names can have their own typeface — including playful and calligraphic ones —
+   and colour) plus custom-event options: print a QR code or not, point it at each guest's own
    invitation (needed to scan guests in at the door) or at any web link, change the line under
    it, leave any line off the card (opening line, names, invitation line, date, time, venue) and
    add up to four lines of your own (also shown on the guest page). Guests of an event without

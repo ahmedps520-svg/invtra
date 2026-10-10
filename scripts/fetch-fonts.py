@@ -28,6 +28,17 @@ FAMILIES = {
     "El Messiri": ["400", "500", "600"],
     "Quicksand": ["400", "500", "600", "700"],
     "Baloo Bhaijaan 2": ["400", "500", "600", "700"],
+    # Extra typefaces for the names (the couple, the baby, the graduate…).
+    "Great Vibes": ["400"],
+    "Dancing Script": ["400", "600"],
+    "Pacifico": ["400"],
+    "Fredoka": ["400", "600"],
+    "Marcellus": ["400"],
+    "Lalezar": ["400"],
+    "Rakkas": ["400"],
+    "Marhey": ["400", "600"],
+    "Lemonada": ["400", "600"],
+    "Katibeh": ["400"],
 }
 
 def css_url(family, variants):
@@ -93,7 +104,7 @@ if __name__ == "__main__":
 # ── Compact TS module for the isomorphic text layout engine ─────────────────
 # Arabic advance widths change with contextual shaping; these factors were
 # calibrated against resvg's shaped output (conservative, ~90th percentile).
-ARABIC_FACTORS = {"Amiri": 0.71, "Aref Ruqaa": 0.72, "Reem Kufi": 0.53, "IBM Plex Sans Arabic": 0.81, "El Messiri": 0.84, "Baloo Bhaijaan 2": 0.75}
+ARABIC_FACTORS = {"Amiri": 0.71, "Aref Ruqaa": 0.72, "Reem Kufi": 0.53, "IBM Plex Sans Arabic": 0.81, "El Messiri": 0.84, "Baloo Bhaijaan 2": 0.75, "Lalezar": 0.87, "Rakkas": 0.81, "Marhey": 0.89, "Lemonada": 0.86, "Katibeh": 0.8}
 
 def write_ts_module():
     metrics = json.load(open(METRICS))

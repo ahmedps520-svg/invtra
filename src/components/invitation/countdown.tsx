@@ -19,6 +19,8 @@ export function Countdown() {
   const target = new Date(vm.event.startsAt).getTime();
   const end = vm.event.endsAt ? new Date(vm.event.endsAt).getTime() : target + 6 * 3600_000;
   const now = useSyncExternalStore(subscribeClock, clockSnapshot, () => null);
+  // Nothing to count down to until the date is known.
+  if (vm.event.dateTbd) return null;
 
   if (now !== null && now >= target) {
     return (

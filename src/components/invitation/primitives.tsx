@@ -3,7 +3,7 @@
 import { createContext, useContext, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { star } from "@/lib/card/ornaments";
-import { fontStack } from "@/lib/design/fonts";
+import { displayWeight, fontStack } from "@/lib/design/fonts";
 import { getTheme } from "@/lib/themes/registry";
 import { luminance } from "@/lib/qr";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,9 @@ export function themeVars(design: InvitationDesign): CSSProperties {
   const p = design.palette;
   const display = `${fontStack(design.fonts.display)}`.replace(/, (serif|sans-serif)$/, "") + `, ${fontStack(design.fonts.arabicDisplay)}`;
   const body = `${fontStack(design.fonts.body)}`.replace(/, (serif|sans-serif)$/, "") + `, ${fontStack(design.fonts.arabicBody)}`;
+  const names =
+    `${fontStack(design.names?.font ?? design.fonts.display)}`.replace(/, (serif|sans-serif)$/, "") +
+    `, ${fontStack(design.names?.fontAr ?? design.fonts.arabicDisplay)}`;
   return {
     "--inv-bg": p.background,
     "--inv-surface": p.surface,
@@ -47,6 +50,10 @@ export function themeVars(design: InvitationDesign): CSSProperties {
     "--inv-display": display,
     "--inv-body": body,
     "--inv-display-weight": design.fonts.display === "jost" ? 300 : design.fonts.display === "pinyon" ? 400 : design.fonts.display === "quicksand" ? 600 : 500,
+    // The names' own typeface and colour (or the display typeface and text colour).
+    "--inv-names": names,
+    "--inv-names-weight": displayWeight(design.names?.font ?? design.fonts.display),
+    "--inv-names-color": design.names?.color ?? p.text,
   } as CSSProperties;
 }
 

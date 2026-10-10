@@ -1,7 +1,7 @@
 import type { Event } from "@prisma/client";
 import { normalizeDesign, type InvitationDesign } from "@/lib/design/schema";
 import { getTheme } from "@/lib/themes/registry";
-import { formatDate, formatTime } from "@/lib/format";
+import { whenDate, whenTime } from "@/lib/event-when";
 import type { CardContent, CardLanguage } from "@/lib/card/build";
 
 type EventLike = Pick<
@@ -14,6 +14,8 @@ type EventLike = Pick<
   | "hostNamesAr"
   | "startsAt"
   | "timezone"
+  | "dateTbd"
+  | "timeTbd"
   | "venueName"
   | "venueNameAr"
   | "address"
@@ -38,13 +40,14 @@ export function cardContent(event: EventLike, design: InvitationDesign = eventDe
     titleAr: event.titleAr,
     hostNames: event.hostNames,
     hostNamesAr: event.hostNamesAr,
+    // "Date to be announced" when the date isn't known; an unknown time is left off.
     date: {
-      en: formatDate(event.startsAt, { locale: "en", timeZone: event.timezone, style: "full" }),
-      ar: formatDate(event.startsAt, { locale: "ar", timeZone: event.timezone, style: "full", digits: design.digits }),
+      en: whenDate(event, "en"),
+      ar: whenDate(event, "ar", { digits: design.digits }),
     },
     time: {
-      en: formatTime(event.startsAt, { locale: "en", timeZone: event.timezone }),
-      ar: formatTime(event.startsAt, { locale: "ar", timeZone: event.timezone, digits: design.digits }),
+      en: whenTime(event, "en") ?? "",
+      ar: whenTime(event, "ar", { digits: design.digits }) ?? "",
     },
     venueName: event.venueName,
     venueNameAr: event.venueNameAr,

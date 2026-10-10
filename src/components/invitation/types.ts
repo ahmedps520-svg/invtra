@@ -25,6 +25,9 @@ export interface InvitationVM {
     hostNamesAr: string | null;
     startsAt: string;
     endsAt: string | null;
+    /** The date / time isn't decided yet (shown as "to be announced"). */
+    dateTbd: boolean;
+    timeTbd: boolean;
     date: Bi;
     time: Bi;
     venueName: string;

@@ -135,6 +135,11 @@ model Event {
   startsAt DateTime
   endsAt   DateTime?
   timezone String    @default("Asia/Dubai")
+  // Not decided yet ("to be announced" — e.g. a baby's arrival). While the date is unknown,
+  // startsAt holds a placeholder about a year ahead so replies stay open; reminders, the
+  // countdown and calendar links wait for the real date. An unknown time keeps 12:00.
+  dateTbd  Boolean   @default(false)
+  timeTbd  Boolean   @default(false)
 
   // Where
   venueName   String

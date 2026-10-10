@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { getI18n } from "@/server/i18n";
 import { pickNamespaces } from "@/lib/i18n";
-import { formatDate, formatTime } from "@/lib/format";
+
 import { I18nProvider } from "@/components/i18n/provider";
 import { DoorApp, DoorClosed } from "@/components/door/door-app";
 import { doorSummary, findDoorEvent } from "@/server/door/service";
+import { whenLabel } from "@/lib/event-when";
 
 type Props = { params: Promise<{ token: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -39,7 +40,7 @@ export default async function DoorPage({ params, searchParams }: Props) {
         initial={JSON.parse(JSON.stringify(summary))}
         event={{
           title: ar ? event.titleAr || event.title : event.title,
-          when: `${formatDate(event.startsAt, { locale, timeZone: event.timezone })} · ${formatTime(event.startsAt, { locale, timeZone: event.timezone })}`,
+          when: whenLabel(event, locale),
           sectionsEnabled: event.sectionsEnabled,
         }}
         lookup={typeof sp.g === "string" ? sp.g : null}

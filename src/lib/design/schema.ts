@@ -51,6 +51,13 @@ export const designSchema = z.object({
     extraAr: extraText,
   }),
   monogram: z.string().trim().max(8).default(""),
+  /**
+   * The names (the couple, the baby, the graduate…) can have their own typeface and colour;
+   * null follows the display typefaces and the text colour.
+   */
+  names: z
+    .object({ font: fontKey.nullable(), fontAr: fontKey.nullable(), color: hex.nullable() })
+    .default({ font: null, fontAr: null, color: null }),
   sections: z.object({
     countdown: z.boolean(),
     schedule: z.boolean(),

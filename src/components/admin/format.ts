@@ -34,6 +34,12 @@ export function day(d: Date | string | null | undefined): string {
   return dFmt.format(typeof d === "string" ? new Date(d) : d);
 }
 
+/** An event's date in admin lists ("Date TBA" while it isn't decided). */
+export function eventWhen(e: { startsAt: Date; timezone: string; dateTbd?: boolean; timeTbd?: boolean }, withTime = false): string {
+  if (e.dateTbd) return "Date TBA";
+  return withTime && !e.timeTbd ? eventDateTime(e.startsAt, e.timezone) : eventDate(e.startsAt, e.timezone);
+}
+
 export function eventDate(d: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",

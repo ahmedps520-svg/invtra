@@ -9,7 +9,8 @@ import { eventForGuest, sectionInfo } from "@/server/events/sections";
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: string }> }) {
   const token = (await ctx.params).token.toUpperCase();
   const data = await loadPublicInvitation(token);
-  if (!data || data.state !== "active" || data.guest.rsvpStatus === "DECLINED") return new NextResponse(null, { status: 404 });
+  // No calendar entry until the date is known.
+  if (!data || data.state !== "active" || data.guest.rsvpStatus === "DECLINED" || data.event.dateTbd) return new NextResponse(null, { status: 404 });
   const body = icsCalendar(eventForGuest(data.event, data.guest), {
     lang: pageLang(data.event, data.guest),
     url: invitationUrl(token),

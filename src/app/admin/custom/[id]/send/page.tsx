@@ -15,9 +15,9 @@ import { KeyValues, PageHeader, StatusBadge } from "@/components/admin/ui";
 import {
   dt,
   eventDate,
-  eventDateTime,
   money,
   rel,
+  eventWhen,
 } from "@/components/admin/format";
 import { buttonClasses } from "@/components/ui/button";
 
@@ -116,7 +116,7 @@ export default async function CustomSendPage({
                 },
                 {
                   label: "Event",
-                  value: `${event.title} · ${eventDateTime(event.startsAt, event.timezone)}`,
+                  value: `${event.title} · ${eventWhen(event, true)}`,
                 },
                 { label: "Guests", value: guestsLabel(pkg.guestLimit, false) },
                 ...(pkg.title

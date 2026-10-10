@@ -1,12 +1,23 @@
 import type { Event } from "@prisma/client";
 import type { PageLang } from "@/components/invitation/types";
+import { utcToZoned } from "@/lib/time";
 
 /**
  * "Add to calendar": one event in the guest's language, at their own section's time and place.
  * Google Calendar gets a prefilled link; Apple Calendar and Outlook get an .ics file.
  */
 
-type CalendarSource = Pick<Event, "title" | "titleAr" | "startsAt" | "endsAt" | "venueName" | "venueNameAr" | "address" | "addressAr">;
+type CalendarSource = Pick<Event, "title" | "titleAr" | "startsAt" | "endsAt" | "venueName" | "venueNameAr" | "address" | "addressAr"> &
+  Partial<Pick<Event, "timezone" | "timeTbd">>;
+
+/** An event whose time isn't known yet is entered as an all-day event on its date. */
+function allDay(event: CalendarSource): { first: string; next: string } | null {
+  if (!event.timeTbd || !event.timezone) return null;
+  const day = utcToZoned(event.startsAt, event.timezone).date;
+  const next = new Date(`${day}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return { first: day.replace(/-/g, ""), next: next.toISOString().slice(0, 10).replace(/-/g, "") };
+}
 type SectionNote = { label: { en: string; ar: string }; note: string | null; noteAr: string | null } | null;
 
 /** Events without an end time are entered as four hours long. */
@@ -42,7 +53,7 @@ export function googleCalendarUrl(event: CalendarSource, opts: { lang: PageLang;
   const q = new URLSearchParams({
     action: "TEMPLATE",
     text: e.title,
-    dates: `${stamp(e.start)}/${stamp(e.end)}`,
+    dates: allDay(event) ? `${allDay(event)!.first}/${allDay(event)!.next}` : `${stamp(e.start)}/${stamp(e.end)}`,
     details: e.description,
     location: e.location,
   });
@@ -78,6 +89,7 @@ function fold(line: string) {
 /** The .ics file (Apple Calendar, Outlook…), with a reminder three hours before. */
 export function icsCalendar(event: CalendarSource, opts: { lang: PageLang; url: string; section?: SectionNote; uid: string; now?: Date }): string {
   const e = calendarEntry(event, opts);
+  const day = allDay(event);
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -87,8 +99,7 @@ export function icsCalendar(event: CalendarSource, opts: { lang: PageLang; url: 
     "BEGIN:VEVENT",
     `UID:${opts.uid}@invtra.store`,
     `DTSTAMP:${stamp(opts.now ?? new Date())}`,
-    `DTSTART:${stamp(e.start)}`,
-    `DTEND:${stamp(e.end)}`,
+    ...(day ? [`DTSTART;VALUE=DATE:${day.first}`, `DTEND;VALUE=DATE:${day.next}`] : [`DTSTART:${stamp(e.start)}`, `DTEND:${stamp(e.end)}`]),
     `SUMMARY:${esc(e.title)}`,
     `LOCATION:${esc(e.location)}`,
     `DESCRIPTION:${esc(e.description)}`,
@@ -96,7 +107,8 @@ export function icsCalendar(event: CalendarSource, opts: { lang: PageLang; url: 
     "BEGIN:VALARM",
     "ACTION:DISPLAY",
     `DESCRIPTION:${esc(e.title)}`,
-    "TRIGGER:-PT3H",
+    // Three hours before — or 9 am on the day when the time isn't known.
+    day ? "TRIGGER:PT9H" : "TRIGGER:-PT3H",
     "END:VALARM",
     "END:VEVENT",
     "END:VCALENDAR",

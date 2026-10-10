@@ -41,7 +41,7 @@ export const PATCH = route<Ctx>("events.design", async (req: NextRequest, ctx) =
   let design = eventDesign(event);
   if (themeKey !== event.themeKey && body.resetStyle !== false) {
     const t = getTheme(themeKey).defaults;
-    design = { ...design, palette: t.palette, fonts: t.fonts, animation: t.animation, card: { ...design.card, qr: { ...design.card.qr, style: t.card.qr.style } } };
+    design = { ...design, palette: t.palette, fonts: t.fonts, names: t.names, animation: t.animation, card: { ...design.card, qr: { ...design.card.qr, style: t.card.qr.style } } };
   }
   if (body.design) design = designSchema.parse(deepMerge(design, body.design));
   if (design.background.imageKey) await assertEventUpload(event.id, design.background.imageKey, ["BACKGROUND", "COVER"]);

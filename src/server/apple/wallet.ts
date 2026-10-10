@@ -11,6 +11,7 @@ import { eventQrText, invitationUrl } from "@/server/invitations";
 import { mapsLinks } from "@/server/invitations/view-model";
 import { eventIsActive } from "@/server/rsvp";
 import { utcToZoned, zoneOffsetMs } from "@/lib/time";
+import { TBA } from "@/lib/event-when";
 import { walletConfig, type WalletConfig } from "./config";
 
 /**
@@ -143,10 +144,19 @@ export async function buildWalletPass(inv: PassInvitation, cfg?: WalletConfig | 
   );
 
   const title = tr(event.title, event.titleAr);
-  pass.headerFields.push({ key: "date", label: "Date", value: isoInZone(view.startsAt, tz), dateStyle: "PKDateStyleMedium", ignoresTimeZone: true, changeMessage: "New time: %@" });
+  // A date or time not decided yet reads "to be announced" (and the pass gets no relevant date).
+  pass.headerFields.push(
+    view.dateTbd
+      ? { key: "date", label: "Date", value: tr(TBA.date.en, TBA.date.ar), changeMessage: "New time: %@" }
+      : { key: "date", label: "Date", value: isoInZone(view.startsAt, tz), dateStyle: "PKDateStyleMedium", ignoresTimeZone: true, changeMessage: "New time: %@" },
+  );
   pass.primaryFields.push({ key: "event", label: "Event", value: title });
   pass.secondaryFields.push({ key: "guest", label: "Guest", value: guest.name }, { key: "people", label: "Guests", value: String(people), textAlignment: "PKTextAlignmentRight" });
-  pass.auxiliaryFields.push({ key: "time", label: "Time", value: isoInZone(view.startsAt, tz), timeStyle: "PKDateStyleShort", ignoresTimeZone: true, changeMessage: "New time: %@" });
+  pass.auxiliaryFields.push(
+    view.timeTbd
+      ? { key: "time", label: "Time", value: tr(TBA.time.en, TBA.time.ar), changeMessage: "New time: %@" }
+      : { key: "time", label: "Time", value: isoInZone(view.startsAt, tz), timeStyle: "PKDateStyleShort", ignoresTimeZone: true, changeMessage: "New time: %@" },
+  );
   // Custom events can leave out the venue, the address or the hosts.
   if (view.venueName.trim() || view.venueNameAr?.trim()) pass.auxiliaryFields.push({ key: "venue", label: "Venue", value: tr(view.venueName, view.venueNameAr), changeMessage: "New venue: %@" });
   if (section) pass.auxiliaryFields.push({ key: "section", label: "Section", value: tr(section.label.en, section.label.ar) });
@@ -165,8 +175,10 @@ export async function buildWalletPass(inv: PassInvitation, cfg?: WalletConfig | 
 
   // The same code as the card: none when the event's card has no QR.
   if (qrText) pass.setBarcodes({ format: "PKBarcodeFormatQR", message: qrText, messageEncoding: "iso-8859-1" });
-  pass.setRelevantDate(view.startsAt);
-  pass.setExpirationDate(new Date(end.getTime() + 24 * 3600_000));
+  if (!view.dateTbd) {
+    pass.setRelevantDate(view.startsAt);
+    pass.setExpirationDate(new Date(end.getTime() + 24 * 3600_000));
+  }
   if (view.latitude != null && view.longitude != null) pass.setLocations({ latitude: view.latitude, longitude: view.longitude, relevantText: title });
 
   pass.localize("ar", Object.fromEntries(Object.entries(ar).map(([k, v]) => [esc(k), esc(v)])));

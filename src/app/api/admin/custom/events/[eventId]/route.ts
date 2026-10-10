@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { notFound, ok, parseJson, requireApiAdmin, route } from "@/server/http";
 import { audit } from "@/server/log";
 import { discardCustomDraft, updateCustomEvent } from "@/server/custom/service";
-import { customEventInputSchema } from "@/lib/validation/event";
+import { customEventInputSchema, withDateRules } from "@/lib/validation/event";
 
 type Ctx = { params: Promise<{ eventId: string }> };
 
@@ -13,7 +13,7 @@ export const PATCH = route<Ctx>("admin.custom.details", async (req: NextRequest,
   const { eventId } = await ctx.params;
   const event = await db.event.findFirst({ where: { id: eventId, custom: true, deletedAt: null } });
   if (!event) throw notFound("Event");
-  const input = await parseJson(req, customEventInputSchema);
+  const input = await parseJson(req, withDateRules(customEventInputSchema));
   const result = await updateCustomEvent(event, input);
   await audit(admin.id, "admin.custom.details", "event", event.id);
   return ok({ event: { id: result.event.id }, cardChanged: result.cardChanged, staleAccepted: 0 });

@@ -392,6 +392,18 @@ describe("card options for custom events", () => {
     expect(trimmed).toContain("No gifts please");
   });
 
+  it("gives the names their own typeface and colour", async () => {
+    const event = await bareEvent();
+    const plain = card(event, {});
+    expect(plain).not.toContain("Great Vibes");
+    const styled = card(event, { names: { font: "great-vibes", fontAr: "marhey", color: "#7FA7C9" } });
+    expect(styled).toMatch(/font-family="'Great Vibes'"[^>]*fill="#7FA7C9"[^>]*>Sara</);
+    // Only the names change: the rest keeps the text colour.
+    expect(styled).not.toMatch(/fill="#7FA7C9"[^>]*>Grand Hall/);
+    const { normalizeDesign } = await import("@/lib/design/schema");
+    expect(normalizeDesign(eventDesign(event), { names: { font: "not-a-font" } }).names).toEqual({ font: null, fontAr: null, color: null });
+  });
+
   it("rejects a QR link that isn't a web address", async () => {
     const { designSchema } = await import("@/lib/design/schema");
     const link = designSchema.shape.card.shape.qr.shape.link;

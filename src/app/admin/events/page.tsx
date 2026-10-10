@@ -12,7 +12,7 @@ import {
   StatusBadge,
 } from "@/components/admin/ui";
 import { EventStateBadge } from "@/components/admin/event-state";
-import { eventDate, guestLimit, num } from "@/components/admin/format";
+import { guestLimit, num, eventWhen } from "@/components/admin/format";
 import { themes as themeNames } from "@/lib/i18n/dictionaries/en/themes";
 import { isThemeKey, THEME_KEYS } from "@/lib/themes/registry";
 
@@ -110,7 +110,7 @@ export default async function EventsPage({
             header: "Date",
             cell: (e) => (
               <span className="whitespace-nowrap">
-                {eventDate(e.startsAt, e.timezone)}
+                {eventWhen(e)}
               </span>
             ),
             hideBelow: "sm",

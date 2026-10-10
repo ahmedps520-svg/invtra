@@ -38,6 +38,8 @@ export function eventForGuest<
   return {
     ...event,
     startsAt,
+    // The section's own time is known even when the main one is "to be announced".
+    ...(d.time && "timeTbd" in event ? { timeTbd: false } : {}),
     // A different start makes the main end time meaningless for this section.
     endsAt: d.time && startsAt.getTime() !== event.startsAt.getTime() ? null : event.endsAt,
     venueName: d.venueName ?? event.venueName,

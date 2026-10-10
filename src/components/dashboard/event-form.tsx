@@ -13,14 +13,14 @@ import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { DateInput } from "@/components/ui/date-input";
 import { countryForTimezone } from "@/lib/timezone-country";
-import { Switch } from "@/components/ui/toggle";
+import { Checkbox, Switch } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import { fmt } from "@/lib/i18n/config";
 import { COMMON_TIME_ZONES, zoneOffsetMs } from "@/lib/time";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
 import { CardPreview } from "@/components/invitation/card-preview";
-import { customEventInputSchema, eventInputSchema, type EventInput } from "@/lib/validation/event";
+import { customEventInputSchema, eventInputSchema, withDateRules, type EventInput } from "@/lib/validation/event";
 import { cn } from "@/lib/utils";
 import { errorMessage, plural, themeName } from "./i18n";
 import { ScheduleEditor, type ScheduleRow } from "./schedule-editor";
@@ -86,6 +86,9 @@ type TextKey = (typeof TEXT_KEYS)[number];
 type FormState = Record<TextKey, string> & {
   type: EventType;
   language: Lang;
+  /** Date / time "to be announced". */
+  dateTbd: boolean;
+  timeTbd: boolean;
   allowWebRsvp: boolean;
   autoReminder: boolean;
   sectionsEnabled: boolean;
@@ -124,6 +127,8 @@ function fromInput(input?: EventInput | null): FormState {
     ...s,
     type: input?.type ?? "WEDDING",
     language,
+    dateTbd: input?.dateTbd ?? false,
+    timeTbd: input?.timeTbd ?? false,
     allowWebRsvp: input?.allowWebRsvp ?? true,
     autoReminder: input?.autoReminder ?? true,
     sectionsEnabled: input?.sectionsEnabled ?? false,
@@ -151,9 +156,11 @@ function toPayload(f: FormState, tz: string) {
     titleAr: opt(f.titleAr),
     hostNames: mirror(f.hostNames, f.hostNamesAr),
     hostNamesAr: opt(f.hostNamesAr),
-    date: f.date,
-    time: f.time,
-    endTime: f.endTime || "",
+    date: f.dateTbd ? "" : f.date,
+    time: f.timeTbd ? "" : f.time,
+    dateTbd: f.dateTbd,
+    timeTbd: f.timeTbd,
+    endTime: f.timeTbd ? "" : f.endTime || "",
     timezone: f.timezone || tz,
     venueName: mirror(f.venueName, f.venueNameAr),
     venueNameAr: opt(f.venueNameAr),
@@ -325,7 +332,7 @@ export function EventForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const payload = toPayload(form, tz);
-    const parsed = (relaxed ? customEventInputSchema : eventInputSchema).safeParse(payload);
+    const parsed = withDateRules(relaxed ? customEventInputSchema : eventInputSchema).safeParse(payload);
     if (!parsed.success) {
       const next: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -565,15 +572,30 @@ export function EventForm({
         {/* Date & time */}
         <Section title={d.sections.when.title} description={d.sections.when.description}>
           <div className="grid gap-5 sm:grid-cols-3">
-            <Field id="ev-date" label={f.date} error={err("date")}>
-              <DateInput id="ev-date" value={form.date} onChange={(v) => set("date", v)} invalid={Boolean(err("date"))} describedBy={err("date") ? "ev-date-error" : undefined} />
+            <Field id="ev-date" label={f.date} error={form.dateTbd ? undefined : err("date")}>
+              <DateInput
+                id="ev-date"
+                value={form.dateTbd ? "" : form.date}
+                onChange={(v) => set("date", v)}
+                disabled={form.dateTbd}
+                invalid={!form.dateTbd && Boolean(err("date"))}
+                describedBy={err("date") ? "ev-date-error" : undefined}
+              />
             </Field>
-            <Field id="ev-time" label={f.time} error={err("time")}>
-              {input("time", { type: "time", dir: "ltr" })}
+            <Field id="ev-time" label={f.time} error={form.timeTbd ? undefined : err("time")}>
+              {input("time", { type: "time", dir: "ltr", disabled: form.timeTbd, value: form.timeTbd ? "" : form.time, error: form.timeTbd ? "" : undefined })}
             </Field>
             <Field id="ev-endTime" label={f.endTime} optional={d.optional} error={err("endTime")}>
-              {input("endTime", { type: "time", dir: "ltr" })}
+              {input("endTime", { type: "time", dir: "ltr", disabled: form.timeTbd, value: form.timeTbd ? "" : form.endTime, error: form.timeTbd ? "" : undefined })}
             </Field>
+          </div>
+          {/* Not decided yet (a baby's arrival…): guests see "to be announced". */}
+          <div className="-mt-2 space-y-2">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Checkbox checked={form.dateTbd} onChange={(v) => set("dateTbd", v)} label={f.dateTbd} />
+              <Checkbox checked={form.timeTbd} onChange={(v) => set("timeTbd", v)} label={f.timeTbd} />
+            </div>
+            {form.dateTbd || form.timeTbd ? <p className="text-[13px] text-ink-faint">{f.tbdHint}</p> : null}
           </div>
           <Field id="ev-timezone" label={f.timezone} hint={f.timezoneHint} error={err("timezone")}>
             <Select id="ev-timezone" value={tz} onChange={(e) => set("timezone", e.target.value)} dir="ltr">

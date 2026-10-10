@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { ok, parseJson, requireApiUser, route } from "@/server/http";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 import { createEvent } from "@/server/events/service";
-import { eventInputSchema } from "@/lib/validation/event";
+import { eventInputSchema, withDateRules } from "@/lib/validation/event";
 
 export const GET = route("events.list", async () => {
   const user = await requireApiUser();
@@ -20,7 +20,7 @@ export const POST = route("events.create", async (req: NextRequest) => {
   const user = await requireApiUser();
   await enforceRateLimit(`events.create:${user.id}`, 30, 3600);
   // Optional `themeKey` preselects a design chosen on the marketing site (/designs → "Use this design").
-  const { themeKey, ...input } = await parseJson(req, eventInputSchema.extend({ themeKey: z.string().max(40).optional() }));
+  const { themeKey, ...input } = await parseJson(req, withDateRules(eventInputSchema.extend({ themeKey: z.string().max(40).optional() })));
   const event = await createEvent(user.id, input, themeKey);
   return ok({ event: { id: event.id } }, { status: 201 });
 });

@@ -140,6 +140,11 @@ export const editor = {
     invalidHex: "Use a hex colour like #84664A",
     contrastWarning: "Your text may be hard to read on this background ({ratio}:1). Try a darker text or a lighter background — 4.5:1 or more reads comfortably.",
     qrSafe: "Whatever colours you choose, the QR code stays dark on light so it always scans.",
+    names: "Colour of the names",
+    namesHint: "Make the names stand out — or keep them in the text colour.",
+    namesSame: "Text colour",
+    namesAny: "Any colour",
+    swatches: { accent: "Accent", gold: "Gold", rose: "Rose", blue: "Baby blue", sage: "Sage", navy: "Navy", burgundy: "Burgundy" },
   },
 
   palettes: {
@@ -214,9 +219,9 @@ export const editor = {
   },
 
   typography: {
-    latinDisplay: "Names & headings",
+    latinDisplay: "Headings",
     latinBody: "Wording",
-    arabicDisplay: "Arabic names & headings",
+    arabicDisplay: "Arabic headings",
     arabicBody: "Arabic wording",
     englishGroup: "English lettering",
     arabicGroup: "Arabic lettering",
@@ -224,7 +229,14 @@ export const editor = {
     sampleBody: "Request the pleasure of your company",
     sampleBodyAr: "يتشرفون بدعوتكم لحضور الحفل",
     sampleNamesAr: "أحمد و سارة",
+    sampleNames: "Sara & Omar",
     reset: "Reset to theme typefaces",
+    namesGroup: "The names",
+    namesHint: "A typeface just for the names — the couple, the baby, the graduate…",
+    namesOnly: "Names",
+    namesLatin: "English names",
+    namesArabic: "Arabic names",
+    namesSame: "Same as headings",
   },
 
   background: {

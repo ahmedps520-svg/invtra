@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { getTheme } from "@/lib/themes/registry";
+import { FONTS } from "@/lib/design/fonts";
 import { monogramOf, cn } from "@/lib/utils";
 import { star } from "@/lib/card/ornaments";
 import { heroMotif } from "@/lib/card/hero-motifs";
@@ -16,16 +17,17 @@ function splitNames(names: string): [string, string] | null {
 }
 
 /** Host names, stacked with an accented ampersand when there are two. */
-function Names({ className }: { className?: string }) {
+function Names({ className, light }: { className?: string; light?: boolean }) {
   const { vm, lang, animation } = useInvitation();
   const theme = getTheme(vm.themeKey);
-  const upper = theme.page.namesUppercase;
+  // Script typefaces are never set in capitals.
+  const upper = theme.page.namesUppercase && FONTS[vm.design.names?.font ?? vm.design.fonts.display].kind !== "script";
   const en = vm.event.hostNames;
   const ar = vm.event.hostNamesAr || "";
   if (!en.trim() && !ar.trim()) return null;
   const render = (names: string, arabic: boolean, size: string) => {
     const pair = splitNames(names);
-    const cls = cn(s.display, size, upper && !arabic && "uppercase tracking-[0.08em]");
+    const cls = cn(s.names, light && s.namesLight, size, upper && !arabic && "uppercase tracking-[0.08em]");
     const word = (text: string, i: number) =>
       animation === "elegant" ? (
         <motion.span
@@ -61,7 +63,7 @@ function Names({ className }: { className?: string }) {
     return (
       <div className={cn(className, "space-y-3")}>
         {render(ar, true, "text-5xl sm:text-6xl")}
-        <p className={cn(s.display, "text-2xl sm:text-3xl opacity-80", upper && "uppercase tracking-[0.1em]")}>{en}</p>
+        <p className={cn(s.names, light && s.namesLight, "text-2xl sm:text-3xl opacity-80", upper && "uppercase tracking-[0.1em]")}>{en}</p>
       </div>
     );
   }
@@ -104,7 +106,7 @@ function HeroText({ light }: { light?: boolean }) {
         <Motif />
       )}
       <Txt en={vm.copy.en.eyebrow} ar={vm.copy.ar.eyebrow} as="p" className={cn(s.eyebrow, "mb-6", light && "text-white/85")} inline />
-      <Names />
+      <Names light={light} />
       <Txt
         en={vm.copy.en.intro}
         ar={vm.copy.ar.intro}

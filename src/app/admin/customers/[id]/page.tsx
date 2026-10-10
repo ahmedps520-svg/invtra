@@ -20,11 +20,11 @@ import {
 } from "@/components/admin/ui";
 import {
   dt,
-  eventDate,
   guestLimit,
   money,
   num,
   rel,
+  eventWhen,
 } from "@/components/admin/format";
 import { EventStateBadge } from "@/components/admin/event-state";
 
@@ -230,7 +230,7 @@ export default async function CustomerDetailPage({
                 {
                   key: "date",
                   header: "Date",
-                  cell: (e) => eventDate(e.startsAt, e.timezone),
+                  cell: (e) => eventWhen(e),
                   hideBelow: "sm",
                 },
                 {

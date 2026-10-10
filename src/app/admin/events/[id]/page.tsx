@@ -22,12 +22,12 @@ import {
 } from "@/components/admin/ui";
 import {
   dt,
-  eventDateTime,
   guestLimit,
   money,
   num,
   pct,
   rel,
+  eventWhen,
 } from "@/components/admin/format";
 import { CardPreview } from "@/components/invitation/card-preview";
 import { themes as themeNames } from "@/lib/i18n/dictionaries/en/themes";
@@ -220,7 +220,7 @@ export default async function EventDetailPage({
                   { label: "Hosts", value: event.hostNames },
                   {
                     label: "Starts",
-                    value: `${eventDateTime(event.startsAt, event.timezone)} (${event.timezone})`,
+                    value: `${eventWhen(event, true)} (${event.timezone})`,
                   },
                   {
                     label: "Venue",

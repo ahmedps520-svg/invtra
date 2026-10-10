@@ -160,7 +160,7 @@ function Body({ checkin }: { checkin?: boolean }) {
         </Reveal>
       ) : null}
 
-      {sec.countdown && !vm.event.past ? (
+      {sec.countdown && !vm.event.past && !vm.event.dateTbd ? (
         <Block>
           <Countdown />
         </Block>

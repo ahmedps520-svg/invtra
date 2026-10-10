@@ -24,11 +24,12 @@ const baseCard: InvitationDesign["card"] = {
 
 const emptyTexts: InvitationDesign["texts"] = { eyebrow: "", intro: "", closing: "", eyebrowAr: "", introAr: "", closingAr: "", extra: "", extraAr: "" };
 
-function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" | "monogram" | "customQr" | "background" | "digits"> &
+function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" | "monogram" | "names" | "customQr" | "background" | "digits"> &
   Partial<Pick<InvitationDesign, "card" | "background" | "digits">>): InvitationDesign {
   return {
     texts: emptyTexts,
     monogram: "",
+    names: { font: null, fontAr: null, color: null },
     sections: baseSections,
     background: { mode: "theme", imageKey: null, overlay: 0.35 },
     customQr: { x: 0.5, y: 0.82, size: 0.22 },

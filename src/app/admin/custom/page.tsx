@@ -32,6 +32,7 @@ import {
   num,
   plural,
   rel,
+  eventWhen,
 } from "@/components/admin/format";
 import { buttonClasses } from "@/components/ui/button";
 import { truncate } from "@/lib/utils";
@@ -135,7 +136,7 @@ export default async function CustomEventsPage({
                     </Link>
                     <p className="text-[12px] text-ink-faint">
                       {common.eventTypes[d.type]} ·{" "}
-                      {eventDate(d.startsAt, d.timezone)}
+                      {eventWhen(d)}
                     </p>
                   </div>
                 ),
@@ -248,7 +249,7 @@ export default async function CustomEventsPage({
                           className="hover:text-ink hover:underline"
                         >
                           {truncate(o.event.title, 40)} ·{" "}
-                          {eventDate(o.event.startsAt, o.event.timezone)}
+                          {eventWhen(o.event)}
                         </Link>
                       ) : (
                         "Event deleted"

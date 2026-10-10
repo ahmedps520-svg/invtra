@@ -5,12 +5,13 @@ import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
 import { cardPreviewProps } from "@/server/events/preview";
 import { pickTemplate } from "@/server/whatsapp/compose";
-import { formatDate, formatTime } from "@/lib/format";
+
 import { fmt } from "@/lib/i18n/config";
 import { buttonClasses } from "@/components/ui/button";
 import { EventCard, type EventCardData } from "@/components/dashboard/event-card";
 import { EventsEmptyState } from "@/components/dashboard/events-empty";
 import { computeSteps } from "./_lib/progress";
+import { whenLabel } from "@/lib/event-when";
 
 export async function generateMetadata() {
   const { dict } = await getI18n();
@@ -51,12 +52,12 @@ export default async function DashboardHome() {
         hostNames: showAr && e.hostNamesAr ? e.hostNamesAr : e.hostNames,
         type: e.type,
         plan: e.plan,
-        dateLabel: `${formatDate(e.startsAt, { locale, timeZone: e.timezone, style: "long" })} · ${formatTime(e.startsAt, { locale, timeZone: e.timezone })}`,
+        dateLabel: whenLabel(e, locale, { style: "long" }),
         venue: showAr && e.venueNameAr ? e.venueNameAr : e.venueName,
         preview: await cardPreviewProps(e),
         counts: { total, accepted: count(e.id, "ACCEPTED"), declined: count(e.id, "DECLINED"), pending: count(e.id, "PENDING") },
         steps: computeSteps(e, total, Boolean(template)),
-        past: e.startsAt < now,
+        past: !e.dateTbd && e.startsAt < now,
       };
     }),
   );

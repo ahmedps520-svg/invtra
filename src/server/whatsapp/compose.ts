@@ -1,6 +1,6 @@
 import type { Event, Guest, MessageTemplate } from "@prisma/client";
 import { db } from "@/server/db";
-import { formatDate, formatTime } from "@/lib/format";
+import { TBA, whenDate, whenTime } from "@/lib/event-when";
 import {
   buttonPayload,
   isTemplateButtons,
@@ -28,7 +28,7 @@ type EventForValues = Pick<
   Event,
   "hostNames" | "hostNamesAr" | "title" | "titleAr" | "startsAt" | "timezone" | "venueName" | "venueNameAr" | "templateVariables" | "themeKey" | "design"
 > &
-  Partial<Pick<Event, "sectionsEnabled" | "sections">>;
+  Partial<Pick<Event, "sectionsEnabled" | "sections" | "dateTbd" | "timeTbd">>;
 
 /**
  * Values for every template variable, with the customer's per-event overrides applied.
@@ -43,6 +43,7 @@ export function templateValues(event: EventForValues, guest: Pick<Guest, "name">
   };
   const sec = event.sectionsEnabled && guest.section ? parseSections(event.sections)[guest.section] : null;
   const startsAt = sec?.time ? sectionStartsAt(event, sec.time) : event.startsAt;
+  const when = { startsAt, timezone: event.timezone, dateTbd: event.dateTbd, timeTbd: event.timeTbd && !sec?.time };
   // WhatsApp rejects empty template values, and custom events can leave the venue or hosts out.
   const venue = sec?.venueName || sec?.venueNameAr ? sec.venueName || sec.venueNameAr! : pick("venue", event.venueName || event.venueNameAr || "—");
   const venueAr = sec?.venueName || sec?.venueNameAr ? sec.venueNameAr || sec.venueName! : pick("venue_ar", event.venueNameAr || event.venueName || "—");
@@ -52,10 +53,11 @@ export function templateValues(event: EventForValues, guest: Pick<Guest, "name">
     host_names_ar: pick("host_names_ar", event.hostNamesAr || event.hostNames || event.titleAr || event.title),
     event_name: pick("event_name", event.title),
     event_name_ar: pick("event_name_ar", event.titleAr || event.title),
-    event_date: formatDate(startsAt, { locale: "en", timeZone: event.timezone, style: "full" }),
-    event_date_ar: formatDate(startsAt, { locale: "ar", timeZone: event.timezone, style: "full", digits }),
-    event_time: formatTime(startsAt, { locale: "en", timeZone: event.timezone }),
-    event_time_ar: formatTime(startsAt, { locale: "ar", timeZone: event.timezone, digits }),
+    // A date or time not decided yet reads "to be announced" (WhatsApp needs a value for every variable).
+    event_date: whenDate(when, "en"),
+    event_date_ar: whenDate(when, "ar", { digits }),
+    event_time: whenTime(when, "en") ?? (event.dateTbd ? "—" : TBA.time.en),
+    event_time_ar: whenTime(when, "ar", { digits }) ?? (event.dateTbd ? "—" : TBA.time.ar),
     venue,
     venue_ar: venueAr,
     invitation_token: token,

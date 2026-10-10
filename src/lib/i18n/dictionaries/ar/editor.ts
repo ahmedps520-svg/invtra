@@ -142,6 +142,11 @@ export const editor: typeof en = {
     invalidHex: "استخدم رمز لون مثل ‎#84664A",
     contrastWarning: "قد يصعب قراءة النص على هذه الخلفية (التباين {ratio}:1). جرّب نصًا أغمق أو خلفية أفتح — التباين 4.5:1 أو أكثر مريح للقراءة.",
     qrSafe: "مهما كانت الألوان التي تختارها، يبقى رمز QR داكنًا على خلفية فاتحة ليُقرأ دائمًا.",
+    names: "لون الأسماء",
+    namesHint: "ميّز الأسماء بلون خاص — أو أبقها بلون النص.",
+    namesSame: "لون النص",
+    namesAny: "أي لون",
+    swatches: { accent: "اللون المميز", gold: "ذهبي", rose: "وردي", blue: "أزرق فاتح", sage: "أخضر هادئ", navy: "كحلي", burgundy: "عنابي" },
   },
 
   palettes: {
@@ -216,9 +221,9 @@ export const editor: typeof en = {
   },
 
   typography: {
-    latinDisplay: "الأسماء والعناوين",
+    latinDisplay: "العناوين",
     latinBody: "الصياغة",
-    arabicDisplay: "الأسماء والعناوين بالعربية",
+    arabicDisplay: "العناوين بالعربية",
     arabicBody: "الصياغة بالعربية",
     englishGroup: "الحروف الإنجليزية",
     arabicGroup: "الحروف العربية",
@@ -226,7 +231,14 @@ export const editor: typeof en = {
     sampleBody: "Request the pleasure of your company",
     sampleBodyAr: "يتشرفون بدعوتكم لحضور الحفل",
     sampleNamesAr: "أحمد و سارة",
+    sampleNames: "Sara & Omar",
     reset: "استعادة خطوط التصميم",
+    namesGroup: "الأسماء",
+    namesHint: "خط خاص بالأسماء — العروسان، المولود، الخريج…",
+    namesOnly: "الأسماء",
+    namesLatin: "الأسماء بالإنجليزية",
+    namesArabic: "الأسماء بالعربية",
+    namesSame: "مثل العناوين",
   },
 
   background: {

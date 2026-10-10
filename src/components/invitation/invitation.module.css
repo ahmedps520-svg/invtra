@@ -24,6 +24,18 @@
   line-height: 1.02;
 }
 
+/* The names: their own typeface and colour when chosen (else the display face and text colour). */
+.names {
+  font-family: var(--inv-names, var(--inv-display));
+  font-weight: var(--inv-names-weight, var(--inv-display-weight, 500));
+  color: var(--inv-names-color, inherit);
+  line-height: 1.02;
+}
+
+.namesLight {
+  color: inherit;
+}
+
 .body {
   font-family: var(--inv-body);
 }

@@ -47,8 +47,10 @@ export function manualMessage(event: MessageEvent, guest: Pick<Guest, "name" | "
   const link = invitationUrl(token);
   // A custom event without a venue has no 📍 line.
   const place = (venue: string) => (venue && venue !== "—" ? `\n📍 ${venue}` : "");
-  const ar = `السلام عليكم ${v.guest_name}،\n\nيتشرّف ${v.host_names_ar} بدعوتكم لحضور ${v.event_name_ar}.\n📅 ${v.event_date_ar} · ${v.event_time_ar}${place(v.venue_ar)}${sectionLine(event, guest, "ar")}`;
-  const en = `Dear ${v.guest_name},\n\n${v.host_names} would be delighted to welcome you to ${v.event_name}.\n📅 ${v.event_date} · ${v.event_time}${place(v.venue)}${sectionLine(event, guest, "en")}`;
+  // "Date to be announced" without a time, or the date and time.
+  const when = (date: string, time: string) => [date, time].filter((x) => x && x !== "—").join(" · ");
+  const ar = `السلام عليكم ${v.guest_name}،\n\nيتشرّف ${v.host_names_ar} بدعوتكم لحضور ${v.event_name_ar}.\n📅 ${when(v.event_date_ar, v.event_time_ar)}${place(v.venue_ar)}${sectionLine(event, guest, "ar")}`;
+  const en = `Dear ${v.guest_name},\n\n${v.host_names} would be delighted to welcome you to ${v.event_name}.\n📅 ${when(v.event_date, v.event_time)}${place(v.venue)}${sectionLine(event, guest, "en")}`;
   const lang = messageLang(event, guest);
   if (lang === "ar") return `${ar}\n\nدعوتك الخاصة وتأكيد الحضور:\n${link}`;
   if (lang === "en") return `${en}\n\nYour personal invitation and RSVP:\n${link}`;

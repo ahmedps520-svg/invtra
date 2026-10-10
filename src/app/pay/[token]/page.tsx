@@ -16,13 +16,14 @@ import { ensureReceiptNumber, guestsLabel } from "@/server/payments/receipts";
 import { PAY_COPY } from "@/lib/i18n/pay-copy";
 import { localePath } from "@/lib/i18n/routing";
 import { fmt } from "@/lib/i18n/config";
-import { formatDate, formatMoney, formatTime } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 import { Logo } from "@/components/brand/logo";
 import { buttonClasses } from "@/components/ui/button";
 import { PayButton } from "@/components/billing/pay-button";
 import { Receipt, type ReceiptData } from "@/components/billing/receipt";
 import { AutoRefresh } from "@/components/billing/auto-refresh";
 import { cn } from "@/lib/utils";
+import { whenLabel } from "@/lib/event-when";
 
 export const metadata: Metadata = {
   title: "Payment",
@@ -48,6 +49,8 @@ async function load(token: string) {
           titleAr: true,
           startsAt: true,
           timezone: true,
+          dateTbd: true,
+          timeTbd: true,
           venueName: true,
           venueNameAr: true,
         },
@@ -238,7 +241,7 @@ export default async function PayPage({ params, searchParams }: Props) {
                 <Row
                   icon={<CalendarDays />}
                   label={t.date}
-                  value={`${formatDate(ev.startsAt, { locale, timeZone: tz, style: "full" })} · ${formatTime(ev.startsAt, { locale, timeZone: tz })}`}
+                  value={whenLabel({ ...ev, timezone: tz }, locale)}
                 />
                 <Row
                   icon={<MapPin />}

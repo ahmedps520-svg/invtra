@@ -9,13 +9,35 @@ import { parseSections, sectionDiffers, SECTION_KEYS } from "@/lib/sections";
 import { walletChanged } from "@/server/apple/push";
 
 /** Fields printed on the invitation image — changing them requires re-sending updates. */
-const CARD_FIELDS = ["title", "titleAr", "hostNames", "hostNamesAr", "startsAt", "timezone", "venueName", "venueNameAr", "address", "addressAr", "type", "language"] as const;
+const CARD_FIELDS = ["title", "titleAr", "hostNames", "hostNamesAr", "startsAt", "dateTbd", "timeTbd", "timezone", "venueName", "venueNameAr", "address", "addressAr", "type", "language"] as const;
 
-function toEventData(input: EventInput) {
-  const startsAt = zonedToUtc(input.date, input.time, input.timezone);
+/** Event details as saved; the date / time may be "to be announced" (older callers omit the flags). */
+export type EventDetails = Omit<EventInput, "dateTbd" | "timeTbd"> & Partial<Pick<EventInput, "dateTbd" | "timeTbd">>;
+
+/** How far ahead an unknown date is parked, so replies stay open and nothing treats it as past. */
+const TBD_AHEAD_MS = 365 * 86_400_000;
+
+/**
+ * When the event starts. An unknown time is kept as 12:00; an unknown date as a placeholder about a
+ * year ahead — the same one on every save while the date stays unknown, so nothing re-renders.
+ */
+function startOf(input: EventDetails, prev?: Pick<Event, "startsAt" | "dateTbd" | "timezone"> | null) {
+  const dateTbd = Boolean(input.dateTbd) || !input.date;
+  const timeTbd = Boolean(input.timeTbd) || !input.time;
+  const time = timeTbd ? "12:00" : input.time;
+  let date = input.date;
+  if (dateTbd) {
+    const keep = prev?.dateTbd && prev.timezone === input.timezone && prev.startsAt.getTime() > Date.now() + 30 * 86_400_000;
+    date = utcToZoned(keep ? prev.startsAt : new Date(Date.now() + TBD_AHEAD_MS), input.timezone).date;
+  }
+  return { startsAt: zonedToUtc(date, time, input.timezone), date, dateTbd, timeTbd };
+}
+
+function toEventData(input: EventDetails, prev?: Pick<Event, "startsAt" | "dateTbd" | "timezone"> | null) {
+  const { startsAt, date, dateTbd, timeTbd } = startOf(input, prev);
   let endsAt: Date | null = null;
-  if (input.endTime) {
-    endsAt = zonedToUtc(input.date, input.endTime, input.timezone);
+  if (input.endTime && !timeTbd) {
+    endsAt = zonedToUtc(date, input.endTime, input.timezone);
     if (endsAt <= startsAt) endsAt = new Date(endsAt.getTime() + 86_400_000); // ends after midnight
   }
   return {
@@ -27,6 +49,8 @@ function toEventData(input: EventInput) {
     hostNamesAr: input.hostNamesAr,
     startsAt,
     endsAt,
+    dateTbd,
+    timeTbd,
     timezone: input.timezone,
     venueName: input.venueName,
     venueNameAr: input.venueNameAr,
@@ -70,7 +94,7 @@ const OCCASION_THEME: Partial<Record<EventInput["type"], ThemeKey>> = {
   GRADUATION: "confetti",
 };
 
-export async function createEvent(userId: string, input: EventInput, preferredTheme?: string | null) {
+export async function createEvent(userId: string, input: EventDetails, preferredTheme?: string | null) {
   const byLanguage: ThemeKey = input.language === "AR" ? "arabic" : input.language === "BILINGUAL" ? "bilingual" : DEFAULT_THEME;
   const themeKey: ThemeKey = isThemeKey(preferredTheme) ? preferredTheme : (OCCASION_THEME[input.type] ?? byLanguage);
   const theme = getTheme(themeKey);
@@ -92,8 +116,8 @@ export async function createEvent(userId: string, input: EventInput, preferredTh
 }
 
 /** Update event details. Returns whether anything printed on the invitation changed. */
-export async function updateEvent(event: Event, input: EventInput) {
-  const data = toEventData(input);
+export async function updateEvent(event: Event, input: EventDetails) {
+  const data = toEventData(input, event);
   const cardChanged = CARD_FIELDS.some((k) => {
     const a = (event as Record<string, unknown>)[k];
     const b = (data as Record<string, unknown>)[k];
@@ -110,7 +134,7 @@ export async function updateEvent(event: Event, input: EventInput) {
       },
     });
     // A new date or time: everyone gets the day-before reminder for the new start.
-    if (e.startsAt.getTime() !== event.startsAt.getTime() && e.startsAt > new Date()) {
+    if ((e.startsAt.getTime() !== event.startsAt.getTime() || e.dateTbd !== event.dateTbd) && e.startsAt > new Date()) {
       await tx.guest.updateMany({ where: { eventId: event.id, reminderSentAt: { not: null } }, data: { reminderSentAt: null } });
     }
     return e;
@@ -129,9 +153,11 @@ export function eventToInput(event: Event & { scheduleItems: { time: string; tit
     titleAr: event.titleAr,
     hostNames: event.hostNames,
     hostNamesAr: event.hostNamesAr,
-    date: start.date,
-    time: start.time,
-    endTime: event.endsAt ? utcToZoned(event.endsAt, event.timezone).time : "",
+    date: event.dateTbd ? "" : start.date,
+    time: event.timeTbd ? "" : start.time,
+    dateTbd: event.dateTbd,
+    timeTbd: event.timeTbd,
+    endTime: event.endsAt && !event.timeTbd ? utcToZoned(event.endsAt, event.timezone).time : "",
     timezone: event.timezone,
     venueName: event.venueName,
     venueNameAr: event.venueNameAr,

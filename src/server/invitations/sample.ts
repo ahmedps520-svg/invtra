@@ -148,6 +148,8 @@ export function sampleEvent(themeKey: ThemeKey, language: EventLanguage): Event 
     autoReminder: false,
     custom: false,
     customDraft: false,
+    dateTbd: false,
+    timeTbd: false,
     themeKey: theme.key,
     design: theme.defaults as unknown as Prisma.JsonValue,
     imageMode: "GENERATED",

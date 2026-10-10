@@ -42,6 +42,8 @@ function invited(g: GuestLike) {
 
 /** Is the day-before reminder due for this guest now? */
 export function reminderDue(event: Event, guest: Pick<Guest, "section" | "rsvpAt">, now = new Date()) {
+  // No reminder until the date is known (its start is only a placeholder until then).
+  if (event.dateTbd) return false;
   const start = eventForGuest(event, guest).startsAt.getTime();
   const t = now.getTime();
   if (t < start - REMINDER_LEAD_MS || t > start - REMINDER_LAST_MS) return false;
@@ -59,6 +61,7 @@ export async function queueDueReminders(now = new Date()) {
       deletedAt: null,
       deactivatedAt: null,
       plan: { not: null },
+      dateTbd: false,
       // Sections can start a few hours apart — look a little wider than the 24-hour lead.
       startsAt: { gte: new Date(now.getTime() - 12 * 3600_000), lte: new Date(now.getTime() + REMINDER_LEAD_MS + 12 * 3600_000) },
     },
@@ -136,7 +139,7 @@ export async function reminderOverview(event: Event) {
   return {
     autoReminder: event.autoReminder,
     /** When INVTRA's reminders go out (the main start; sections follow their own times). */
-    reminderAt: new Date(start - REMINDER_LEAD_MS).toISOString(),
+    reminderAt: event.dateTbd ? null : new Date(start - REMINDER_LEAD_MS).toISOString(),
     reminderTemplate: Boolean(reminderTemplate),
     accepted: accepted.length,
     reminded: accepted.filter((g) => g.reminderSentAt).length,
