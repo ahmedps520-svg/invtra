@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { Copy, DoorOpen, ExternalLink, MessageCircle, Power, RefreshCw } from "lucide-react";
+import { BarChart3, Copy, DoorOpen, ExternalLink, MessageCircle, Power, RefreshCw } from "lucide-react";
 import { useI18n } from "@/components/i18n/provider";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -65,7 +66,15 @@ export function DoorCard({
 
   return (
     <Card>
-      <CardHeader title={t.title} />
+      <CardHeader
+        title={t.title}
+        action={
+          <Link href={`/dashboard/events/${eventId}/checkin`} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-bronze-700 hover:text-bronze-900">
+            <BarChart3 className="size-3.5" />
+            {t.dashboard}
+          </Link>
+        }
+      />
       <div className="px-6 pb-6">
         <p className="text-[13.5px] leading-relaxed text-ink-soft">{t.body}</p>
         {url ? (

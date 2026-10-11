@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, ExternalLink, MapPin } from "lucide-react";
+import { ArrowLeft, CalendarDays, ExternalLink, MapPin, ScanLine } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
 import { findOwnedEvent } from "@/server/events/access";
@@ -57,6 +57,11 @@ export default async function EventLayout({ children, params }: { children: Reac
               <ExternalLink className="size-3.5" />
               {d.header.viewGuestPage}
             </a>
+            {/* Arrivals and door scans on the night. */}
+            <Link href={`/dashboard/events/${event.id}/checkin`} className={buttonClasses("outline", "sm")}>
+              <ScanLine className="size-3.5" />
+              {dict.door.checkin.open}
+            </Link>
             {event.firstSentAt ? (
               <Badge tone="sage" dot>
                 {d.header.sent}

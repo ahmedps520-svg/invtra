@@ -1,4 +1,4 @@
-import type { Event, Guest, Prisma } from "@prisma/client";
+import type { DoorScanResult, Event, Guest, Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { appUrl } from "@/server/env";
 import { badRequest, notFound } from "@/server/http";
@@ -117,17 +117,41 @@ export function tokenFromCode(code: string): string | null {
 
 export type ScanResult = { ok: true; guest: DoorGuest } | { ok: false; reason: "unknown" | "other_event" | "revoked" };
 
-/** Look up a scanned QR code for this event and count it as a door scan. */
+/** Look up a scanned QR code for this event, count it as a door scan and add it to the host's scan log. */
 export async function doorScan(event: Event, code: string): Promise<ScanResult> {
   const token = tokenFromCode(code);
-  if (!token) return { ok: false, reason: "unknown" };
+  if (!token) return logged(event, null, "UNKNOWN", { ok: false, reason: "unknown" });
   const inv = await db.invitation.findUnique({ where: { token }, select: { eventId: true, status: true, guestId: true, guest: { select: { isTest: true } } } });
-  if (!inv) return { ok: false, reason: "unknown" };
-  if (inv.eventId !== event.id) return { ok: false, reason: "other_event" };
-  if (inv.status === "REVOKED") return { ok: false, reason: "revoked" };
+  if (!inv) return logged(event, null, "UNKNOWN", { ok: false, reason: "unknown" });
+  // Another event's guest stays out of this event's log.
+  if (inv.eventId !== event.id) return logged(event, null, "OTHER_EVENT", { ok: false, reason: "other_event" });
+  // The host's own test invitation isn't a guest arriving: it works, but stays out of the log.
+  const guestId = inv.guest.isTest ? undefined : inv.guestId;
+  if (inv.status === "REVOKED") return logged(event, guestId, "REVOKED", { ok: false, reason: "revoked" });
   await recordScan(token, true);
   const guest = await db.guest.findUniqueOrThrow({ where: { id: inv.guestId }, select: GUEST_FIELDS });
-  return { ok: true, guest: toDoorGuest(guest, event.sectionsEnabled) };
+  return logged(event, guestId, scanResult(guest), { ok: true, guest: toDoorGuest(guest, event.sectionsEnabled) });
+}
+
+/** How a valid invitation reads at the door. */
+export function scanResult(guest: Pick<Guest, "checkedInAt" | "rsvpStatus">): DoorScanResult {
+  return guest.checkedInAt ? "ALREADY_IN" : guest.rsvpStatus !== "ACCEPTED" ? "NOT_ACCEPTED" : "VALID";
+}
+
+/**
+ * Write a scan to the door log (test invitations aside). The same code read again within a few
+ * seconds — the camera app and the scanner both opening it — is logged once.
+ */
+async function logged(event: Event, guestId: string | null | undefined, result: DoorScanResult, value: ScanResult): Promise<ScanResult> {
+  if (guestId !== undefined) await logDoorScan(event.id, guestId, result);
+  return value;
+}
+
+export async function logDoorScan(eventId: string, guestId: string | null, result: DoorScanResult) {
+  const repeat = guestId
+    ? await db.doorScan.findFirst({ where: { eventId, guestId, result, createdAt: { gt: new Date(Date.now() - 5000) } }, select: { id: true } })
+    : null;
+  if (!repeat) await db.doorScan.create({ data: { eventId, guestId, result } });
 }
 
 /** Find guests by name, group or the last digits of their phone. */
@@ -159,7 +183,7 @@ export async function doorGuest(event: Event, guestId: string): Promise<DoorGues
 }
 
 /** Check a guest in (with how many people arrived), or undo it. */
-export async function doorCheckIn(event: Event, guestId: string, opts: { count?: number; undo?: boolean }): Promise<DoorGuest> {
+export async function doorCheckIn(event: Event, guestId: string, opts: { count?: number; undo?: boolean; byHost?: boolean }): Promise<DoorGuest> {
   const guest = await db.guest.findFirst({ where: { id: guestId, eventId: event.id, isTest: false } });
   if (!guest) throw notFound("Guest");
   if (opts.count !== undefined && (opts.count < 1 || opts.count > 50)) throw badRequest("invalid_count", "Between 1 and 50 people.");
@@ -172,7 +196,7 @@ export async function doorCheckIn(event: Event, guestId: string, opts: { count?:
   });
   await walletChanged({ guestIds: [guest.id] });
   if (!opts.undo && !guest.checkedInAt) {
-    await recordActivity(db, event.id, "guest.checked_in", { name: guest.name, count: updated.checkedInCount, door: true }, guest.id);
+    await recordActivity(db, event.id, "guest.checked_in", { name: guest.name, count: updated.checkedInCount, door: !opts.byHost }, guest.id);
   }
   return toDoorGuest(updated, event.sectionsEnabled);
 }

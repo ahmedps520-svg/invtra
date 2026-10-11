@@ -5,7 +5,7 @@ import { rateLimit } from "@/server/security/rate-limit";
 import { recordScan } from "@/server/invitations/public";
 import { BOT_UA } from "@/server/invitations/public";
 import { appUrl } from "@/server/env";
-import { DOOR_COOKIE, findDoorEvent } from "@/server/door/service";
+import { DOOR_COOKIE, findDoorEvent, logDoorScan, scanResult } from "@/server/door/service";
 
 /**
  * Target of every guest's QR code (upper-case so the QR stays small and robust).
@@ -54,5 +54,9 @@ async function recordScanForViewer(token: string, userId: string | null, isAdmin
     : null;
   const byHost = Boolean(owner && (owner.event.userId === userId || isAdmin));
   const inv = await recordScan(token, byHost);
+  // The host scanning with their own phone at the door shows up in their check-in log too.
+  if (inv && byHost && !inv.guest.isTest) {
+    await logDoorScan(inv.eventId, inv.guestId, inv.status === "REVOKED" ? "REVOKED" : scanResult(inv.guest));
+  }
   return inv ? { byHost } : null;
 }

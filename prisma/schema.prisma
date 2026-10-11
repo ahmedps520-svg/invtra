@@ -229,6 +229,7 @@ model Event {
   messages      WhatsAppMessage[]
   views         InvitationView[]
   scans         QRScan[]
+  doorScans     DoorScan[]
   rsvps         Rsvp[]
   activities    Activity[]
 
@@ -333,17 +334,17 @@ enum RsvpSource {
 }
 
 model Guest {
-  id             String  @id @default(cuid())
+  id             String        @id @default(cuid())
   eventId        String
-  event          Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event          Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
   name           String
   phone          String // E.164
   groupName      String?
-  allowedCount   Int     @default(1)
+  allowedCount   Int           @default(1)
   attendingCount Int?
   locale         String? // optional per-guest language override ("en" | "ar")
   notes          String?
-  isTest         Boolean @default(false) // host's own number for "send me a test"; hidden from lists & stats
+  isTest         Boolean       @default(false) // host's own number for "send me a test"; hidden from lists & stats
   section        GuestSection? // men's or women's section, when the event has sections
 
   status            GuestStatus    @default(PENDING)
@@ -377,6 +378,7 @@ model Guest {
   invitation Invitation?
   messages   WhatsAppMessage[]
   rsvps      Rsvp[]
+  doorScans  DoorScan[]
 
   @@unique([eventId, phone])
   @@index([eventId, status])
@@ -450,6 +452,29 @@ model QRScan {
 
   @@index([eventId, createdAt])
   @@index([invitationId])
+}
+
+/// Every QR code read at the door (by staff with the door link), including the ones turned away.
+model DoorScan {
+  id        String         @id @default(cuid())
+  eventId   String
+  event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestId   String?
+  guest     Guest?         @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  result    DoorScanResult
+  createdAt DateTime       @default(now())
+
+  @@index([eventId, createdAt])
+  @@index([guestId])
+}
+
+enum DoorScanResult {
+  VALID // an invitation for this event, guest not checked in yet
+  ALREADY_IN // the guest had already been checked in
+  NOT_ACCEPTED // the guest declined or hasn't replied
+  UNKNOWN // not an INVTRA invitation
+  OTHER_EVENT // an invitation to a different event
+  REVOKED // the host cancelled this invitation
 }
 
 model Rsvp {
@@ -754,29 +779,33 @@ model Order {
  * Amounts are in minor units (halalas); prices are VAT-inclusive.
  */
 model TaxStatement {
-  id         String    @id @default(cuid())
-  month      String // "2026-10"
-  currency   String
-  rate       Int // VAT %, e.g. 15
-  receipts   Int // paid orders in the month
-  gross      Int // collected (VAT included)
-  refunds    Int // refunded in the month
-  vat        Int // VAT owed for the month (on sales minus on refunds)
-  net        Int // income excluding VAT
-  createdAt  DateTime  @default(now())
-  emailedAt  DateTime?
+  id        String    @id @default(cuid())
+  month     String // "2026-10"
+  currency  String
+  rate      Int // VAT %, e.g. 15
+  receipts  Int // paid orders in the month
+  gross     Int // collected (VAT included)
+  refunds   Int // refunded in the month
+  vat       Int // VAT owed for the month (on sales minus on refunds)
+  net       Int // income excluding VAT
+  createdAt DateTime  @default(now())
+  emailedAt DateTime?
 
   @@unique([month, currency])
 }
 
-/** Integration settings managed from the admin (Apple certificates…). Secrets are encrypted with APP_SECRET. */
+/**
+ * Integration settings managed from the admin (Apple certificates…). Secrets are encrypted with APP_SECRET.
+ */
 model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
 }
 
-/** iPhones that saved a guest's Apple Wallet pass and want updates (Apple's PassKit web service). */
+/**
+ * iPhones that saved a guest's Apple Wallet pass and want updates (Apple's PassKit web service).
+ */
 model WalletRegistration {
   id              String   @id @default(cuid())
   deviceLibraryId String
@@ -789,7 +818,9 @@ model WalletRegistration {
   @@index([serialNumber])
 }
 
-/** Sequential receipt numbers per calendar year (INVTRA-2026-0001, …). */
+/**
+ * Sequential receipt numbers per calendar year (INVTRA-2026-0001, …).
+ */
 model ReceiptCounter {
   year Int @id
   last Int @default(0)
