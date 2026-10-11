@@ -1,7 +1,9 @@
 import type { Order, Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { appUrl } from "@/server/env";
-import { emailLayout, sendEmail } from "@/server/email";
+import { sendEmail } from "@/server/email";
+import { renderEmail, renderEmailText } from "@/server/email-template";
+import { receiptEmail } from "@/server/emails";
 import { formatDate, formatMoney } from "@/lib/format";
 import { isUnlimited } from "@/lib/plans";
 
@@ -10,8 +12,6 @@ import { isUnlimited } from "@/lib/plans";
  * page (/pay/<token> for payment links, /receipt/<orderId> for signed-in customers) and
  * an email; custom packages also get a WhatsApp receipt (queue job "payment.receipt").
  */
-
-const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /** Next receipt number for the year, e.g. INVTRA-2026-0007 (gap-free, inside the payment transaction). */
 export async function nextReceiptNumber(tx: Prisma.TransactionClient, paidAt: Date): Promise<string> {
@@ -52,21 +52,17 @@ export async function sendReceiptEmail(orderId: string) {
   const amount = formatMoney(order.amount, order.currency, ar ? "ar" : "en");
   const link = receiptUrl(order);
   const when = formatDate(order.paidAt ?? new Date(), { locale: ar ? "ar" : "en", timeZone: order.event?.timezone ?? "Asia/Riyadh", style: "long" });
-  const name = escapeHtml(order.user.name);
-  const title = escapeHtml(eventName(ar));
-  await sendEmail({
-    to: order.user.email,
-    subject: ar ? `إيصال الدفع ${number} — إنفترا` : `Your INVTRA receipt ${number}`,
-    text: ar
-      ? `مرحبًا ${order.user.name}،\n\nاستلمنا دفعتك بقيمة ${amount} لمناسبة ${eventName(true)} بتاريخ ${when}.\nرقم الإيصال: ${number}\n\nعرض الإيصال:\n${link}\n\nشكرًا لاختيارك إنفترا.`
-      : `Hello ${order.user.name},\n\nWe received your payment of ${amount} for ${eventName(false)} on ${when}.\nReceipt number: ${number}\n\nView your receipt:\n${link}\n\nThank you for choosing INVTRA.`,
-    html: emailLayout(
-      ar ? "شكرًا لك — تم الدفع" : "Thank you — payment received",
-      ar
-        ? `<div dir="rtl"><p>مرحبًا ${name}،</p><p>استلمنا دفعتك بقيمة <b>${amount}</b> لمناسبة <b>${title}</b> بتاريخ ${when}.</p><p>رقم الإيصال: <b>${number}</b></p><p><a href="${link}" style="color:#84664a">عرض الإيصال</a></p></div>`
-        : `<p>Hello ${name},</p><p>We received your payment of <b>${amount}</b> for <b>${title}</b> on ${when}.</p><p>Receipt number: <b>${number}</b></p><p><a href="${link}" style="color:#84664a">View your receipt</a></p>`,
-    ),
+  const mail = receiptEmail({
+    name: order.user.name,
+    locale: order.user.locale,
+    number: number ?? "",
+    amount,
+    paidOn: when,
+    event: eventName(ar),
+    link,
+    eventId: order.eventId,
   });
+  await sendEmail({ to: order.user.email, subject: mail.subject, text: renderEmailText(mail), html: renderEmail(mail) });
 }
 
 /** "Unlimited guests" / "Up to 500 guests" (English or Arabic). */

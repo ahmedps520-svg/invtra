@@ -9,7 +9,9 @@ import { hashPassword } from "@/server/auth/password";
 import { generateSecretToken, sha256 } from "@/server/security/tokens";
 import { badRequest, conflict, notFound } from "@/server/http";
 import { enqueue } from "@/server/queue/queue";
-import { emailLayout, sendEmail } from "@/server/email";
+import { sendEmail } from "@/server/email";
+import { renderEmail, renderEmailText } from "@/server/email-template";
+import { paymentRequestEmail } from "@/server/emails";
 import { UNLIMITED_GUESTS } from "@/lib/plans";
 import {
   customPackageSchema,
@@ -23,6 +25,8 @@ type CustomEventInput = EventInput;
 import { normalizePhone } from "@/lib/phone";
 import { formatMoney } from "@/lib/format";
 import { zonedToUtc } from "@/lib/time";
+import { whenLabel } from "@/lib/event-when";
+import { guestsLabel } from "@/server/payments/receipts";
 import { oneOf, paging, str, type SearchParams } from "@/server/admin/params";
 import { assertWhatsAppOn } from "@/server/whatsapp";
 
@@ -55,15 +59,6 @@ function minorUnits(amount: number, currency: string) {
 export function payUrl(token: string) {
   return appUrl(`/pay/${token}`);
 }
-
-const escapeHtml = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
-  );
 
 /** One-time link that lets a host created by staff choose their own password (7 days). */
 async function passwordSetupLink(userId: string) {
@@ -337,6 +332,10 @@ type Loaded = Order & {
     titleAr: string | null;
     startsAt: Date;
     timezone: string;
+    dateTbd: boolean;
+    timeTbd: boolean;
+    venueName: string;
+    venueNameAr: string | null;
   } | null;
 };
 
@@ -361,19 +360,16 @@ async function loadOrder(orderId: string): Promise<Loaded> {
           titleAr: true,
           startsAt: true,
           timezone: true,
+          dateTbd: true,
+          timeTbd: true,
+          venueName: true,
+          venueNameAr: true,
         },
       },
     },
   });
   if (!order) throw notFound("Order");
   return order;
-}
-
-function eventName(order: Loaded, ar: boolean) {
-  return (
-    (ar ? order.event?.titleAr || order.event?.title : order.event?.title) ??
-    "INVTRA"
-  );
 }
 
 /**
@@ -383,19 +379,54 @@ function eventName(order: Loaded, ar: boolean) {
 export function paymentRequestWhatsAppUrl(order: {
   amount: number;
   currency: string;
+  guestLimit?: number;
   payToken: string | null;
   user: { name: string; phone: string | null; locale: string };
-  event: { title: string; titleAr: string | null } | null;
+  event: { title: string; titleAr: string | null; startsAt?: Date; timezone?: string; dateTbd?: boolean; timeTbd?: boolean } | null;
 }): string | null {
   if (!order.user.phone || !order.payToken) return null;
   const ar = order.user.locale === "ar";
-  const amount = formatMoney(order.amount, order.currency, ar ? "ar" : "en");
-  const event = (ar ? order.event?.titleAr || order.event?.title : order.event?.title) ?? "INVTRA";
-  const link = payUrl(order.payToken);
-  const text = ar
-    ? `مرحبًا ${order.user.name}،\n\nباقة دعوات إنفترا لمناسبة ${event} جاهزة. الإجمالي: ${amount}.\n\nللمراجعة والدفع:\n${link}`
-    : `Hello ${order.user.name},\n\nYour INVTRA invitation package for ${event} is ready. Total: ${amount}.\n\nReview and pay here:\n${link}`;
-  return `https://wa.me/${order.user.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+  const lang = ar ? "ar" : "en";
+  const amount = formatMoney(order.amount, order.currency, lang);
+  const ev = order.event;
+  const event = (ar ? ev?.titleAr || ev?.title : ev?.title) ?? "INVTRA";
+  const link = appUrl(`/pay/${order.payToken}${ar ? "?lang=ar" : ""}`);
+  const when = ev?.startsAt && ev.timezone ? whenLabel({ startsAt: ev.startsAt, timezone: ev.timezone, dateTbd: ev.dateTbd, timeTbd: ev.timeTbd }, lang, { style: "long" }) : null;
+  const guests = order.guestLimit === undefined ? null : guestsLabel(order.guestLimit, ar);
+  const transfer = env().PAYMENT_PROVIDER === "manual";
+  // WhatsApp formatting: *bold*. Lines in the host's language.
+  const lines = ar
+    ? [
+        `مرحبًا ${order.user.name} 🤍`,
+        "",
+        `باقة دعوات *${event}* جاهزة ✨`,
+        "",
+        ...(when ? [`📅 ${when}`] : []),
+        ...(guests ? [`👥 ${guests}`] : []),
+        `💳 الإجمالي: *${amount}*`,
+        "",
+        "شاهد تصميم دعوتك وتفاصيل الباقة وأكمل الدفع من هنا:",
+        link,
+        ...(transfer ? ["", "الدفع بالتحويل البنكي — تجد بيانات الحساب في الصفحة، وبعد التحويل أرسل لنا الإيصال هنا."] : []),
+        "",
+        "شكرًا لاختيارك إنفترا 🌿",
+      ]
+    : [
+        `Hello ${order.user.name} 🤍`,
+        "",
+        `Your invitation package for *${event}* is ready ✨`,
+        "",
+        ...(when ? [`📅 ${when}`] : []),
+        ...(guests ? [`👥 ${guests}`] : []),
+        `💳 Total: *${amount}*`,
+        "",
+        "See your invitation design and package, and complete the payment here:",
+        link,
+        ...(transfer ? ["", "Payment is by bank transfer — the account details are on the page. Once you've transferred, just send us the receipt here."] : []),
+        "",
+        "Thank you for choosing INVTRA 🌿",
+      ];
+  return `https://wa.me/${order.user.phone.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /** Staff sent the link themselves (their own WhatsApp): note when. */
@@ -416,7 +447,7 @@ export async function sendPaymentRequest(
     throw badRequest("no_link", "This order has no payment link.");
   if (order.status !== "PENDING")
     throw conflict("not_payable", "This order is not awaiting payment.");
-  const result = { whatsapp: false, email: false };
+  const result: { whatsapp: boolean; email: boolean; emailError?: string } = { whatsapp: false, email: false };
 
   if (channels.whatsapp) {
     assertWhatsAppOn();
@@ -433,34 +464,23 @@ export async function sendPaymentRequest(
     result.whatsapp = true;
   }
   if (channels.email) {
-    const ar = order.user.locale === "ar";
-    const amount = formatMoney(order.amount, order.currency, ar ? "ar" : "en");
-    const link = payUrl(order.payToken);
     const setup =
       opts.newCustomer || !order.user.lastLoginAt
         ? await passwordSetupLink(order.user.id)
         : null;
-    const name = escapeHtml(order.user.name);
-    const title = escapeHtml(eventName(order, ar));
     try {
+      const mail = await paymentRequestEmail(order, setup);
       await sendEmail({
         to: order.user.email,
-        subject: ar
-          ? `باقة دعوات ${eventName(order, true)} جاهزة — إنفترا`
-          : `Your INVTRA package for ${eventName(order, false)} is ready`,
-        text: ar
-          ? `مرحبًا ${order.user.name}،\n\nباقة دعوات إنفترا لمناسبة ${eventName(order, true)} جاهزة. الإجمالي: ${amount}.\n\nللمراجعة والدفع:\n${link}${setup ? `\n\nأنشأنا لك حسابًا في إنفترا لإدارة مناسبتك. اختر كلمة المرور من هنا (صالح 7 أيام):\n${setup}` : ""}\n\nإنفترا`
-          : `Hello ${order.user.name},\n\nYour INVTRA invitation package for ${eventName(order, false)} is ready. Total: ${amount}.\n\nReview and pay securely:\n${link}${setup ? `\n\nWe've created an INVTRA account for you to manage your event. Choose your password here (valid for 7 days):\n${setup}` : ""}\n\nINVTRA`,
-        html: emailLayout(
-          ar ? "باقتك جاهزة" : "Your package is ready",
-          ar
-            ? `<div dir="rtl"><p>مرحبًا ${name}،</p><p>باقة دعوات إنفترا لمناسبة <b>${title}</b> جاهزة. الإجمالي: <b>${amount}</b>.</p><p><a href="${link}" style="display:inline-block;background:#1e1a16;color:#faf7f2;padding:12px 22px;border-radius:999px;text-decoration:none">مراجعة ودفع</a></p>${setup ? `<p>أنشأنا لك حسابًا لإدارة مناسبتك — <a href="${setup}" style="color:#84664a">اختر كلمة المرور</a> (صالح 7 أيام).</p>` : ""}</div>`
-            : `<p>Hello ${name},</p><p>Your INVTRA invitation package for <b>${title}</b> is ready. Total: <b>${amount}</b>.</p><p><a href="${link}" style="display:inline-block;background:#1e1a16;color:#faf7f2;padding:12px 22px;border-radius:999px;text-decoration:none">Review &amp; pay</a></p>${setup ? `<p>We've created an INVTRA account for you to manage your event — <a href="${setup}" style="color:#84664a">choose your password</a> (valid for 7 days).</p>` : ""}`,
-        ),
+        subject: mail.subject,
+        text: renderEmailText(mail),
+        html: renderEmail(mail),
       });
       result.email = true;
     } catch (e) {
       await logError("custom:email", e, { orderId: order.id });
+      // Shown to staff, so a refused email doesn't look like nothing happened.
+      result.emailError = e instanceof Error ? e.message.slice(0, 300) : "the email service refused it";
     }
   }
   if (result.whatsapp || result.email)
@@ -469,6 +489,19 @@ export async function sendPaymentRequest(
       data: { requestSentAt: new Date() },
     });
   return result;
+}
+
+/** Email staff a copy of the payment-link email, exactly as the host gets it (no account link). */
+export async function sendPaymentEmailPreview(orderId: string, to: string) {
+  const order = await loadOrder(orderId);
+  if (!order.payToken) throw badRequest("no_link", "This order has no payment link.");
+  const mail = await paymentRequestEmail(order, null);
+  try {
+    await sendEmail({ to, subject: `[Preview] ${mail.subject}`, text: renderEmailText(mail), html: renderEmail(mail) });
+  } catch (e) {
+    await logError("custom:email", e, { orderId: order.id, preview: true });
+    throw badRequest("email_failed", `The email couldn't be sent: ${e instanceof Error ? e.message.slice(0, 300) : "the email service refused it"}`);
+  }
 }
 
 /** Withdraw an unpaid custom package (its payment link stops working). */

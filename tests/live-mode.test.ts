@@ -52,3 +52,20 @@ describe("bank transfer", () => {
     expect(paymentRequestWhatsAppUrl({ amount: 1, currency: "SAR", payToken: "T", user: { name: "x", phone: null, locale: "en" }, event: null })).toBeNull();
   });
 });
+
+describe("emails", () => {
+  it("renders the payment email in INVTRA's design, escaped, with bank details and both languages", async () => {
+    const { renderEmail, renderEmailText } = await import("@/server/email-template");
+    const { passwordResetEmail } = await import("@/server/emails");
+    const en = passwordResetEmail({ name: "Asma <script>", locale: "en", link: "https://invtra.store/reset-password?token=abc" });
+    const html = renderEmail(en);
+    expect(html).toContain("/brand/email-logo.png");
+    expect(html).toContain("Choose a new password");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("Asma &lt;script&gt;");
+    expect(renderEmailText(en)).toContain("Choose a new password: https://invtra.store/reset-password?token=abc");
+    const ar = renderEmail(passwordResetEmail({ name: "أسماء", locale: "ar", link: "https://invtra.store/r" }));
+    expect(ar).toContain('dir="rtl"');
+    expect(ar).toContain("إعادة تعيين كلمة المرور");
+  });
+});

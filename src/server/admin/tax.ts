@@ -1,7 +1,8 @@
 import type { Order } from "@prisma/client";
 import { db } from "@/server/db";
 import { appUrl, env } from "@/server/env";
-import { emailLayout, sendEmail } from "@/server/email";
+import { sendEmail } from "@/server/email";
+import { renderEmail, renderEmailText, type EmailBlock, type EmailContent } from "@/server/email-template";
 import { audit, logError } from "@/server/log";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
 
@@ -274,27 +275,35 @@ export async function closeTaxMonth(now = new Date()) {
     const to = await adminRecipients();
     const label = monthLabel(month);
     const q = quarterOf(month);
-    const lines = totals.map((t) => {
-      const qt = sumTotals(quarter, q, t.currency);
-      return {
-        text: [
-          `Receipts: ${t.receipts}`,
-          `Collected (VAT included): ${exactMoney(t.gross, t.currency)}`,
-          `Refunded: ${exactMoney(t.refunds, t.currency)}`,
-          `VAT ${rate}% owed for ${label}: ${exactMoney(t.vat, t.currency)}`,
-          `Your income excluding VAT: ${exactMoney(t.net, t.currency)}`,
-          `${q} so far — VAT owed: ${exactMoney(qt.vat, t.currency)}`,
-        ],
-      };
-    });
     const link = appUrl(`/admin/vat?month=${month}`);
-    const text = `INVTRA VAT statement — ${label}\n\n${lines.map((l) => l.text.join("\n")).join("\n\n")}\n\nEvery receipt, line by line: ${link}\n`;
-    const html = emailLayout(
-      `VAT statement — ${label}`,
-      lines.map((l) => `<p>${l.text.map((x, i) => (i === 3 ? `<b>${x}</b>` : x)).join("<br>")}</p>`).join("") +
-        `<p><a href="${link}" style="color:#84664a">Open the VAT report</a> — every receipt, line by line, and a CSV for your accountant.</p>`,
-    );
-    for (const address of to) await sendEmail({ to: address, subject: `INVTRA VAT for ${label}: ${totals.map((t) => exactMoney(t.vat, t.currency)).join(" + ")}`, text, html });
+    const mail: EmailContent = {
+      lang: "en",
+      preheader: `VAT owed for ${label}: ${totals.map((t) => exactMoney(t.vat, t.currency)).join(" + ")}`,
+      eyebrow: "Monthly VAT statement",
+      title: label,
+      blocks: [
+        ...totals.flatMap((t, i): EmailBlock[] => {
+          const qt = sumTotals(quarter, q, t.currency);
+          return [
+            {
+              kind: "details",
+              rows: [
+                { label: "Receipts", value: String(t.receipts) },
+                { label: "Collected (VAT included)", value: exactMoney(t.gross, t.currency) },
+                { label: "Refunded", value: exactMoney(t.refunds, t.currency) },
+                { label: "Your income excluding VAT", value: exactMoney(t.net, t.currency) },
+                { label: `${q} so far — VAT owed`, value: exactMoney(qt.vat, t.currency) },
+              ],
+            },
+            { kind: "amount", label: `VAT ${rate}% owed for ${label}`, value: exactMoney(t.vat, t.currency), note: i === 0 ? "Pay it with your ZATCA return" : undefined },
+          ];
+        }),
+        { kind: "button", label: "Open the VAT report", href: link },
+        { kind: "p", muted: true, text: "Every receipt, line by line, and a CSV for your accountant." },
+      ],
+    };
+    const html = renderEmail(mail);
+    for (const address of to) await sendEmail({ to: address, subject: `INVTRA VAT for ${label}: ${totals.map((t) => exactMoney(t.vat, t.currency)).join(" + ")}`, text: renderEmailText(mail), html });
     await db.taxStatement.updateMany({ where: { month }, data: { emailedAt: new Date() } });
   } catch (e) {
     await logError("tax:statement-email", e, { month });

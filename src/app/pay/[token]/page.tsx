@@ -227,6 +227,21 @@ export default async function PayPage({ params, searchParams }: Props) {
             {t.intro}
           </p>
 
+          {ev ? (
+            <figure className="mt-8 flex flex-col items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/pay/${token}/card`}
+                alt={t.design}
+                width={240}
+                className="w-[200px] rounded-xl border border-line shadow-soft sm:w-[240px]"
+              />
+              <figcaption className="mt-3 text-[12.5px] text-ink-faint">
+                {t.design}
+              </figcaption>
+            </figure>
+          ) : null}
+
           {note ? (
             <p
               className={cn(

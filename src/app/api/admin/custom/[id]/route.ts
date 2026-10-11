@@ -11,6 +11,7 @@ import { audit } from "@/server/log";
 import {
   cancelCustomPackage,
   markPaymentRequestSent,
+  sendPaymentEmailPreview,
   sendPaymentRequest,
 } from "@/server/custom/service";
 import { undoTestPayment } from "@/server/payments/service";
@@ -29,6 +30,7 @@ const schema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("undo_test") }),
   z.object({ action: z.literal("mark_sent") }),
+  z.object({ action: z.literal("preview_email") }),
 ]);
 
 /** Admin: resend a payment link (WhatsApp / email) or withdraw the package. */
@@ -43,12 +45,23 @@ export const POST = route<Ctx>(
         throw badRequest("no_channel", "Choose WhatsApp, email or both.");
       const r = await sendPaymentRequest(id, input);
       await audit(admin.id, "admin.custom.send", "order", id, r);
+      if (r.emailError && !r.whatsapp) {
+        throw badRequest("email_failed", `The email couldn't be sent: ${r.emailError}`);
+      }
       return ok({
         message:
-          [r.whatsapp && "WhatsApp message queued", r.email && "email sent"]
+          [
+            r.whatsapp && "WhatsApp message queued",
+            r.email && "email sent",
+            r.emailError && `the email couldn't be sent (${r.emailError})`,
+          ]
             .filter(Boolean)
             .join(" · ") || "Nothing was sent",
       });
+    }
+    if (input.action === "preview_email") {
+      await sendPaymentEmailPreview(id, admin.email);
+      return ok({ message: `Preview sent to ${admin.email}` });
     }
     if (input.action === "mark_sent") {
       await markPaymentRequestSent(id);

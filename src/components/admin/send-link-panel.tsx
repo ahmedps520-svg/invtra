@@ -52,6 +52,20 @@ export function SendLinkPanel({
     email: emailReady,
   });
 
+  const [previewing, setPreviewing] = useState(false);
+  /** Email the staff member a copy, to see exactly what the host gets. */
+  async function preview() {
+    setPreviewing(true);
+    try {
+      const res = await api<{ message: string }>(`/api/admin/custom/${orderId}`, { body: { action: "preview_email" } });
+      toast(res.message, "success");
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : "Couldn't send the preview.", "error");
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
   /** Opened the chat in the staff member's own WhatsApp: note it as sent. */
   async function sentOwnWhatsApp() {
     try {
@@ -234,7 +248,16 @@ export function SendLinkPanel({
                 <p className="ms-[26px] mt-1 text-[12.5px] text-ink-faint">
                   Email isn&apos;t connected yet (SMTP_URL in Render).
                 </p>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  onClick={preview}
+                  disabled={previewing}
+                  className="ms-[26px] mt-1 text-[12.5px] text-bronze-700 underline underline-offset-4 hover:text-ink disabled:opacity-60"
+                >
+                  {previewing ? "Sending a preview…" : "Email me a preview first"}
+                </button>
+              )}
             </div>
           </div>
           {error ? (
