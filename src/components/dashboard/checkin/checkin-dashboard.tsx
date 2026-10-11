@@ -27,6 +27,7 @@ const POLL_MS = 5000;
 const SECTION_COLOR: Record<SectionKey, string> = { MEN: "#2f5d8a", WOMEN: "#a2456b" };
 const FLAGGED: DoorScanResult[] = ["NOT_ACCEPTED", "UNKNOWN", "OTHER_EVENT", "REVOKED"];
 const PAGE = 80;
+const WINDOW_MS = 12 * 3600_000;
 
 const matches: Record<Filter, (g: CheckinGuest) => boolean> = {
   all: () => true,
@@ -433,21 +434,20 @@ function Stat({ label, value, hint, tone, className }: { label: string; value: s
   );
 }
 
-/** People checked in per 15 minutes (30 for a long evening), in the event's time zone. */
+/** People checked in per 15 minutes (30 or 60 over a long evening), in the event's time zone. */
 function ArrivalsChart({ guests, timeZone, locale, empty, label }: { guests: CheckinGuest[]; timeZone: string; locale: Locale; empty: string; label: string }) {
   const bars = useMemo(() => {
     if (!guests.length) return [];
-    const times = guests.map((g) => new Date(g.checkedInAt!).getTime());
-    const first = Math.min(...times);
-    const lastT = Math.max(...times);
+    // The evening's arrivals: a test check-in days earlier would stretch the chart to nothing.
+    const all = guests.map((g) => ({ at: new Date(g.checkedInAt!).getTime(), people: g.checkedInCount ?? 1 }));
+    const lastT = Math.max(...all.map((a) => a.at));
+    const recent = all.filter((a) => a.at > lastT - WINDOW_MS);
+    const first = Math.min(...recent.map((a) => a.at));
     const step = lastT - first > 8 * 3600_000 ? 60 * 60_000 : lastT - first > 4 * 3600_000 ? 30 * 60_000 : 15 * 60_000;
     const start = Math.floor(first / step) * step;
     const slots = Math.floor((lastT - start) / step) + 1;
     const out = Array.from({ length: Math.max(slots, 4) }, (_, i) => ({ at: start + i * step, people: 0 }));
-    for (const g of guests) {
-      const i = Math.floor((new Date(g.checkedInAt!).getTime() - start) / step);
-      out[i].people += g.checkedInCount ?? 1;
-    }
+    for (const a of recent) out[Math.floor((a.at - start) / step)].people += a.people;
     return out;
   }, [guests]);
 

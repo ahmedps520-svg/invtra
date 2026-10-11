@@ -34,7 +34,7 @@ export const door: typeof en = {
     lastArrival: "آخر وصول",
     nobodyYet: "لا أحد بعد",
     timeline: "الوصول عبر الوقت",
-    timelineHint: "عدد الحاضرين كل ١٥ دقيقة",
+    timelineHint: "عدد الحاضرين خلال المناسبة",
     timelineEmpty: "سيظهر الوصول هنا عند تسجيل دخول الضيوف.",
     slot: "{time}: {n}",
     guests: "قائمة الضيوف",

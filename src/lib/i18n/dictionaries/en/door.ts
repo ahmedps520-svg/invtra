@@ -34,7 +34,7 @@ export const door = {
     lastArrival: "Last arrival",
     nobodyYet: "No one yet",
     timeline: "Arrivals over time",
-    timelineHint: "People checked in, every 15 minutes",
+    timelineHint: "People checked in through the evening",
     timelineEmpty: "Arrivals appear here as guests are checked in.",
     slot: "{time}: {n}",
     guests: "Guest list",
