@@ -41,12 +41,15 @@ model User {
   deactivationNote String?
   locale           String        @default("en")
   phone            String?
+  emailVerifiedAt  DateTime? // proved they own the email (code, password reset link or Apple)
+  verifyBy         DateTime? // unverified accounts lock after this until the email is verified
   lastLoginAt      DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
   sessions       Session[]
   passwordResets PasswordResetToken[]
+  emailCodes     EmailCode[]
   events         Event[]
   orders         Order[]
   uploads        Upload[]
@@ -68,6 +71,20 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+/// 4-digit email verification codes (hashed). Only the latest one for a user can be used.
+model EmailCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model PasswordResetToken {

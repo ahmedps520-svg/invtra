@@ -18,7 +18,8 @@ export type EmailBlock =
   | { kind: "button"; label: string; href: string; fallback?: string }
   | { kind: "secondary"; label: string; href: string }
   | { kind: "box"; title: string; text?: Seg[] | string; rows?: { label: string; value: string; ltr?: boolean }[]; footer?: Seg[] | string }
-  | { kind: "divider" };
+  | { kind: "divider" }
+  | { kind: "code"; code: string; note?: string };
 
 export type EmailContent = {
   lang: EmailLang;
@@ -146,6 +147,14 @@ function block(b: EmailBlock, lang: EmailLang): string {
       );
     case "divider":
       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px"><tr><td align="center" style="font-size:10px;line-height:1;color:${C.accent};letter-spacing:6px">&#9670;</td></tr></table>`;
+    case "code":
+      // A one-time code: large, spaced digits that read (and copy) left to right in either language.
+      return (
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 22px"><tr><td align="center">` +
+        `<div dir="ltr" style="display:inline-block;padding:18px 30px 16px;background:${C.soft};border:1px solid ${C.line};border-radius:16px;font-family:${f.display};font-size:44px;line-height:1;letter-spacing:14px;color:${C.ink};font-weight:600">${escapeHtml(b.code)}</div>` +
+        (b.note ? `<p style="margin:12px 0 0;font-family:${f.body};font-size:13px;color:${C.muted}">${escapeHtml(b.note)}</p>` : "") +
+        `</td></tr></table>`
+      );
   }
 }
 
@@ -222,6 +231,9 @@ export function renderEmailText(c: EmailContent): string {
       case "button":
       case "secondary":
         out.push(`${b.label}: ${b.href}`, "");
+        break;
+      case "code":
+        out.push(b.code, ...(b.note ? [b.note] : []), "");
         break;
       case "box":
         out.push(b.title);

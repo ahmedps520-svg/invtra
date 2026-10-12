@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { planName } from "@/lib/plans";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowLeft, Ban, MailCheck, RotateCcw, Sparkles } from "lucide-react";
 import { buttonClasses } from "@/components/ui/button";
 import { requireAdmin } from "@/server/auth/guards";
 import { getCustomer } from "@/server/admin/customers";
@@ -27,6 +27,7 @@ import {
   eventWhen,
 } from "@/components/admin/format";
 import { EventStateBadge } from "@/components/admin/event-state";
+import { EmailBadge } from "@/components/admin/email-badge";
 
 export const metadata: Metadata = { title: "Customer" };
 
@@ -64,11 +65,27 @@ export default async function CustomerDetailPage({
           <span className="inline-flex flex-wrap items-center gap-2">
             {user.email}
             <StatusBadge status={user.status} />
+            <EmailBadge user={user} />
           </span>
         }
         actions={
           user.status === "ACTIVE" ? (
             <>
+              {!user.emailVerifiedAt ? (
+                <AdminAction
+                  url={`/api/admin/customers/${user.id}`}
+                  body={{ action: "verify_email" }}
+                  label="Mark email verified"
+                  variant="outline"
+                  icon={<MailCheck className="size-3.5" />}
+                  confirm={{
+                    title: "Mark this email as verified?",
+                    description: `Only do this once you're sure ${user.email} belongs to ${user.name} — for example after they've replied from it. Their account stays active without a code.`,
+                    confirmLabel: "Mark verified",
+                    reason: { label: "Reason", placeholder: "Visible to staff in the audit log", required: true },
+                  }}
+                />
+              ) : null}
               <Link
                 href={`/admin/custom/new?email=${encodeURIComponent(user.email)}`}
                 className={buttonClasses("outline", "sm")}
@@ -156,6 +173,10 @@ export default async function CustomerDetailPage({
                   value: user.locale === "ar" ? "Arabic" : "English",
                 },
                 { label: "Joined", value: dt(user.createdAt) },
+                {
+                  label: "Email verified",
+                  value: user.emailVerifiedAt ? dt(user.emailVerifiedAt) : <EmailBadge user={user} />,
+                },
                 {
                   label: "Last sign-in",
                   value: user.lastLoginAt ? (

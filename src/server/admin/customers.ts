@@ -34,6 +34,8 @@ export async function listCustomers(sp: SearchParams) {
         createdAt: true,
         lastLoginAt: true,
         deactivatedAt: true,
+        emailVerifiedAt: true,
+        verifyBy: true,
         _count: { select: { events: { where: { deletedAt: null } }, orders: { where: { status: "PAID" } } } },
       },
     }),
@@ -57,6 +59,8 @@ export async function getCustomer(id: string) {
       lastLoginAt: true,
       deactivatedAt: true,
       deactivationNote: true,
+      emailVerifiedAt: true,
+      verifyBy: true,
       events: { orderBy: { startsAt: "desc" } },
       orders: { orderBy: { createdAt: "desc" }, include: { event: { select: { id: true, title: true } } } },
       _count: { select: { sessions: true } },
@@ -128,4 +132,13 @@ export async function reactivateCustomer(actorId: string, userId: string, input:
   });
   await audit(actorId, "admin.user.reactivate", "user", userId, { reason: input.reason, email: user.email, eventsReactivated: eventIds });
   return { events: eventIds.length };
+}
+
+/** Staff confirm a customer's email by hand (e.g. their codes never arrive), which also unlocks the account. */
+export async function verifyCustomerEmail(actorId: string, userId: string, reason: string) {
+  const user = await db.user.findUnique({ where: { id: userId }, select: { id: true, email: true, emailVerifiedAt: true } });
+  if (!user) throw notFound("Customer");
+  if (user.emailVerifiedAt) throw conflict("already_verified", "This email is already verified.");
+  await db.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+  await audit(actorId, "admin.user.verify_email", "user", userId, { reason, email: user.email });
 }

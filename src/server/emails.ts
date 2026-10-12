@@ -197,3 +197,32 @@ export function passwordResetEmail(o: { name: string; locale: string; link: stri
     ],
   };
 }
+
+/** The 4-digit code that verifies an account's email. */
+export function verificationCodeEmail(o: { name: string; locale: string; code: string; minutes: number }): Mail {
+  const ar = o.locale === "ar";
+  return {
+    lang: ar ? "ar" : "en",
+    subject: ar ? `${o.code} رمز التحقق من بريدك في إنفترا` : `${o.code} is your INVTRA verification code`,
+    preheader: ar ? `رمزك ${o.code} — صالح لمدة ${o.minutes} دقائق.` : `Your code is ${o.code}. It works for ${o.minutes} minutes.`,
+    eyebrow: ar ? "حسابك" : "Your account",
+    title: ar ? "تحقق من بريدك الإلكتروني" : "Verify your email",
+    blocks: [
+      { kind: "p", text: ar ? `مرحبًا ${o.name}،` : `Hi ${o.name},` },
+      {
+        kind: "p",
+        text: ar
+          ? "أدخل هذا الرمز في إنفترا لتأكيد أن هذا البريد الإلكتروني لك:"
+          : "Enter this code in INVTRA to confirm this email address is yours:",
+      },
+      { kind: "code", code: o.code, note: ar ? `صالح لمدة ${o.minutes} دقائق` : `Valid for ${o.minutes} minutes` },
+      {
+        kind: "p",
+        muted: true,
+        text: ar
+          ? "لا تشارك هذا الرمز مع أحد — فريق إنفترا لن يطلبه منك أبدًا. إذا لم تطلب الرمز، تجاهل هذه الرسالة."
+          : "Don't share this code with anyone — the INVTRA team will never ask for it. If you didn't ask for a code, you can ignore this email.",
+      },
+    ],
+  };
+}

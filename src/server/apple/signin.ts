@@ -137,11 +137,16 @@ export function appleName(userField: string | null | undefined): string | null {
  * the same (Apple-verified) email, else a new account. Null when the account is deactivated.
  */
 export async function accountForApple(id: AppleIdentity, name: string | null, locale: "en" | "ar") {
+  // Apple has verified the email it shares, so a matching INVTRA email counts as verified too.
+  const sameEmail = (email: string) => Boolean(id.email && id.emailVerified && id.email === email);
   const linked = await db.user.findUnique({ where: { appleSub: id.sub } });
-  if (linked) return linked;
+  if (linked) {
+    if (!linked.emailVerifiedAt && sameEmail(linked.email)) return db.user.update({ where: { id: linked.id }, data: { emailVerifiedAt: new Date() } });
+    return linked;
+  }
   if (id.email && id.emailVerified) {
     const byEmail = await db.user.findUnique({ where: { email: id.email } });
-    if (byEmail) return db.user.update({ where: { id: byEmail.id }, data: { appleSub: id.sub } });
+    if (byEmail) return db.user.update({ where: { id: byEmail.id }, data: { appleSub: id.sub, emailVerifiedAt: byEmail.emailVerifiedAt ?? new Date() } });
   }
   const email = id.email ?? `${id.sub.replace(/[^a-z0-9]/gi, "").slice(0, 40)}@apple.invtra.invalid`;
   return db.user.create({
@@ -150,6 +155,8 @@ export async function accountForApple(id: AppleIdentity, name: string | null, lo
       name: name ?? (id.privateEmail || !id.email ? (locale === "ar" ? "ضيف إنفترا" : "INVTRA host") : id.email.split("@")[0]),
       passwordHash: "", // no password until they set one (Forgot password)
       appleSub: id.sub,
+      // Apple vouches for the account (and its relay email), so there's nothing to verify.
+      emailVerifiedAt: new Date(),
       locale,
     },
   });

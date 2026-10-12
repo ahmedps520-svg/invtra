@@ -56,10 +56,10 @@ async function main() {
   if (email && password) {
     const existing = await db.user.findUnique({ where: { email } });
     if (!existing) {
-      await db.user.create({ data: { email, name: "INVTRA Admin", role: "ADMIN", passwordHash: await hashPassword(password) } });
+      await db.user.create({ data: { email, name: "INVTRA Admin", role: "ADMIN", passwordHash: await hashPassword(password), emailVerifiedAt: new Date() } });
       console.log(`Created admin ${email}`);
     } else if (existing.role !== "ADMIN") {
-      await db.user.update({ where: { id: existing.id }, data: { role: "ADMIN" } });
+      await db.user.update({ where: { id: existing.id }, data: { role: "ADMIN", emailVerifiedAt: existing.emailVerifiedAt ?? new Date() } });
       console.log(`Promoted ${email} to admin`);
     }
   }
@@ -80,7 +80,7 @@ async function main() {
 async function seedDemo() {
   const email = "demo@invtra.store";
   let user = await db.user.findUnique({ where: { email } });
-  if (!user) user = await db.user.create({ data: { email, name: "Sara Al Mansoori", passwordHash: await hashPassword("demo-password-2026") } });
+  if (!user) user = await db.user.create({ data: { email, name: "Sara Al Mansoori", passwordHash: await hashPassword("demo-password-2026"), emailVerifiedAt: new Date() } });
   const has = await db.event.findFirst({ where: { userId: user.id } });
   if (has) return;
   const theme = THEME_LIST.find((t) => t.key === "luxury")!;

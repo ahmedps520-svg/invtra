@@ -1122,6 +1122,16 @@ export const dashboard = {
     verified: "Business account",
     image: "Invitation image",
   },
+  verifyEmail: {
+    banner: "Verify your email — {days} left.",
+    bannerBody: "Your account will be deactivated on {date} if your email isn't verified.",
+    bannerToday: "Verify your email today.",
+    cta: "Verify now",
+    popupTitle: "Please verify your email",
+    popupBody: "You have {days} to verify {email}. If it isn't verified by {date}, your account will be deactivated until it is.",
+    popupLater: "Remind me later",
+    days: { one: "1 day", other: "{n} days" } as Plural,
+  },
   errors: {
     generic: "Something went wrong. Please try again.",
     no_plan: "Choose a plan before sending invitations.",

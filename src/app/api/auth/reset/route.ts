@@ -17,8 +17,10 @@ export const POST = route("auth.reset", async (req: NextRequest) => {
   if (!record || record.usedAt || record.expiresAt < new Date()) {
     throw badRequest("invalid_token", "This reset link has expired. Please request a new one.");
   }
+  const user = await db.user.findUniqueOrThrow({ where: { id: record.userId }, select: { emailVerifiedAt: true } });
   await db.$transaction([
-    db.user.update({ where: { id: record.userId }, data: { passwordHash: await hashPassword(password) } }),
+    // The link came to their inbox, which also proves they own the email.
+    db.user.update({ where: { id: record.userId }, data: { passwordHash: await hashPassword(password), emailVerifiedAt: user.emailVerifiedAt ?? new Date() } }),
     db.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
   ]);
   await destroyAllSessions(record.userId);

@@ -8,7 +8,7 @@ export const SESSION_COOKIE = "invtra_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const SESSION_REFRESH_AFTER_MS = 24 * 60 * 60 * 1000;
 
-export type SessionUser = Pick<User, "id" | "email" | "name" | "role" | "status" | "locale" | "phone">;
+export type SessionUser = Pick<User, "id" | "email" | "name" | "role" | "status" | "locale" | "phone" | "emailVerifiedAt" | "verifyBy" | "createdAt">;
 
 function cookieOptions(expires: Date) {
   return {
@@ -41,7 +41,9 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const session = await db.session.findUnique({
     where: { tokenHash: sha256(token) },
     include: {
-      user: { select: { id: true, email: true, name: true, role: true, status: true, locale: true, phone: true } },
+      user: {
+        select: { id: true, email: true, name: true, role: true, status: true, locale: true, phone: true, emailVerifiedAt: true, verifyBy: true, createdAt: true },
+      },
     },
   });
   if (!session) return null;

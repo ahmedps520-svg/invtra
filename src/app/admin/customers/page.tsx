@@ -4,6 +4,7 @@ import { listCustomers } from "@/server/admin/customers";
 import { currentParams, type SearchParams } from "@/server/admin/params";
 import { FilterBar } from "@/components/admin/filter-bar";
 import { DataTable, LinkCell, Muted, PageHeader, Pagination, StatusBadge } from "@/components/admin/ui";
+import { EmailBadge } from "@/components/admin/email-badge";
 import { day, dt, num, rel } from "@/components/admin/format";
 
 export const metadata: Metadata = { title: "Customers" };
@@ -46,6 +47,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
           { key: "created", header: "Joined", cell: (u) => <span title={dt(u.createdAt)}>{day(u.createdAt)}</span>, hideBelow: "sm" },
           { key: "login", header: "Last sign-in", cell: (u) => (u.lastLoginAt ? <span title={dt(u.lastLoginAt)}>{rel(u.lastLoginAt)}</span> : <Muted>Never</Muted>), hideBelow: "md" },
           { key: "status", header: "Status", cell: (u) => <StatusBadge status={u.status} /> },
+          { key: "email", header: "Email", cell: (u) => <EmailBadge user={u} />, hideBelow: "lg" },
         ]}
       />
       <Pagination page={data.page} pageSize={data.pageSize} total={data.total} basePath="/admin/customers" params={params} />

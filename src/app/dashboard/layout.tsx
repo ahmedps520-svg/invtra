@@ -8,6 +8,8 @@ import { DashboardTopBar } from "@/components/dashboard/top-bar";
 import { PreviewBanner } from "@/components/dashboard/preview-banner";
 import { OfferBanner } from "@/components/offers/national-day";
 import { activeOffer, offerInfo } from "@/lib/offers";
+import { verificationOf } from "@/lib/auth/verification";
+import { VerifyEmailBanner } from "@/components/dashboard/verify-email-banner";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -16,6 +18,7 @@ export const metadata: Metadata = {
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser("/dashboard");
   const { locale } = await getI18n();
+  const verification = verificationOf(user);
   return (
     <I18nProvider locale={locale} dict={pickNamespaces(locale, ["dashboard", "themes", "door"])}>
       <div className="flex min-h-dvh flex-col bg-ivory">
@@ -23,6 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           user={{ name: user.name, email: user.email, role: user.role }}
           showSimulator={env().WHATSAPP_PROVIDER === "mock"}
         />
+        {!verification.verified ? <VerifyEmailBanner verification={verification} email={user.email} /> : null}
         <OfferBanner offer={offerInfo(activeOffer(), env().PAYMENT_CURRENCY)} currency={env().PAYMENT_CURRENCY} href="/dashboard/events/new" />
         {env().WHATSAPP_PROVIDER === "mock" ? <PreviewBanner admin={user.role === "ADMIN"} /> : null}
         <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 pb-24 pt-8 sm:px-6 sm:pt-10 lg:px-8">

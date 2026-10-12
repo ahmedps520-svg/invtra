@@ -53,7 +53,8 @@ export function SignupForm({ next, loginHref }: { next: string; loginHref: strin
     setSubmitting(true);
     try {
       await api("/api/auth/signup", { body: { name: name.trim(), email: email.trim(), password } });
-      router.replace(next);
+      // Straight on to the code we email them (they can choose to verify later).
+      router.replace(`/verify-email?next=${encodeURIComponent(next)}`);
       router.refresh();
     } catch (err) {
       setSubmitting(false);

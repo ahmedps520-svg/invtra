@@ -3,6 +3,7 @@ import { ZodError, type ZodType, type ZodTypeDef } from "zod";
 import { Prisma } from "@prisma/client";
 import { getSessionUser, type SessionUser } from "@/server/auth/session";
 import { logError } from "@/server/log";
+import { isLocked } from "@/lib/auth/verification";
 
 /**
  * Route-handler plumbing shared by every /api endpoint:
@@ -87,7 +88,15 @@ export function parseQuery<T>(req: NextRequest, schema: ZodType<T, ZodTypeDef, u
   return schema.parse(Object.fromEntries(req.nextUrl.searchParams.entries()));
 }
 
+/** The signed-in user; accounts deactivated for not verifying their email are refused. */
 export async function requireApiUser(): Promise<SessionUser> {
+  const user = await requireApiSession();
+  if (isLocked(user)) throw new HttpError(403, "email_unverified", "Verify your email address to keep using your account.");
+  return user;
+}
+
+/** The signed-in user, verified or not (for the email verification endpoints). */
+export async function requireApiSession(): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user) throw unauthorized();
   return user;
