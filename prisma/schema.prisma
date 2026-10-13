@@ -212,6 +212,8 @@ model Event {
   coverImageKey     String?
   logoKey           String?
   musicKey          String?
+  // The latest "video for your Status" (storage key; its name carries the design version).
+  statusVideoKey    String?
   // Bumped whenever something printed on the invitation image changes.
   contentVersion    Int       @default(1)
 

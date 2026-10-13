@@ -20,6 +20,7 @@ import { SECTION_LABELS } from "@/lib/sections";
 import { ActivityFeed, type ActivityItem } from "./activity-feed";
 import { DoorCard } from "./door-card";
 import { RemindersCard } from "./reminders-card";
+import { StatusVideoCard } from "./status-video";
 import type { ReminderOverview } from "@/server/reminders/service";
 import { errorMessage, plural } from "./i18n";
 import { ResponseRing, Tile } from "./stats";
@@ -65,12 +66,14 @@ export function EventOverview({
   serverNow,
   door,
   reminders,
+  video,
 }: {
   eventId: string;
   eventTitle: string;
   /** The door check-in link for staff (null until the host creates one). */
   door: { url: string | null; closesAt: string; timeZone: string };
   reminders: ReminderOverview;
+  video: Omit<React.ComponentProps<typeof StatusVideoCard>, "eventId" | "preview">;
   initial: OverviewData;
   preview: PreviewProps;
   ready: boolean;
@@ -305,6 +308,8 @@ export function EventOverview({
               <CardPreview {...preview} className="w-full max-w-[260px] rounded-[3px] shadow-lift ring-1 ring-ink/5" title={eventTitle} />
             </div>
           </Card>
+
+          <StatusVideoCard eventId={eventId} preview={preview} {...video} />
 
           <DoorCard eventId={eventId} eventTitle={eventTitle} initialUrl={door.url} closesAt={door.closesAt} timeZone={door.timeZone} />
 

@@ -70,6 +70,9 @@ const schema = z
     // Support chat: the "Chat with us on WhatsApp" button (digits with country code; empty hides it).
     SUPPORT_WHATSAPP: z.string().default("966557663974"),
 
+    // The "video for your Status" (Dashboard → event): path to the ffmpeg binary.
+    FFMPEG_PATH: z.string().default("ffmpeg"),
+
     // Background jobs
     INLINE_WORKER: bool,
     WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(64).default(8),

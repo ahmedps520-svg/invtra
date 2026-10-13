@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Send } from "lucide-react";
 import { CardPreview } from "@/components/invitation/card-preview";
 import { Button, buttonClasses } from "@/components/ui/button";
@@ -30,7 +30,8 @@ import { useCardProps, useMediaQuery } from "./use-card-props";
 import { WebsitePanel } from "./website-panel";
 import { WordingPanel } from "./wording-panel";
 
-type SectionId = "theme" | "image" | "wording" | "colours" | "typography" | "background" | "qr" | "website" | "media";
+const SECTION_IDS = ["theme", "image", "wording", "colours", "typography", "background", "qr", "website", "media"] as const;
+type SectionId = (typeof SECTION_IDS)[number];
 
 export function DesignEditor(props: EditorProps) {
   return (
@@ -47,6 +48,17 @@ function EditorLayout() {
   const [open, setOpen] = useState<Set<SectionId>>(() => new Set<SectionId>(["theme"]));
   const [mobilePreview, setMobilePreview] = useState(false);
   const summaries = useSummaries();
+
+  // A link to /design#design-media (e.g. "Add music" on the overview) opens that section.
+  useEffect(() => {
+    const id = window.location.hash.replace(/^#design-/, "") as SectionId;
+    if (!SECTION_IDS.includes(id)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the hash is only known in the browser
+    setOpen(new Set([id]));
+    // Once the sections above have collapsed and this one has opened.
+    const timer = setTimeout(() => document.getElementById(`design-${id}`)?.scrollIntoView({ block: "start", behavior: "smooth" }), 350);
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggle = (id: SectionId) =>
     setOpen((s) => {

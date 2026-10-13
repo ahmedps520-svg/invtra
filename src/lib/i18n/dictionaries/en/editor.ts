@@ -330,7 +330,7 @@ export const editor = {
     logo: "Logo or crest",
     logoHint: "Your monogram, crest or company logo. A PNG with a transparent background looks best.",
     music: "Background music",
-    musicHint: "A song for your guest website. Guests start it themselves — it never plays automatically.",
+    musicHint: "A song for your guest website — guests start it themselves, it never plays automatically — and for your Status video.",
     audioTypes: "MP3, M4A or OGG, up to 12 MB",
     musicReady: "Your song",
     play: "Play",

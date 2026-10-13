@@ -159,6 +159,7 @@ export function sampleEvent(themeKey: ThemeKey, language: EventLanguage): Event 
     coverImageKey: null,
     logoKey: null,
     musicKey: null,
+    statusVideoKey: null,
     contentVersion: 1,
     messageTemplateId: null,
     templateVariables: null,

@@ -12,6 +12,8 @@ RUN npx prisma generate && npx next build
 
 FROM base AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+# ffmpeg renders the hosts' "video for your Status".
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app /app
 RUN npm prune --omit=dev --ignore-scripts && npm install --no-save prisma@6.19.3 && mkdir -p /app/storage
 EXPOSE 3000

@@ -20,6 +20,7 @@ import { sendPaymentWhatsApp, sendReceipt } from "@/server/custom/messages";
 import { MAX_NUDGES, reminderDue, viaInvtra } from "@/server/reminders/service";
 import { pushWalletUpdates } from "@/server/apple/push";
 import { sendUnpaidReminder } from "@/server/reminders/unpaid";
+import { renderStatusVideo } from "@/server/video/status";
 
 /**
  * Job handlers. A handler either succeeds, throws (→ retried with backoff), or throws
@@ -41,6 +42,7 @@ export const handlers: Record<JobType, (job: Job, payload: Payload) => Promise<v
   "payment.receipt": (_job, p) => sendReceipt(String(p.orderId), p.channel === "whatsapp" ? "whatsapp" : "email"),
   "reminder.send": (_job, p) => sendFollowUp(String(p.guestId), "REMINDER"),
   "event.unpaid_reminder": (_job, p) => sendUnpaidReminder(String(p.eventId), Number(p.n) || 1),
+  "event.status_video": (_job, p) => renderStatusVideo(String(p.eventId), String(p.version)),
   "nudge.send": (_job, p) => sendFollowUp(String(p.guestId), "NUDGE"),
   "wallet.push": async (_job, p) => void (await pushWalletUpdates(Array.isArray(p.serials) ? p.serials.map(String) : [])),
   "mock.webhook": async (_job, p) => {
