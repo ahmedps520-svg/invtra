@@ -170,6 +170,8 @@ export function sampleEvent(themeKey: ThemeKey, language: EventLanguage): Event 
     teaserMediaExpiresAt: null,
     sectionTeaserMedia: null,
     firstSentAt: null,
+    payReminders: 0,
+    payRemindedAt: null,
     deactivatedAt: null,
     deactivatedReason: null,
     deletedAt: null,

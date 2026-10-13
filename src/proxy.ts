@@ -105,9 +105,14 @@ export function proxy(req: NextRequest) {
   if (pathname.startsWith("/api/")) {
     const method = req.method.toUpperCase();
     // Called by other services, not browsers on our pages: webhooks (signed), Apple Wallet on
-    // guests' phones (pass authentication token) and Sign in with Apple's form post (state cookie).
+    // guests' phones (pass authentication token), Sign in with Apple's form post (state cookie)
+    // and mail apps' unsubscribe (signed link).
     const external =
-      pathname.startsWith("/api/webhooks/") || pathname.startsWith("/api/wallet/v1/") || pathname === "/api/auth/apple/callback";
+      pathname.startsWith("/api/webhooks/") ||
+      pathname.startsWith("/api/wallet/v1/") ||
+      pathname === "/api/auth/apple/callback" ||
+      // One-click unsubscribe from mail apps; the signed link is the authorisation.
+      pathname === "/api/email/stop";
     if (!external && !["GET", "HEAD", "OPTIONS"].includes(method)) {
       const origin = req.headers.get("origin");
       const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");

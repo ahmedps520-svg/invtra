@@ -8,13 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { Segmented } from "@/components/ui/toggle";
+import { Segmented, Switch } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import { api, ApiError } from "@/lib/api-client";
 import type { Locale } from "@/lib/i18n/config";
 import { errorMessage } from "./i18n";
 
-export function SettingsPage({ user }: { user: { name: string; email: string; phone: string | null; locale: Locale } }) {
+export function SettingsPage({ user }: { user: { name: string; email: string; phone: string | null; locale: Locale; emailReminders: boolean } }) {
   const { dict } = useI18n();
   const d = dict.dashboard.settings;
   return (
@@ -25,8 +25,38 @@ export function SettingsPage({ user }: { user: { name: string; email: string; ph
       </div>
       <ProfileForm user={user} />
       <PasswordForm />
+      <EmailPreferences initial={user.emailReminders} />
       <DeleteAccount />
     </div>
+  );
+}
+
+function EmailPreferences({ initial }: { initial: boolean }) {
+  const { dict } = useI18n();
+  const d = dict.dashboard.settings.emails;
+  const toast = useToast();
+  const [on, setOn] = useState(initial);
+  const [busy, setBusy] = useState(false);
+
+  async function change(value: boolean) {
+    setOn(value);
+    setBusy(true);
+    try {
+      await api("/api/account", { method: "PATCH", body: { emailReminders: value } });
+      toast(d.saved, "success");
+    } catch (err) {
+      setOn(!value);
+      toast(errorMessage(err, dict), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Section title={d.title}>
+      <Switch id="s-reminders" checked={on} onChange={change} disabled={busy} label={d.reminders} description={d.remindersHint} />
+      <p className="mt-4 text-[13px] text-ink-faint">{d.always}</p>
+    </Section>
   );
 }
 

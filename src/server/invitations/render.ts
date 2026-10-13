@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import type { Event, Guest, Invitation } from "@prisma/client";
 import { db } from "@/server/db";
 import { storage } from "@/server/storage";
@@ -105,4 +106,10 @@ export async function renderTeaser(
   const png = renderSvgToPng(svg);
   await storage().put(key, png, "image/png");
   return { key, version, png, variant };
+}
+
+/** The teaser as a small JPEG (640px wide) for emails and payment pages. */
+export async function teaserJpeg(event: RenderEvent): Promise<Buffer> {
+  const { png } = await renderTeaser(event);
+  return sharp(png).resize({ width: 640 }).flatten({ background: "#fffdfa" }).jpeg({ quality: 84, mozjpeg: true }).toBuffer();
 }

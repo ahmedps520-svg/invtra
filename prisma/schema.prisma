@@ -44,6 +44,7 @@ model User {
   emailVerifiedAt  DateTime? // proved they own the email (code, password reset link or Apple)
   verifyBy         DateTime? // unverified accounts lock after this until the email is verified
   source           String? // where they came from, first touch: "code:TIKTOK10", "invitation", "utm:tiktok"
+  emailReminders   Boolean       @default(true) // reminder emails about invitations they haven't sent yet
   lastLoginAt      DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -233,6 +234,8 @@ model Event {
   sectionTeaserMedia   Json?
 
   firstSentAt       DateTime?
+  payReminders      Int       @default(0) // "your invitation is ready to send" emails while it has no plan
+  payRemindedAt     DateTime?
   deactivatedAt     DateTime?
   deactivatedReason String?
   deletedAt         DateTime?

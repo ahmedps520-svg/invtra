@@ -9,12 +9,20 @@ export const PATCH = route("account.update", async (req: NextRequest) => {
   const user = await requireApiUser();
   const input = await parseJson(
     req,
-    z.object({
-      name: z.string().trim().min(2).max(80),
-      phone: z.string().trim().max(32).optional().nullable(),
-      locale: z.enum(["en", "ar"]).optional(),
-    }),
+    z.union([
+      z.object({
+        name: z.string().trim().min(2).max(80),
+        phone: z.string().trim().max(32).optional().nullable(),
+        locale: z.enum(["en", "ar"]).optional(),
+      }),
+      // Email preferences are saved on their own (a switch in Settings).
+      z.object({ emailReminders: z.boolean() }),
+    ]),
   );
+  if ("emailReminders" in input) {
+    await db.user.update({ where: { id: user.id }, data: { emailReminders: input.emailReminders } });
+    return ok({ emailReminders: input.emailReminders });
+  }
   let phone: string | null = null;
   if (input.phone) {
     const p = normalizePhone(input.phone);

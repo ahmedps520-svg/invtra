@@ -11,6 +11,6 @@ export async function generateMetadata() {
 export default async function Settings() {
   const session = await requireUser("/dashboard/settings");
   const { locale } = await getI18n();
-  const user = await db.user.findUniqueOrThrow({ where: { id: session.id }, select: { name: true, email: true, phone: true, locale: true } });
+  const user = await db.user.findUniqueOrThrow({ where: { id: session.id }, select: { name: true, email: true, phone: true, locale: true, emailReminders: true } });
   return <SettingsPage user={{ ...user, locale }} />;
 }

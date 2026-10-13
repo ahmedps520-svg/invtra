@@ -1122,6 +1122,13 @@ export const dashboard = {
       saved: "Password changed. Other devices have been signed out.",
       wrong: "Your current password is incorrect.",
     },
+    emails: {
+      title: "Emails",
+      reminders: "Reminders about unsent invitations",
+      remindersHint: "A short email if an invitation you've designed hasn't been sent yet — at most twice per event.",
+      saved: "Email preferences saved",
+      always: "Receipts, verification codes and other important emails always arrive.",
+    },
     danger: {
       title: "Delete account",
       body: "Permanently deletes your account with all events, guest lists and files. Invitation links stop working immediately. This can't be undone.",

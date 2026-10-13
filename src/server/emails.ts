@@ -11,6 +11,17 @@ import { supportChatUrl } from "@/lib/support";
 
 export type Mail = EmailContent & { subject: string };
 
+/** "ضيف واحد" / "ضيفان" / "٣ ضيوف" / "١٥ ضيفًا" / "١٠٠ ضيف". */
+function guestCountAr(n: number) {
+  if (n === 1) return "ضيف واحد";
+  if (n === 2) return "ضيفان";
+  const num = n.toLocaleString("ar");
+  const tens = n % 100;
+  if (tens >= 3 && tens <= 10) return `${num} ضيوف`;
+  if (tens >= 11 && tens <= 99) return `${num} ضيفًا`;
+  return `${num} ضيف`;
+}
+
 /** "Unlimited guests" / "Up to 500 guests". */
 function guests(limit: number, ar: boolean) {
   if (isUnlimited(limit)) return ar ? "عدد غير محدود من الضيوف" : "Unlimited guests";
@@ -227,5 +238,76 @@ export function verificationCodeEmail(o: { name: string; locale: string; code: s
           : "Don't share this code with anyone — the INVTRA team will never ask for it. If you didn't ask for a code, you can ignore this email.",
       },
     ],
+  };
+}
+
+/**
+ * "Your invitation is ready to send": for an event that still has no plan, a day after it was
+ * created (n = 1) and a few days later (n = 2).
+ */
+export function unpaidReminderEmail(o: {
+  name: string;
+  locale: string;
+  event: string;
+  n: number;
+  reviewUrl: string;
+  designUrl: string;
+  cardUrl: string;
+  priceFrom: string;
+  guests: number;
+  stopUrl: string;
+}): Mail {
+  const ar = o.locale === "ar";
+  const first = o.n === 1;
+  const help = supportChatUrl(env().SUPPORT_WHATSAPP, ar ? `مرحبًا إنفترا، لدي سؤال عن دعوة ${o.event}.` : `Hello INVTRA, I have a question about my invitation for ${o.event}.`);
+  const blocks: EmailBlock[] = [
+    { kind: "p", text: ar ? `مرحبًا ${o.name}،` : `Hi ${o.name},` },
+    {
+      kind: "p",
+      text: first
+        ? ar
+          ? ["دعوتك لـ ", { b: o.event }, " محفوظة وجاهزة. اختر باقة وأرسلها لضيوفك على واتساب — كل ضيف يصله رابط ورمز QR خاص به، وتتابع الردود لحظة بلحظة."]
+          : ["Your invitation for ", { b: o.event }, " is saved and ready. Choose a plan and send it to your guests on WhatsApp — each guest gets their own link and QR code, and you'll see every reply as it comes in."]
+        : ar
+          ? ["ما زالت دعوة ", { b: o.event }, " محفوظة كما تركتها. متى ما كنت جاهزًا، اختر باقة وأرسلها في دقائق."]
+          : ["Your invitation for ", { b: o.event }, " is still saved just as you left it. Whenever you're ready, choose a plan and send it in minutes."],
+    },
+    { kind: "image", src: o.cardUrl, alt: ar ? `تصميم دعوة ${o.event}` : `Invitation design for ${o.event}`, width: 240, href: o.reviewUrl },
+    { kind: "button", label: ar ? "اختر باقة وأرسل الدعوة" : "Choose a plan & send", href: o.reviewUrl },
+    { kind: "secondary", label: ar ? "عدّل التصميم" : "Edit the design", href: o.designUrl },
+    {
+      kind: "p",
+      muted: true,
+      text: [
+        ar ? `الباقات تبدأ من ${o.priceFrom} — تُدفع مرة واحدة لكل مناسبة.` : `Plans start at ${o.priceFrom} — paid once, per event.`,
+        o.guests ? (ar ? ` في قائمتك ${guestCountAr(o.guests)}.` : ` You have ${o.guests.toLocaleString("en")} ${o.guests === 1 ? "guest" : "guests"} on your list.`) : "",
+      ],
+    },
+    {
+      kind: "p",
+      muted: true,
+      text: ar
+        ? ["تحتاج مساعدة؟ ", { a: "راسلنا على واتساب", href: help }, " أو ردّ على هذه الرسالة."]
+        : ["Need a hand? ", { a: "Message us on WhatsApp", href: help }, " or reply to this email."],
+    },
+    {
+      kind: "p",
+      muted: true,
+      text: [{ a: ar ? "إيقاف هذه التذكيرات" : "Stop these reminders", href: o.stopUrl }],
+    },
+  ];
+  return {
+    lang: ar ? "ar" : "en",
+    subject: first
+      ? ar
+        ? `دعوة ${o.event} جاهزة للإرسال`
+        : `Your invitation for ${o.event} is ready to send`
+      : ar
+        ? `ما زالت دعوة ${o.event} بانتظارك`
+        : `Still planning ${o.event}? Your invitation is waiting`,
+    preheader: ar ? "اختر باقة وأرسل دعوتك لضيوفك على واتساب." : "Choose a plan and send it to your guests on WhatsApp.",
+    eyebrow: ar ? "دعوتك" : "Your invitation",
+    title: o.event,
+    blocks,
   };
 }

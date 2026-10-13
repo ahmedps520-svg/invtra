@@ -17,7 +17,8 @@ export type JobType =
   | "payment.receipt"
   | "reminder.send"
   | "nudge.send"
-  | "wallet.push";
+  | "wallet.push"
+  | "event.unpaid_reminder";
 
 export const PRIORITY = { bulk: 0, normal: 5, interactive: 10 } as const;
 

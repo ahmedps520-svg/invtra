@@ -7,6 +7,7 @@ import { claimJobs, completeJob, failJob, PermanentJobError, queueBus, reclaimSt
 import { handlers, onJobFailed } from "./handlers";
 import { purgeDeletedEvents } from "@/server/maintenance";
 import { queueDueReminders } from "@/server/reminders/service";
+import { queueUnpaidReminders } from "@/server/reminders/unpaid";
 import { closeTaxMonth } from "@/server/admin/tax";
 
 /**
@@ -62,6 +63,7 @@ export function startWorker(opts: { concurrency: number; pollMs?: number; label?
     if (now - lastReminders > 5 * 60_000) {
       lastReminders = now;
       await queueDueReminders().catch((e) => logError("worker:reminders", e));
+      await queueUnpaidReminders().catch((e) => logError("worker:unpaid-reminders", e));
     }
     if (now - lastHourly > 3_600_000) {
       lastHourly = now;
