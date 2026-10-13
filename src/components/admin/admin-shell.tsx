@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Apple, ArrowLeft, CalendarHeart, CreditCard, FileText, LayoutDashboard, LogOut, Menu as MenuIcon, MessageSquare, Palette, Percent, ScanLine, ScrollText, Sparkles, TicketPercent, UserSearch, Users, X } from "lucide-react";
+import { AlertTriangle, Apple, ArrowLeft, CalendarHeart, CreditCard, FileText, Filter, LayoutDashboard, LogOut, Menu as MenuIcon, MessageSquare, Palette, Percent, ScanLine, ScrollText, Sparkles, TicketPercent, UserSearch, Users, X } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ function sections(b: AdminBadges): { label?: string; items: NavItem[] }[] {
     {
       label: "Business",
       items: [
+        { href: "/admin/funnel", label: "Funnel", icon: <Filter /> },
         { href: "/admin/custom", label: "Custom events", icon: <Sparkles /> },
         { href: "/admin/payments", label: "Payments", icon: <CreditCard />, badge: b.pendingOrders || undefined },
         { href: "/admin/codes", label: "Discount codes", icon: <TicketPercent /> },

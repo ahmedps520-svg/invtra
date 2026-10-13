@@ -13,6 +13,7 @@ import { sendEmail } from "@/server/email";
 import { renderEmail, renderEmailText } from "@/server/email-template";
 import { paymentRequestEmail } from "@/server/emails";
 import { UNLIMITED_GUESTS } from "@/lib/plans";
+import { newAccountDeadline } from "@/lib/auth/verification";
 import {
   customPackageSchema,
   type CustomPackageInput,
@@ -180,6 +181,8 @@ export async function saveCustomPackage(
         phone,
         locale: input.host.locale,
         passwordHash: await hashPassword(generateSecretToken()),
+        source: "staff", // made by INVTRA for a custom package
+        verifyBy: newAccountDeadline(),
       },
     });
   } else if (phone && !user.phone) {
