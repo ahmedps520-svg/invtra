@@ -77,8 +77,13 @@ export function formatNumber(n: number, locale: Locale, digits: DigitStyle = "la
   return new Intl.NumberFormat(intlLocale(locale, digits)).format(n);
 }
 
+/** Decimal places of a currency's minor unit (KWD, BHD and OMR use 3). */
+export function currencyDigits(currency: string): number {
+  return ["KWD", "BHD", "OMR"].includes(currency) ? 3 : 2;
+}
+
 export function formatMoney(minor: number, currency: string, locale: Locale): string {
-  const fractionDigits = ["KWD", "BHD", "OMR"].includes(currency) ? 3 : 2;
+  const fractionDigits = currencyDigits(currency);
   return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency,

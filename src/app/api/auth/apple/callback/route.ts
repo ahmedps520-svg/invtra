@@ -6,6 +6,7 @@ import { logError } from "@/server/log";
 import { rateLimit } from "@/server/security/rate-limit";
 import { createSession } from "@/server/auth/session";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n/config";
+import { cleanSource } from "@/lib/attribution";
 import { signinConfig } from "@/server/apple/config";
 import { accountForApple, APPLE_STATE_COOKIE, appleName, exchangeAppleCode, readAppleState, verifyAppleIdToken } from "@/server/apple/signin";
 
@@ -32,7 +33,8 @@ export async function POST(req: NextRequest) {
   try {
     const idToken = await exchangeAppleCode(config, code);
     const identity = await verifyAppleIdToken(idToken, config, saved.nonce);
-    const user = await accountForApple(identity, appleName(form.get("user") as string | null), requestLocale(req));
+    const source = cleanSource(saved.source);
+    const user = await accountForApple(identity, appleName(form.get("user") as string | null), requestLocale(req), source);
     if (user.status !== "ACTIVE") return back("/login?error=deactivated");
     await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     await createSession(user.id, req.headers.get("user-agent"));

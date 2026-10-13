@@ -10,7 +10,7 @@ export const GET = route("billing.orders", async () => {
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     take: 100,
-    include: { event: { select: { title: true } } },
+    include: { event: { select: { title: true } }, promoCode: { select: { code: true } } },
   });
   const instructions = await manualInstructions(user.locale === "ar" ? "ar" : "en");
   return ok({ orders: orders.map((o) => serializeCustomerOrder(o, instructions)) });

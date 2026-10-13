@@ -17,6 +17,9 @@ export type ReceiptData = {
   guestLimit: number;
   /** Bought with a limited-time offer (its name is shown instead of the plan). */
   promo?: string | null;
+  /** Discount code used, and what it took off (the list price is amount + discount). */
+  code?: string | null;
+  discount?: number;
   amount: number;
   currency: string;
   title: string | null;
@@ -42,6 +45,7 @@ export function methodLabel(provider: string, method: string | null, ar: boolean
   if (method && METHOD[method.toUpperCase()]) return METHOD[method.toUpperCase()];
   if (provider === "manual") return ar ? "تحويل بنكي" : "Bank transfer";
   if (provider === "mock") return ar ? "دفعة تجريبية" : "Test payment";
+  if (provider === "promo") return ar ? "كود خصم" : "Discount code";
   return ar ? "بطاقة" : "Card";
 }
 
@@ -128,8 +132,24 @@ export function Receipt({ data, t, ar, company }: { data: ReceiptData; t: PayCop
               <p className="mt-1 text-[13px] text-ink-soft">{guestsLabel(data.guestLimit, ar)}</p>
               {data.title ? <p dir="auto" className={cn("mt-1 whitespace-pre-line text-[13px] text-ink-soft", ar ? "text-right" : "text-left")}>{data.title}</p> : null}
             </td>
-            <td className="py-4 text-end font-medium text-ink tabular-nums">{formatMoney(data.amount, data.currency, locale)}</td>
+            <td className="py-4 text-end font-medium text-ink tabular-nums">{formatMoney(data.amount + (data.discount ?? 0), data.currency, locale)}</td>
           </tr>
+          {data.discount ? (
+            <tr className="text-[13.5px] text-sage">
+              <td className="pb-4 pe-4">
+                {t.discount}
+                {data.code ? (
+                  <>
+                    {" "}
+                    (<span dir="ltr">{data.code}</span>)
+                  </>
+                ) : null}
+              </td>
+              <td className="pb-4 text-end tabular-nums" dir="ltr">
+                −{formatMoney(data.discount, data.currency, locale)}
+              </td>
+            </tr>
+          ) : null}
         </tbody>
         <tfoot>
           {vat !== null ? (

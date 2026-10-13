@@ -34,7 +34,19 @@ type Order = {
   receiptUrl?: string;
   receiptNumber?: string | null;
   promo?: string | null;
+  code?: string | null;
+  discount?: number;
 };
+
+/** "TIKTOK10 −20 SAR" under an order's amount. */
+function CodeNote({ order, locale }: { order: Order; locale: "en" | "ar" }) {
+  if (!order.code || !order.discount) return null;
+  return (
+    <p className="mt-0.5 text-[12px] text-sage tabular-nums">
+      <span dir="ltr">{order.code}</span> · <span dir="ltr">−{formatMoney(order.discount, order.currency, locale)}</span>
+    </p>
+  );
+}
 
 const STATUS_TONE: Record<Order["status"], Tone> = {
   PENDING: "ochre",
@@ -250,6 +262,7 @@ export function BillingPage({
                         <p className="font-medium text-ink tabular-nums">
                           {formatMoney(o.amount, o.currency, locale)}
                         </p>
+                        <CodeNote order={o} locale={locale} />
                         <Badge tone={STATUS_TONE[o.status]} className="mt-1">
                           {d.status[o.status]}
                         </Badge>
@@ -342,6 +355,7 @@ function OrderRows({
         </td>
         <td className="px-3 py-3.5 text-end font-medium text-ink tabular-nums">
           {formatMoney(o.amount, o.currency, locale)}
+          <CodeNote order={o} locale={locale} />
         </td>
         <td className="px-6 py-3.5 text-end">
           <Badge tone={STATUS_TONE[o.status]}>{d.status[o.status]}</Badge>

@@ -40,6 +40,7 @@ export async function listOrders(sp: SearchParams) {
       include: {
         user: { select: { id: true, name: true, email: true } },
         event: { select: { id: true, title: true, plan: true } },
+        promoCode: { select: { id: true, code: true } },
         _count: { select: { payments: true } },
       },
     }),

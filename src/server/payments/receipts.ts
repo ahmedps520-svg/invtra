@@ -43,7 +43,11 @@ export function receiptUrl(order: Pick<Order, "id" | "payToken">) {
 export async function sendReceiptEmail(orderId: string) {
   const order = await db.order.findUnique({
     where: { id: orderId },
-    include: { user: { select: { name: true, email: true, locale: true } }, event: { select: { title: true, titleAr: true, timezone: true } } },
+    include: {
+      user: { select: { name: true, email: true, locale: true } },
+      event: { select: { title: true, titleAr: true, timezone: true } },
+      promoCode: { select: { code: true } },
+    },
   });
   if (!order || order.status !== "PAID") return;
   const eventName = (ar: boolean) => (ar ? order.event?.titleAr || order.event?.title : order.event?.title) ?? "INVTRA";
@@ -61,6 +65,7 @@ export async function sendReceiptEmail(orderId: string) {
     event: eventName(ar),
     link,
     eventId: order.eventId,
+    discount: order.promoCode && order.discount ? `${order.promoCode.code} · −${formatMoney(order.discount, order.currency, ar ? "ar" : "en")}` : null,
   });
   await sendEmail({ to: order.user.email, subject: mail.subject, text: renderEmailText(mail), html: renderEmail(mail) });
 }

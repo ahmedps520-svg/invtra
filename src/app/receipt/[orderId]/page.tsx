@@ -22,6 +22,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ orderI
       user: { select: { name: true, email: true, phone: true } },
       event: { select: { title: true, titleAr: true, timezone: true } },
       payments: { where: { status: { in: ["SUCCEEDED", "REFUNDED"] } }, orderBy: { createdAt: "desc" }, take: 1 },
+      promoCode: { select: { code: true } },
     },
   });
   if (!order || (order.userId !== user.id && user.role !== "ADMIN") || (order.status !== "PAID" && order.status !== "REFUNDED")) notFound();
@@ -47,6 +48,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ orderI
             paidAt: order.paidAt ?? order.updatedAt,
             plan: order.plan,
             promo: order.promo,
+            code: order.promoCode?.code ?? null,
+            discount: order.discount,
             guestLimit: order.guestLimit,
             amount: order.amount,
             currency: order.currency,

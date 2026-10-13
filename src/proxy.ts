@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { LOCALE_COOKIE } from "@/lib/i18n/config";
+import { CODE_COOKIE, SOURCE_COOKIE } from "@/lib/attribution";
 import { LOCALE_HEADER, isLocalizedPath, localePath, splitLocale } from "@/lib/i18n/routing";
 
 const SESSION_COOKIE = "invtra_session";
@@ -63,6 +64,27 @@ function canonicalHostRedirect(req: NextRequest): NextResponse | null {
 /** Remember the Arabic choice for the app pages (same cookie as the language switcher). */
 function rememberArabicOn(res: NextResponse) {
   res.cookies.set(LOCALE_COOKIE, "ar", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+}
+
+/**
+ * Where visitors come from, for Admin → Funnel and discount codes:
+ *  - ?code=TIKTOK10 is remembered for checkout (latest link wins) and
+ *  - the first source seen — a code, an invitation's "create your own" link (?ref=invitation)
+ *    or an ad (utm_source) — is kept for the account they create.
+ */
+const MONTH = 60 * 60 * 24 * 30;
+
+function rememberSource(req: NextRequest, res: NextResponse) {
+  if (req.method !== "GET" || isPrefetch(req)) return;
+  const q = req.nextUrl.searchParams;
+  const secure = process.env.NODE_ENV === "production";
+  const code = (q.get("code") ?? "").trim().toUpperCase();
+  const validCode = /^[A-Z0-9][A-Z0-9-]{2,29}$/.test(code) ? code : null;
+  if (validCode) res.cookies.set(CODE_COOKIE, validCode, { path: "/", maxAge: MONTH, sameSite: "lax", secure });
+  if (req.cookies.get(SOURCE_COOKIE)) return;
+  const utm = (q.get("utm_source") ?? "").toLowerCase().replace(/[^a-z0-9_.-]/g, "").slice(0, 40);
+  const source = validCode ? `code:${validCode}` : q.get("ref") === "invitation" ? "invitation" : utm ? `utm:${utm}` : null;
+  if (source) res.cookies.set(SOURCE_COOKIE, source, { path: "/", maxAge: 3 * MONTH, sameSite: "lax", secure, httpOnly: true });
 }
 
 const isPrefetch = (req: NextRequest) => req.headers.has("next-router-prefetch") || req.headers.get("purpose") === "prefetch";
@@ -136,6 +158,7 @@ export function proxy(req: NextRequest) {
     if (prefersArabic && req.method === "GET" && !isPrefetch(req)) {
       const res = NextResponse.redirect(new URL(localePath("ar", pathname) + req.nextUrl.search, req.url), 307);
       res.headers.set("Vary", "Cookie, Accept-Language");
+      rememberSource(req, res);
       return res;
     }
     requestHeaders.set(LOCALE_HEADER, "en");
@@ -148,6 +171,7 @@ export function proxy(req: NextRequest) {
   const res = rewrite ? NextResponse.rewrite(rewrite, { request: { headers: requestHeaders } }) : NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("Content-Security-Policy", policy);
   if (rememberArabic) rememberArabicOn(res);
+  rememberSource(req, res);
   return res;
 }
 

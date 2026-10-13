@@ -138,6 +138,8 @@ export function receiptEmail(o: {
   event: string;
   link: string;
   eventId: string | null;
+  /** "TIKTOK10 · −20 SAR" when a discount code was used. */
+  discount?: string | null;
 }): Mail {
   const ar = o.locale === "ar";
   const blocks: EmailBlock[] = [
@@ -154,6 +156,7 @@ export function receiptEmail(o: {
         { label: ar ? "رقم الإيصال" : "Receipt number", value: o.number },
         { label: ar ? "تاريخ الدفع" : "Paid on", value: o.paidOn },
         { label: ar ? "المناسبة" : "Event", value: o.event },
+        ...(o.discount ? [{ label: ar ? "كود الخصم" : "Discount code", value: o.discount }] : []),
       ],
     },
     { kind: "amount", label: ar ? "المبلغ المدفوع" : "Amount paid", value: o.amount, note: ar ? "شامل ضريبة القيمة المضافة" : "VAT included" },

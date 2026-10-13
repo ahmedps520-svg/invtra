@@ -202,6 +202,15 @@ export default async function PaymentsPage({
                     <p className="text-ink">
                       {planName(o.plan)}{" "}
                       {o.promo ? <span className="me-1 rounded-full bg-[#e7f3ec] px-2 py-0.5 text-[11px] font-medium text-[#00502A]">{offerName(o.promo)}</span> : null}
+                      {o.promoCode ? (
+                        <Link
+                          href={`/admin/codes/${o.promoCode.id}`}
+                          className="me-1 rounded-full bg-bronze-50 px-2 py-0.5 font-mono text-[11px] font-medium text-bronze-700 hover:underline"
+                          title={`Discount: ${money(o.discount, o.currency)}`}
+                        >
+                          {o.promoCode.code}
+                        </Link>
+                      ) : null}
                       <span className="text-ink-faint">
                         · {guestLimit(o.guestLimit)} guests
                       </span>

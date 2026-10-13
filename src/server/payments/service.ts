@@ -10,6 +10,7 @@ import { nextReceiptNumber } from "./receipts";
 import { enqueue } from "@/server/queue/queue";
 import { paymentProvider, providerFor } from "./index";
 import type { CheckoutUrls, PaidDetails } from "./types";
+import { codeAppliesTo, discountFor, usableCode, wrongPlan } from "./promo";
 import { whatsappOff } from "@/server/whatsapp";
 
 /**
@@ -93,7 +94,7 @@ export async function createOrderForEvent(
   user: { id: string },
   event: Pick<Event, "id" | "userId" | "plan" | "deletedAt" | "deactivatedAt">,
   plan: PlanTier,
-  opts: { offer?: string | null } = {},
+  opts: { offer?: string | null; code?: string | null } = {},
 ): Promise<{ order: Order; reused: boolean }> {
   if (plan !== "BASIC" && plan !== "PREMIUM") {
     throw badRequest("plan_not_self_serve", "The Custom plan is arranged with our team — please contact us.");
@@ -104,6 +105,7 @@ export async function createOrderForEvent(
   let amount: number | null;
   let guestLimit = PLANS[plan].guestLimit ?? 0;
   let promo: string | null = null;
+  if (opts.offer && opts.code) throw badRequest("promo_with_offer", "Discount codes can't be used with this offer.");
   if (opts.offer) {
     const offer = findOffer(opts.offer);
     if (!offer || !isOfferActive(offer)) throw badRequest("offer_ended", "This offer has ended.");
@@ -121,7 +123,17 @@ export async function createOrderForEvent(
       event.plan === plan ? "This event already has this plan." : "This event already has a higher plan.",
     );
   }
-  const provider = paymentProvider().name;
+  let promoCodeId: string | null = null;
+  let discount = 0;
+  if (opts.code) {
+    const code = await usableCode(opts.code, user.id, currency);
+    if (!codeAppliesTo(code, plan)) throw wrongPlan(code);
+    promoCodeId = code.id;
+    discount = discountFor(code, amount, currency);
+    amount -= discount;
+  }
+  // Paid in full by a code: nothing to pay, so no payment provider.
+  const provider = amount === 0 ? "promo" : paymentProvider().name;
 
   const existing = await db.order.findFirst({
     where: {
@@ -134,6 +146,8 @@ export async function createOrderForEvent(
       currency,
       guestLimit,
       promo,
+      promoCodeId,
+      discount,
       createdAt: { gte: new Date(Date.now() - ORDER_REUSE_MS) },
     },
     orderBy: { createdAt: "desc" },
@@ -141,7 +155,7 @@ export async function createOrderForEvent(
   if (existing) return { order: existing, reused: true };
 
   const order = await db.order.create({
-    data: { userId: user.id, eventId: event.id, plan, guestLimit, amount, currency, provider, status: "PENDING", promo },
+    data: { userId: user.id, eventId: event.id, plan, guestLimit, amount, currency, provider, status: "PENDING", promo, promoCodeId, discount },
   });
   return { order, reused: false };
 }
@@ -151,7 +165,7 @@ export async function startCheckout(
   user: { id: string; email: string; name?: string | null },
   event: Pick<Event, "id" | "userId" | "plan" | "title" | "deletedAt" | "deactivatedAt">,
   plan: PlanTier,
-  opts: { offer?: string | null } = {},
+  opts: { offer?: string | null; code?: string | null } = {},
 ): Promise<{ redirectUrl: string; orderId: string }> {
   const { order, reused } = await createOrderForEvent(user, event, plan, opts);
   const provider = paymentProvider();
@@ -168,6 +182,12 @@ export async function startCheckout(
   }
   // A reused order gets a fresh hosted session; the previous one must not stay payable.
   if (reused && order.providerRef) await expireCheckouts([order]);
+
+  if (order.amount === 0) {
+    // A code covered the whole price: the plan applies straight away (with a receipt).
+    await applyPaidOrder(order.id, { provider: "promo", amount: 0, note: "Paid in full with a discount code" });
+    return { redirectUrl: checkoutUrls(event.id).successUrl, orderId: order.id };
+  }
 
   let result;
   try {
@@ -432,9 +452,15 @@ export type CustomerOrder = {
   receiptNumber?: string | null;
   /** Bought with a limited-time offer (src/lib/offers.ts). */
   promo: string | null;
+  /** Discount code used, and what it took off. */
+  code: string | null;
+  discount: number;
 };
 
-export function serializeCustomerOrder(order: Order & { event: { title: string } | null }, instructions: string): CustomerOrder {
+export function serializeCustomerOrder(
+  order: Order & { event: { title: string } | null; promoCode?: { code: string } | null },
+  instructions: string,
+): CustomerOrder {
   return {
     id: order.id,
     eventId: order.eventId,
@@ -448,6 +474,8 @@ export function serializeCustomerOrder(order: Order & { event: { title: string }
     createdAt: order.createdAt.toISOString(),
     paidAt: order.paidAt?.toISOString() ?? null,
     promo: order.promo,
+    code: order.promoCode?.code ?? null,
+    discount: order.discount,
     ...(order.provider === "manual" && order.status === "PENDING" ? { instructions } : {}),
     ...(order.payToken && order.status === "PENDING" ? { payUrl: `/pay/${order.payToken}` } : {}),
     ...(order.status === "PAID" || order.status === "REFUNDED"

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ArrowRight, Check, Crown, Lock } from "lucide-react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { ArrowRight, Check, Crown, Lock, TicketPercent, X } from "lucide-react";
 import Link from "next/link";
 import { useI18n } from "@/components/i18n/provider";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,21 @@ export type PlansResponse = {
 };
 
 const ORDER: PlanTier[] = ["BASIC", "PREMIUM", "CUSTOM"];
+
+/** A discount code checked against this event's plans (GET /api/billing/promo). */
+type Promo = {
+  code: string;
+  percentOff: number | null;
+  amountOff: number | null;
+  currency: string;
+  prices: Partial<Record<PlanTier, { base: number; discount: number; amount: number } | null>>;
+};
+
+/** The code from a shared link (?code=…), remembered by the site for 30 days. */
+function linkCode(): string | null {
+  const m = document.cookie.match(/(?:^|; )invtra_code=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
 
 /** Loads GET /api/billing/plans (with the event's upgrade credit when `eventId` is given). */
 export function usePlans(eventId?: string) {
@@ -89,6 +104,43 @@ export function PlanCards({
   const d = dict.dashboard.review.plan;
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
+  const [promo, setPromo] = useState<Promo | null>(null);
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  const c = d.code;
+
+  const applyCode = useCallback(
+    async (value: string) => {
+      if (!eventId || !value.trim()) return;
+      setApplying(true);
+      setCodeError(null);
+      try {
+        setPromo(await api<Promo>(`/api/billing/promo?code=${encodeURIComponent(value.trim())}&event=${encodeURIComponent(eventId)}`));
+      } catch (e) {
+        setPromo(null);
+        setCodeError(errorMessage(e, dict));
+      } finally {
+        setApplying(false);
+      }
+    },
+    [eventId, dict],
+  );
+
+  // Arrived through a link with a code: apply it for them.
+  useEffect(() => {
+    if (!eventId) return;
+    const code = linkCode();
+    if (!code) return;
+    const id = setTimeout(() => {
+      setCodeOpen(true);
+      setCodeInput(code);
+      void applyCode(code);
+    }, 0);
+    return () => clearTimeout(id);
+  }, [eventId, applyCode]);
+
   const sorted = [...plans].sort(
     (a, b) => ORDER.indexOf(a.tier) - ORDER.indexOf(b.tier),
   );
@@ -116,7 +168,10 @@ export function PlanCards({
         `/api/events/${eventId}/checkout`,
         {
           method: "POST",
-          body: { plan: tier, ...(offerKey ? { offer: offerKey } : {}) },
+          body: {
+            plan: tier,
+            ...(offerKey ? { offer: offerKey } : promo?.prices[tier] ? { code: promo.code } : {}),
+          },
         },
       );
       toast(d.redirecting, "info");
@@ -180,6 +235,7 @@ export function PlanCards({
             currentPlan && price !== null && !isCurrent && !lower
               ? Math.max(0, price - currentPrice)
               : null;
+          const deal = !isCurrent && !lower ? (promo?.prices[p.tier] ?? null) : null;
           return (
             <div
               key={p.tier}
@@ -209,6 +265,23 @@ export function PlanCards({
                   <p className="text-sm leading-relaxed text-ink-soft">
                     {d.custom}
                   </p>
+                ) : deal ? (
+                  <>
+                    <p className="flex flex-wrap items-baseline gap-x-2.5">
+                      <span className="font-display text-4xl leading-none text-ink lining-nums">
+                        {deal.amount === 0 ? c.freePrice : formatMoney(deal.amount, currency, locale)}
+                      </span>
+                      <span className="text-[15px] text-ink-faint line-through decoration-1 tabular-nums">
+                        {formatMoney(deal.base, currency, locale)}
+                      </span>
+                    </p>
+                    <p className="mt-1.5 text-xs font-medium text-sage">
+                      {currentPlan && deal.amount > 0
+                        ? `${fmt(d.upgradePrice, { price: formatMoney(deal.amount, currency, locale) })} · `
+                        : ""}
+                      {fmt(c.save, { amount: formatMoney(deal.discount, currency, locale) })}
+                    </p>
+                  </>
                 ) : (
                   <>
                     <p className="font-display text-4xl leading-none text-ink lining-nums">
@@ -283,6 +356,92 @@ export function PlanCards({
           );
         })}
       </div>
+      {eventId ? (
+        <div className="mt-5">
+          {promo ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-sage/25 bg-sage-soft px-4 py-3" role="status">
+              <TicketPercent className="size-4 shrink-0 text-sage" />
+              <p className="min-w-0 flex-1 text-[13.5px] text-ink">
+                <span className="font-medium" dir="ltr">
+                  {fmt(c.applied, { code: promo.code })}
+                </span>
+                <span className="text-ink-soft">
+                  {" · "}
+                  {promo.percentOff === 100
+                    ? fmt(c.free, { code: promo.code })
+                    : promo.percentOff
+                      ? fmt(c.percent, { n: formatNumber(promo.percentOff, locale) })
+                      : fmt(c.amount, { amount: formatMoney(promo.amountOff ?? 0, promo.currency, locale) })}
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setPromo(null);
+                  setCodeInput("");
+                }}
+                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-ink-faint hover:text-ink"
+              >
+                <X className="size-3.5" />
+                {c.remove}
+              </button>
+            </div>
+          ) : codeOpen ? (
+            <form
+              className="max-w-md"
+              onSubmit={(e: FormEvent) => {
+                e.preventDefault();
+                void applyCode(codeInput);
+              }}
+            >
+              <label htmlFor="promo-code" className="text-[13px] font-medium text-ink">
+                {c.label}
+              </label>
+              <div className="mt-1.5 flex gap-2">
+                <input
+                  id="promo-code"
+                  value={codeInput}
+                  onChange={(e) => {
+                    setCodeInput(e.target.value.toUpperCase());
+                    setCodeError(null);
+                  }}
+                  placeholder={c.placeholder}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  maxLength={40}
+                  dir="ltr"
+                  aria-invalid={Boolean(codeError)}
+                  aria-describedby={codeError ? "promo-code-error" : undefined}
+                  className={cn(
+                    "h-11 min-w-0 flex-1 rounded-xl border bg-paper px-3.5 text-[15px] uppercase tracking-[0.08em] text-ink outline-none transition placeholder:normal-case placeholder:tracking-normal placeholder:text-ink-faint focus:border-bronze-400",
+                    codeError ? "border-rosewood/50" : "border-line-strong",
+                  )}
+                  data-testid="promo-input"
+                />
+                <Button type="submit" variant="outline" loading={applying} disabled={!codeInput.trim()}>
+                  {c.apply}
+                </Button>
+              </div>
+              {codeError ? (
+                <p id="promo-code-error" role="alert" className="mt-1.5 text-[13px] text-rosewood">
+                  {codeError}
+                </p>
+              ) : null}
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCodeOpen(true)}
+              className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-bronze-700 underline-offset-4 hover:text-bronze-900 hover:underline"
+              data-testid="promo-toggle"
+            >
+              <TicketPercent className="size-4" />
+              {c.toggle}
+            </button>
+          )}
+        </div>
+      ) : null}
       {eventId ? <CheckoutNote /> : null}
     </div>
   );

@@ -43,6 +43,7 @@ model User {
   phone            String?
   emailVerifiedAt  DateTime? // proved they own the email (code, password reset link or Apple)
   verifyBy         DateTime? // unverified accounts lock after this until the email is verified
+  source           String? // where they came from, first touch: "code:TIKTOK10", "invitation", "utm:tiktok"
   lastLoginAt      DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -57,6 +58,7 @@ model User {
 
   @@index([role])
   @@index([createdAt])
+  @@index([source])
 }
 
 model Session {
@@ -781,13 +783,38 @@ model Order {
   createdById   String? // the admin who prepared it
   requestSentAt DateTime? // last time the payment link was sent to the host
 
-  receiptNumber String? @unique // e.g. INVTRA-2026-0001, assigned when paid
+  receiptNumber String?    @unique // e.g. INVTRA-2026-0001, assigned when paid
   promo         String? // limited-time offer this was bought with (src/lib/offers.ts), e.g. "national-day-96"
+  promoCodeId   String? // discount code used at checkout
+  promoCode     PromoCode? @relation(fields: [promoCodeId], references: [id], onDelete: Restrict)
+  discount      Int        @default(0) // minor units taken off the price by the code (amount is what's paid)
 
   payments Payment[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([promoCodeId])
+}
+
+/// Discount codes made by staff (Admin → Discount codes): e.g. TIKTOK10, or one per influencer.
+model PromoCode {
+  id             String     @id @default(cuid())
+  code           String     @unique // upper case letters, digits and dashes
+  note           String? // who or what it's for: "TikTok ad, October", "Influencer @sara"
+  percentOff     Int? // 1–100 (exactly one of percentOff / amountOff)
+  amountOff      Int? // minor units of `currency`
+  currency       String?
+  plans          PlanTier[] // the plans it works for; empty = every self-serve plan
+  maxUses        Int? // paid orders in total
+  onePerCustomer Boolean    @default(true)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  active         Boolean    @default(true)
+  createdById    String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  orders Order[]
 }
 
 /**

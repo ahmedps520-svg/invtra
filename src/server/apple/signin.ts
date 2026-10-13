@@ -21,20 +21,23 @@ export function appleRedirectUri() {
   return appUrl("/api/auth/apple/callback");
 }
 
-/** The signed state cookie value: state, nonce, where to go after, expiry. */
-export function createAppleState(next: string) {
+/**
+ * The signed state cookie value: state, nonce, where to go after, expiry — and where the visitor
+ * came from (Apple's cross-site post back doesn't bring our other cookies).
+ */
+export function createAppleState(next: string, source: string | null = null) {
   const state = randomBytes(24).toString("base64url");
   const nonce = randomBytes(24).toString("base64url");
-  const body = b64url(JSON.stringify({ state, nonce, next, exp: Date.now() + STATE_TTL_MS }));
+  const body = b64url(JSON.stringify({ state, nonce, next, source, exp: Date.now() + STATE_TTL_MS }));
   return { state, nonce, cookie: `${body}.${hmac(`apple-state:${body}`)}` };
 }
 
-export function readAppleState(cookie: string | undefined | null): { state: string; nonce: string; next: string } | null {
+export function readAppleState(cookie: string | undefined | null): { state: string; nonce: string; next: string; source?: string | null } | null {
   if (!cookie) return null;
   const [body, mac] = cookie.split(".");
   if (!body || !mac || !safeEqual(mac, hmac(`apple-state:${body}`))) return null;
   try {
-    const v = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as { state: string; nonce: string; next: string; exp: number };
+    const v = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as { state: string; nonce: string; next: string; source?: string | null; exp: number };
     return v.exp > Date.now() ? v : null;
   } catch {
     return null;
@@ -136,7 +139,7 @@ export function appleName(userField: string | null | undefined): string | null {
  * The INVTRA account for an Apple identity: the one already linked, else the account with
  * the same (Apple-verified) email, else a new account. Null when the account is deactivated.
  */
-export async function accountForApple(id: AppleIdentity, name: string | null, locale: "en" | "ar") {
+export async function accountForApple(id: AppleIdentity, name: string | null, locale: "en" | "ar", source: string | null = null) {
   // Apple has verified the email it shares, so a matching INVTRA email counts as verified too.
   const sameEmail = (email: string) => Boolean(id.email && id.emailVerified && id.email === email);
   const linked = await db.user.findUnique({ where: { appleSub: id.sub } });
@@ -157,6 +160,7 @@ export async function accountForApple(id: AppleIdentity, name: string | null, lo
       appleSub: id.sub,
       // Apple vouches for the account (and its relay email), so there's nothing to verify.
       emailVerifiedAt: new Date(),
+      source,
       locale,
     },
   });
