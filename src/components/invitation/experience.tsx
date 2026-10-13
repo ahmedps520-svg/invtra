@@ -213,10 +213,24 @@ function Body({ checkin }: { checkin?: boolean }) {
 
       <footer className="px-6 pb-16 text-center">
         {vm.design.card.showBranding ? (
-          <a href="https://invtra.store" className={cn(s.muted, "inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] opacity-70 transition hover:opacity-100")}>
-            <LogoMark className="h-5 text-current" />
-            <Label pick={(x) => x.footer} />
-          </a>
+          <>
+            <a href="https://invtra.store" className={cn(s.muted, "inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] opacity-70 transition hover:opacity-100")}>
+              <LogoMark className="h-5 text-current" />
+              <Label pick={(x) => x.footer} />
+            </a>
+            {vm.mode === "guest" ? (
+              // Guests who are planning their own occasion — counted as "invitation" sign-ups.
+              <p className="mt-3">
+                <a
+                  href={vm.lang === "ar" ? "/ar?ref=invitation" : "/?ref=invitation"}
+                  className={cn(s.muted, "text-[12.5px] underline decoration-current/30 underline-offset-4 opacity-75 transition hover:opacity-100")}
+                  data-testid="create-yours"
+                >
+                  <Label pick={(x) => x.createYours} />
+                </a>
+              </p>
+            ) : null}
+          </>
         ) : null}
       </footer>
 

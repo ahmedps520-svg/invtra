@@ -210,6 +210,11 @@ describe("where visitors come from", () => {
     expect(res.cookies.get("invtra_code")?.value).toBe("TIKTOK10");
     expect(res.cookies.get("invtra_src")?.value).toBe("code:TIKTOK10");
 
+    // The "create your invitation" link at the end of every guest page.
+    const guest = proxy(new NextRequest("https://invtra.store/?ref=invitation"));
+    expect(guest.cookies.get("invtra_src")?.value).toBe("invitation");
+    expect(guest.cookies.get("invtra_code")).toBeUndefined();
+
     const ad = proxy(new NextRequest("https://invtra.store/invitations/weddings?utm_source=TikTok"));
     expect(ad.cookies.get("invtra_src")?.value).toBe("utm:tiktok");
 

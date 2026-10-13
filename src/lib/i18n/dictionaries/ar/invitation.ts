@@ -97,4 +97,5 @@ export const invitation: typeof en = {
   },
   preview: { banner: "معاينة — يرى الضيوف هذه الصفحة من دعوة الواتساب." },
   footer: "دعوة من إنفترا",
+  createYours: "لديك مناسبة؟ أنشئ دعوتك",
 };

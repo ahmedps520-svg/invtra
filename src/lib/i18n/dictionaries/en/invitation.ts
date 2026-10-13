@@ -95,4 +95,5 @@ export const invitation = {
   },
   preview: { banner: "Preview — guests see this page from their WhatsApp invitation." },
   footer: "Invitation by INVTRA",
+  createYours: "Planning an occasion? Create your invitation",
 };
