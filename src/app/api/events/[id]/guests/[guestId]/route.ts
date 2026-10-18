@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { db } from "@/server/db";
-import { notFound, ok, parseJson, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { ok, parseJson, requireApiUser, route } from "@/server/http";
+import { getGuestAccess, guestInScope } from "@/server/events/cohosts";
 import { defaultCountryFor, deleteGuests, editGuest } from "@/server/guests/service";
 import { ensureInvitation, invitationUrl } from "@/server/invitations";
 import { guestInputSchema } from "@/lib/validation/guest";
@@ -11,10 +11,9 @@ type Ctx = { params: Promise<{ id: string; guestId: string }> };
 async function load(ctx: Ctx) {
   const user = await requireApiUser();
   const { id, guestId } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
-  const guest = await db.guest.findFirst({ where: { id: guestId, eventId: event.id } });
-  if (!guest) throw notFound("Guest");
-  return { user, event, guest };
+  const access = await getGuestAccess(user, id);
+  const guest = await guestInScope(access, guestId);
+  return { user, event: access.event, guest };
 }
 
 /** Guest detail incl. message history, RSVP history, views and scans. */

@@ -1,4 +1,4 @@
-import type { Event, Guest } from "@prisma/client";
+import type { Event, Guest, Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { badRequest, notFound } from "@/server/http";
 import { ensureInvitation, ensureInvitations, invitationUrl } from "@/server/invitations";
@@ -78,10 +78,10 @@ export type ManualGuest = {
   waUrl: string;
 };
 
-/** Every guest with their personal link and ready-to-send message. */
-export async function manualSendList(event: Event): Promise<ManualGuest[]> {
+/** Every guest (a co-host: every guest on their list) with their personal link and ready-to-send message. */
+export async function manualSendList(event: Event, scope: Prisma.GuestWhereInput = {}): Promise<ManualGuest[]> {
   const guests = await db.guest.findMany({
-    where: { eventId: event.id, isTest: false },
+    where: { eventId: event.id, isTest: false, ...scope },
     orderBy: { createdAt: "asc" },
     select: { id: true, eventId: true, name: true, phone: true, groupName: true, locale: true, section: true, status: true, deliveryStatus: true, manualSentAt: true },
   });

@@ -14,6 +14,7 @@ import {
   Send,
   SendHorizontal,
   Sparkles,
+  Users,
   XCircle,
 } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
@@ -44,9 +45,12 @@ export function describeActivity(a: ActivityItem, dict: Dictionary, locale: Loca
       return { text: d.updated, icon: <Pencil />, tone: "neutral" };
     case "guests.imported": {
       const skipped = num("duplicates") + num("invalid");
+      // Imported by a co-host onto their list.
+      const list = typeof data.list === "string" ? data.list : "";
+      const notes = [list, skipped ? fmt(d.importedSkipped, { duplicates: n(num("duplicates")), invalid: n(num("invalid")) }) : ""].filter(Boolean);
       return {
         text: plural(locale, d.imported, num("created")),
-        note: skipped ? fmt(d.importedSkipped, { duplicates: n(num("duplicates")), invalid: n(num("invalid")) }) : undefined,
+        note: notes.length ? notes.join(" · ") : undefined,
         icon: <FileSpreadsheet />,
         tone: "slate",
       };
@@ -101,6 +105,8 @@ export function describeActivity(a: ActivityItem, dict: Dictionary, locale: Loca
     }
     case "plan.custom_offered":
       return { text: d.customOffered, icon: <CreditCard />, tone: "bronze" };
+    case "cohost.joined":
+      return { text: fmt(d.coHostJoined, { label: String(data.label ?? "") }), icon: <Users />, tone: "slate" };
     default:
       return { text: d.unknown, icon: <Sparkles />, tone: "neutral" };
   }

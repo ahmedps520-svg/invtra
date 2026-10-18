@@ -1,5 +1,5 @@
 import { ok, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getGuestAccess, guestInScope } from "@/server/events/cohosts";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 import { markManualSent } from "@/server/sending/manual";
 
@@ -10,6 +10,7 @@ export const POST = route<Ctx>("guests.manual_sent", async (_req, ctx) => {
   const user = await requireApiUser();
   const { id, guestId } = await ctx.params;
   await enforceRateLimit(`manual-send:${user.id}`, 600, 600);
-  const event = await getOwnedEvent(user, id);
-  return ok(await markManualSent(event, guestId));
+  const access = await getGuestAccess(user, id);
+  await guestInScope(access, guestId);
+  return ok(await markManualSent(access.event, guestId));
 });

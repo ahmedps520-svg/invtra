@@ -18,7 +18,8 @@ export type ActivityKind =
   | "guest.scanned"
   | "guest.checked_in"
   | "plan.purchased"
-  | "plan.custom_offered";
+  | "plan.custom_offered"
+  | "cohost.joined";
 
 type Tx = Prisma.TransactionClient | typeof db;
 

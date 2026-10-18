@@ -53,6 +53,7 @@ model User {
   passwordResets PasswordResetToken[]
   emailCodes     EmailCode[]
   events         Event[]
+  coHosting      CoHost[]
   orders         Order[]
   uploads        Upload[]
   sendBatches    SendBatch[]
@@ -247,6 +248,7 @@ model Event {
   scheduleItems ScheduleItem[]
   galleryImages GalleryImage[]
   guests        Guest[]
+  coHosts       CoHost[]
   invitations   Invitation[]
   sendBatches   SendBatch[]
   orders        Order[]
@@ -370,6 +372,9 @@ model Guest {
   notes          String?
   isTest         Boolean       @default(false) // host's own number for "send me a test"; hidden from lists & stats
   section        GuestSection? // men's or women's section, when the event has sections
+  // The co-host whose list this guest is on (null: the event owner's own list).
+  coHostId       String?
+  coHost         CoHost?       @relation(fields: [coHostId], references: [id], onDelete: SetNull)
 
   status            GuestStatus    @default(PENDING)
   rsvpStatus        RsvpStatus     @default(PENDING)
@@ -407,6 +412,37 @@ model Guest {
   @@unique([eventId, phone])
   @@index([eventId, status])
   @@index([phone])
+  @@index([coHostId])
+}
+
+/**
+ * Someone the owner invited to keep their own guest list for the event (e.g. the groom's
+ * family). They sign in with their own account, see and send only their own guests, and
+ * can't change the event, its design or its plan. Removing them moves their guests to the
+ * owner's list.
+ */
+model CoHost {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  label       String // who they are to the event: "Groom's family"
+  email       String // where the invitation went
+  guestLimit  Int? // optional cap on their list
+  // Set when they accept, to the account that accepted.
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  acceptedAt  DateTime?
+  // Part of the invitation link's signature: changing it retires the old link.
+  inviteNonce String
+  invitedAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  guests Guest[]
+
+  @@unique([eventId, email])
+  @@unique([eventId, userId])
+  @@index([userId])
 }
 
 enum InvitationStatus {

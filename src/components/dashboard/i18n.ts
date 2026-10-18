@@ -24,7 +24,8 @@ export function errorMessage(err: unknown, dict: Dictionary): string {
     if (err.status === 0) return dict.common.errors.network;
     if (err.status === 429 || err.code === "rate_limited") return dict.dashboard.errors.rate_limited;
     const known = (dict.dashboard.errors as Record<string, string>)[err.code];
-    if (known) return known;
+    // Some messages carry a number from the server, e.g. a list's limit.
+    if (known) return err.fields ? fmt(known, err.fields) : known;
     if (err.status === 401) return dict.common.errors.unauthorized;
     if (err.status === 403) return dict.common.errors.forbidden;
     if (err.status === 404) return dict.dashboard.errors.not_found;

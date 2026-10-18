@@ -12,6 +12,8 @@ export type GuestRow = {
   locale: string | null;
   notes: string | null;
   section: "MEN" | "WOMEN" | null;
+  /** The co-host whose list they're on (null: the owner's own). */
+  coHostId?: string | null;
   status: GuestStatusKey;
   rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED";
   rsvpSource: "WHATSAPP" | "WEB" | "HOST" | null;

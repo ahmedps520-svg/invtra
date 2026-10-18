@@ -34,7 +34,18 @@ const REPLIED = new Set(["ACCEPTED", "DECLINED", "INVITATION_SENT", "VIEWED", "Q
  * WhatsApp on that guest's chat with the invitation message (and personal link) typed in.
  * The host presses send in WhatsApp; the guest is counted as sent when the button is used.
  */
-export function ManualSendPanel({ eventId, ready, guests: initial }: { eventId: string; ready: boolean; guests: ManualGuestRow[] }) {
+export function ManualSendPanel({
+  eventId,
+  ready,
+  guests: initial,
+  coHost = false,
+}: {
+  eventId: string;
+  ready: boolean;
+  guests: ManualGuestRow[];
+  /** A co-host sending to their own list: the event itself is the owner's to get ready. */
+  coHost?: boolean;
+}) {
   const { dict, locale } = useI18n();
   const d = dict.dashboard.send.manual;
   const toast = useToast();
@@ -71,10 +82,12 @@ export function ManualSendPanel({ eventId, ready, guests: initial }: { eventId: 
     return (
       <Card className="px-6 py-10 text-center sm:px-10">
         <h2 className="font-display text-3xl text-ink">{d.notReadyTitle}</h2>
-        <p className="mx-auto mt-2 max-w-md text-[15px] text-ink-soft">{guests.length ? d.notReadyBody : d.noGuests}</p>
-        <Link href={stepHref(eventId, guests.length ? "review" : "guests")} className={buttonClasses("primary", "md", "mt-6")}>
-          {guests.length ? d.notReadyCta : d.addGuests}
-        </Link>
+        <p className="mx-auto mt-2 max-w-md text-[15px] text-ink-soft">{guests.length ? (coHost ? d.notReadyCoHost : d.notReadyBody) : d.noGuests}</p>
+        {guests.length && coHost ? null : (
+          <Link href={stepHref(eventId, guests.length ? "review" : "guests")} className={buttonClasses("primary", "md", "mt-6")}>
+            {guests.length ? d.notReadyCta : d.addGuests}
+          </Link>
+        )}
       </Card>
     );
   }

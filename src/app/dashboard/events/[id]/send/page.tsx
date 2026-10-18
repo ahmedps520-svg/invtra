@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
-import { findOwnedEvent } from "@/server/events/access";
+import { findGuestAccess } from "@/server/events/cohosts";
 import { cardPreviewProps } from "@/server/events/preview";
 import { sendReadiness } from "@/server/sending/service";
 import { messagePreview } from "@/server/sending/preview";
@@ -20,9 +20,20 @@ export async function generateMetadata() {
 export default async function SendPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/dashboard/events/${id}/send`);
-  const event = await findOwnedEvent(user.id, id);
-  if (!event) notFound();
+  const access = await findGuestAccess(user, id);
+  if (!access) notFound();
+  const { event, coHost, scope } = access;
   const { dict, locale } = await getI18n();
+
+  // A co-host sends to their own list from their own WhatsApp.
+  if (coHost) {
+    const [ready, guests] = await Promise.all([manualReadiness(event), manualSendList(event, scope)]);
+    return (
+      <div className="mx-auto max-w-5xl">
+        <ManualSendPanel eventId={event.id} ready={ready.ready} guests={guests} coHost />
+      </div>
+    );
+  }
 
   const [readiness, preview, message, latest, failedCount, manualReady, manualGuests] = await Promise.all([
     sendReadiness(event),

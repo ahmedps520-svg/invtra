@@ -3,11 +3,13 @@ import type { GuestStatus } from "@prisma/client";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
-import { findOwnedEvent } from "@/server/events/access";
+import { coHostViews, findGuestAccess, MAX_COHOSTS } from "@/server/events/cohosts";
 import { defaultCountryFor } from "@/server/guests/service";
 import { invitationUrl } from "@/server/invitations";
 import { sectionCounts } from "@/server/guests/sections";
 import { GuestsManager } from "@/components/dashboard/guests/guests-manager";
+import { CoHostsPanel } from "@/components/dashboard/guests/cohosts-panel";
+import { CoHostNote } from "@/components/dashboard/guests/cohost-note";
 import { GUEST_STATUSES, type GuestList, type GuestStatusKey } from "@/components/dashboard/guests/types";
 
 export async function generateMetadata() {
@@ -25,17 +27,22 @@ export default async function GuestsPage({
   const { id } = await params;
   const sp = await searchParams;
   const user = await requireUser(`/dashboard/events/${id}/guests`);
-  const event = await findOwnedEvent(user.id, id);
-  if (!event) notFound();
+  // The owner sees every list; a co-host only their own.
+  const access = await findGuestAccess(user, id);
+  if (!access) notFound();
+  const { event, coHost, scope } = access;
 
   const raw = typeof sp.status === "string" ? sp.status : null;
   const status = raw && (GUEST_STATUSES as readonly string[]).includes(raw) ? (raw as GuestStatusKey) : null;
-  const where = { eventId: event.id, isTest: false, ...(status ? { status: status as GuestStatus } : {}) };
-  const [total, guests, counts, bySection] = await Promise.all([
+  const base = { eventId: event.id, isTest: false, ...scope };
+  const where = { ...base, ...(status ? { status: status as GuestStatus } : {}) };
+  const [total, guests, counts, bySection, coHosts, owner] = await Promise.all([
     db.guest.count({ where }),
     db.guest.findMany({ where, orderBy: { createdAt: "asc" }, take: 50, include: { invitation: { select: { token: true } } } }),
-    db.guest.groupBy({ by: ["status"], where: { eventId: event.id, isTest: false }, _count: true }),
-    db.guest.groupBy({ by: ["section"], where: { eventId: event.id, isTest: false }, _count: true }),
+    db.guest.groupBy({ by: ["status"], where: base, _count: true }),
+    db.guest.groupBy({ by: ["section"], where: base, _count: true }),
+    coHost ? null : coHostViews(event.id),
+    coHost ? db.user.findUnique({ where: { id: event.userId }, select: { name: true, email: true } }) : null,
   ]);
   const initial = JSON.parse(
     JSON.stringify({
@@ -47,6 +54,7 @@ export default async function GuestsPage({
       guests: guests.map(({ invitation, ...g }) => ({ ...g, invitationUrl: invitation ? invitationUrl(invitation.token) : null })),
     }),
   ) as GuestList;
+  const listed = counts.reduce((n, c) => n + c._count, 0);
 
   return (
     <GuestsManager
@@ -58,6 +66,20 @@ export default async function GuestsPage({
       initialStatus={status}
       // eslint-disable-next-line react-hooks/purity -- request time for relative timestamps
       serverNow={Date.now()}
+      lists={coHosts?.length ? coHosts.map((c) => ({ id: c.id, label: c.label })) : undefined}
+      coHost={Boolean(coHost)}
+      aside={
+        coHost ? (
+          <CoHostNote label={coHost.label} owner={owner?.name || owner?.email || ""} count={listed} limit={coHost.guestLimit} />
+        ) : (
+          <CoHostsPanel
+            eventId={event.id}
+            initial={coHosts ?? []}
+            ownCount={listed - (coHosts ?? []).reduce((n, c) => n + c.guests, 0)}
+            max={MAX_COHOSTS}
+          />
+        )
+      }
     />
   );
 }

@@ -59,6 +59,9 @@ export function GuestsManager({
   initial,
   initialStatus,
   serverNow,
+  lists,
+  aside,
+  coHost = false,
 }: {
   eventId: string;
   eventLanguage: "EN" | "AR" | "BILINGUAL";
@@ -68,6 +71,12 @@ export function GuestsManager({
   initial: GuestList;
   initialStatus: GuestStatusKey | null;
   serverNow: number;
+  /** The co-hosts' lists, for the owner to filter by and to label guests with. */
+  lists?: { id: string; label: string }[];
+  /** Shown under the heading (the owner's guest lists, or a co-host's note). */
+  aside?: React.ReactNode;
+  /** A co-host's own list: no workflow steps, and they go on to sending, not the plan. */
+  coHost?: boolean;
 }) {
   const { dict, locale } = useI18n();
   const d = dict.dashboard.guests;
@@ -79,6 +88,7 @@ export function GuestsManager({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<GuestStatusKey | null>(initialStatus);
   const [section, setSection] = useState<SectionFilter | null>(null);
+  const [list, setList] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>("created");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -101,6 +111,7 @@ export function GuestsManager({
       if (query) params.set("q", query);
       if (status) params.set("status", status);
       if (section) params.set("section", section);
+      if (list) params.set("list", list);
       if (!silent) setLoading(true);
       try {
         const res = await api<GuestList>(`/api/events/${eventId}/guests?${params}`, { signal });
@@ -119,7 +130,7 @@ export function GuestsManager({
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [eventId, page, sort, query, status, section, toast, dict],
+    [eventId, page, sort, query, status, section, list, toast, dict],
   );
 
   // Debounce the search box.
@@ -275,7 +286,8 @@ export function GuestsManager({
   };
 
   const totalAll = Object.values(data.counts).reduce((s, n) => s + (n ?? 0), 0);
-  const filtered = Boolean(query || status || section);
+  const filtered = Boolean(query || status || section || list);
+  const listLabel = new Map((lists ?? []).map((l) => [l.id, l.label]));
   const missingSection = sectionsEnabled ? (data.sectionCounts?.NONE ?? 0) : 0;
   const pageIds = data.guests.map((g) => g.id);
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
@@ -337,6 +349,9 @@ export function GuestsManager({
       </button>
       <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-ink-faint">
         {sectionsEnabled && g.section ? <SectionPill section={g.section} label={d.sections.short[g.section]} /> : null}
+        {g.coHostId && listLabel.has(g.coHostId) ? (
+          <span className="shrink-0 rounded-full bg-bronze-50 px-1.5 py-px text-[11px] font-medium text-bronze-700">{listLabel.get(g.coHostId)}</span>
+        ) : null}
         <span className="truncate">
           {g.groupName ? <span>{g.groupName} · </span> : null}
           {plural(locale, d.admits, g.allowedCount)}
@@ -349,11 +364,11 @@ export function GuestsManager({
     <div className="animate-fade-up pb-10">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-2xl">
-          <p className="eyebrow">{d.eyebrow}</p>
+          <p className="eyebrow">{coHost ? dict.dashboard.steps.guests : d.eyebrow}</p>
           <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">{d.title}</h2>
           <p className="mt-2 text-[15px] text-ink-soft">{d.description}</p>
         </div>
-        {totalAll > 0 ? (
+        {totalAll > 0 || list ? (
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <a href={`/api/events/${eventId}/guests/export`} className={buttonClasses("ghost", "md", "order-2 sm:order-none")} download>
               <Download className="size-4" />
@@ -369,7 +384,9 @@ export function GuestsManager({
         ) : null}
       </div>
 
-      {totalAll === 0 ? (
+      {aside}
+
+      {totalAll === 0 && !list ? (
         <div className="mt-10 overflow-hidden rounded-3xl border border-line bg-paper shadow-soft">
           <div className="paper-grain flex flex-col items-center px-6 py-16 text-center">
             <div className="flex size-14 items-center justify-center rounded-full border border-line bg-sand text-bronze-600">
@@ -402,6 +419,29 @@ export function GuestsManager({
                 className="ps-10"
               />
             </div>
+            {lists?.length ? (
+              <div className="sm:w-52">
+                <label htmlFor="g-list" className="sr-only">
+                  {dict.dashboard.cohosts.listFilter}
+                </label>
+                <Select
+                  id="g-list"
+                  value={list ?? ""}
+                  onChange={(e) => {
+                    setList(e.target.value || null);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">{dict.dashboard.cohosts.allLists}</option>
+                  <option value="own">{dict.dashboard.cohosts.yourList}</option>
+                  {lists.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            ) : null}
             {sectionsEnabled ? (
               <div className="sm:w-48">
                 <label htmlFor="g-section" className="sr-only">
@@ -610,8 +650,8 @@ export function GuestsManager({
             <div className="overflow-hidden rounded-2xl border border-line bg-paper/60">
               <Rules />
             </div>
-            <Link href={stepHref(eventId, "review")} className={buttonClasses("primary", "lg", "justify-self-end")}>
-              {d.continue}
+            <Link href={stepHref(eventId, coHost ? "send" : "review")} className={buttonClasses("primary", "lg", "justify-self-end")}>
+              {coHost ? dict.dashboard.review.continue : d.continue}
               <ArrowRight className="size-4 rtl:rotate-180" />
             </Link>
           </div>

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { ok, parseJson, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getGuestAccess, guestInScope } from "@/server/events/cohosts";
 import { rateLimit } from "@/server/security/rate-limit";
 import { tooManyRequests } from "@/server/http";
 import { markFollowUp } from "@/server/reminders/service";
@@ -13,7 +13,8 @@ export const POST = route<Ctx>("guests.followup", async (req: NextRequest, ctx) 
   const user = await requireApiUser();
   if (!(await rateLimit(`followup:${user.id}`, 600, 600)).ok) throw tooManyRequests();
   const { id, guestId } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
+  const access = await getGuestAccess(user, id);
+  await guestInScope(access, guestId);
   const { kind } = await parseJson(req, z.object({ kind: z.enum(["reminder", "nudge"]) }));
-  return ok(await markFollowUp(event, guestId, kind));
+  return ok(await markFollowUp(access.event, guestId, kind));
 });

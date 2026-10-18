@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/server/db";
-import { badRequest, notFound, ok, parseJson, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { badRequest, ok, parseJson, requireApiUser, route } from "@/server/http";
+import { getGuestAccess, guestInScope } from "@/server/events/cohosts";
 import { recordActivity } from "@/server/activity";
 import { updateGuest } from "@/server/guests/status";
 
@@ -15,9 +15,9 @@ type Ctx = { params: Promise<{ id: string; guestId: string }> };
 export const POST = route<Ctx>("guests.rsvp", async (req: NextRequest, ctx) => {
   const user = await requireApiUser();
   const { id, guestId } = await ctx.params;
-  const event = await getOwnedEvent(user, id);
-  const guest = await db.guest.findFirst({ where: { id: guestId, eventId: event.id } });
-  if (!guest) throw notFound("Guest");
+  const access = await getGuestAccess(user, id);
+  const event = access.event;
+  const guest = await guestInScope(access, guestId);
   const body = await parseJson(req, z.object({ response: z.enum(["ACCEPTED", "DECLINED", "PENDING"]), attendingCount: z.number().int().min(0).max(50).optional() }));
   if (body.attendingCount !== undefined && body.attendingCount > guest.allowedCount) throw badRequest("too_many", "More than the guest's allowance.");
   const attending = body.response === "ACCEPTED" ? (body.attendingCount ?? guest.allowedCount) : body.response === "DECLINED" ? 0 : null;

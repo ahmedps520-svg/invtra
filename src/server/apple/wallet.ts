@@ -203,6 +203,7 @@ export async function sampleWalletPass(): Promise<Buffer | null> {
     locale: null,
     notes: null,
     isTest: true,
+    coHostId: null,
     section: null,
     status: "ACCEPTED",
     rsvpStatus: "ACCEPTED",

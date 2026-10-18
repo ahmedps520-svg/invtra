@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 import ExcelJS from "exceljs";
-import { Prisma, type Guest } from "@prisma/client";
+import { Prisma, type CoHost, type Guest } from "@prisma/client";
 import { db } from "@/server/db";
 import { badRequest, conflict } from "@/server/http";
 import { recordActivity } from "@/server/activity";
@@ -13,6 +13,10 @@ import { cancelPendingJobs } from "@/server/queue/queue";
 import { countryForTimezone } from "@/lib/timezone-country";
 import { parseSectionValue, SECTION_LABELS, type SectionKey } from "@/lib/sections";
 import { walletChanged } from "@/server/apple/push";
+import { assertListRoom } from "@/server/events/cohosts";
+
+/** Whose list new guests go on: a co-host's, or the owner's (null). */
+type List = Pick<CoHost, "id" | "guestLimit" | "label"> | null;
 
 export { TIMEZONE_COUNTRY } from "@/lib/timezone-country";
 export const defaultCountryFor = countryForTimezone;
@@ -28,14 +32,16 @@ async function assertCapacity(eventId: string, adding: number) {
   }
 }
 
-export async function addGuest(eventId: string, input: GuestInput, defaultCountry: string): Promise<Guest> {
+export async function addGuest(eventId: string, input: GuestInput, defaultCountry: string, list: List = null): Promise<Guest> {
   const phone = normalizePhone(input.phone, defaultCountry);
   if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number with country code.", { phone: "Enter a valid number, e.g. +966 50 123 4567" });
   await assertCapacity(eventId, 1);
+  await assertListRoom(list, 1);
   try {
     return await db.guest.create({
       data: {
         eventId,
+        coHostId: list?.id ?? null,
         name: input.name,
         phone: phone.e164,
         groupName: input.groupName,
@@ -46,11 +52,18 @@ export async function addGuest(eventId: string, input: GuestInput, defaultCountr
       },
     });
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      throw conflict("duplicate_phone", "A guest with this phone number is already on the list.");
-    }
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") throw await duplicateError(eventId, phone.e164, list);
     throw e;
   }
+}
+
+/** "Already on the list" — or, when it's on someone else's list, say so (without saying whose). */
+async function duplicateError(eventId: string, phone: string, list: List) {
+  const other = await db.guest.findUnique({ where: { eventId_phone: { eventId, phone } }, select: { coHostId: true } });
+  if (other && other.coHostId !== (list?.id ?? null)) {
+    return conflict("duplicate_other_list", "This number is already invited on another guest list for this event.");
+  }
+  return conflict("duplicate_phone", "A guest with this phone number is already on the list.");
 }
 
 export async function editGuest(guest: Guest, input: GuestInput, defaultCountry: string): Promise<Guest> {
@@ -83,13 +96,13 @@ async function editGuestRow(guest: Guest, input: GuestInput, defaultCountry: str
     });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      throw conflict("duplicate_phone", "A guest with this phone number is already on the list.");
+      throw await duplicateError(guest.eventId, phone.e164, guest.coHostId ? { id: guest.coHostId, guestLimit: null, label: "" } : null);
     }
     throw e;
   }
 }
 
-/** Deleting a guest revokes their invitation link and QR immediately. */
+/** Deleting a guest revokes their invitation link and QR immediately. (Callers pass only ids the user may manage.) */
 export async function deleteGuests(eventId: string, ids: string[]) {
   for (const id of ids) {
     await db.job.updateMany({
@@ -214,7 +227,7 @@ export async function previewImport(eventId: string, file: { name: string; data:
 }
 
 /** Save confirmed rows. Invalid numbers and duplicates are skipped and reported. */
-export async function importGuests(eventId: string, rows: GuestInput[], defaultCountry: string) {
+export async function importGuests(eventId: string, rows: GuestInput[], defaultCountry: string, list: List = null) {
   const existing = new Set((await db.guest.findMany({ where: { eventId }, select: { phone: true } })).map((g) => g.phone));
   const data: Prisma.GuestCreateManyInput[] = [];
   let invalid = 0;
@@ -237,6 +250,7 @@ export async function importGuests(eventId: string, rows: GuestInput[], defaultC
     existing.add(phone.e164);
     data.push({
       eventId,
+      coHostId: list?.id ?? null,
       name: parsed.data.name,
       phone: phone.e164,
       groupName: parsed.data.groupName,
@@ -246,28 +260,32 @@ export async function importGuests(eventId: string, rows: GuestInput[], defaultC
     });
   }
   await assertCapacity(eventId, data.length);
+  await assertListRoom(list, data.length);
   const created = await db.guest.createMany({ data, skipDuplicates: true });
   duplicates += data.length - created.count;
-  if (created.count) await recordActivity(db, eventId, "guests.imported", { created: created.count, duplicates, invalid });
+  if (created.count) await recordActivity(db, eventId, "guests.imported", { created: created.count, duplicates, invalid, ...(list ? { list: list.label } : {}) });
   return { created: created.count, duplicates, invalid };
 }
 
 // ── Export ──────────────────────────────────────────────────────────────────
 
-export async function exportGuestsCsv(eventId: string): Promise<string> {
+/** The guest list as CSV: everyone for the owner (with a List column once there are co-hosts), a co-host's own list for them. */
+export async function exportGuestsCsv(eventId: string, scope: Prisma.GuestWhereInput = {}): Promise<string> {
   const event = await db.event.findUnique({ where: { id: eventId }, select: { timezone: true, sectionsEnabled: true } });
   const when = (d: Date) => formatNumericDateTime(d, event?.timezone ?? "Asia/Riyadh"); // dd/mm/yyyy HH:mm, event time
   const guests = await db.guest.findMany({
-    where: { eventId, isTest: false },
-    include: { invitation: { select: { token: true } } },
+    where: { eventId, isTest: false, ...scope },
+    include: { invitation: { select: { token: true } }, coHost: { select: { label: true } } },
     orderBy: [{ groupName: "asc" }, { name: "asc" }],
   });
+  const lists = !("coHostId" in scope) && (await db.coHost.count({ where: { eventId } })) > 0;
   const csv = Papa.unparse({
     fields: [
       "Name",
       "Phone",
       "Group",
       "Guests allowed",
+      ...(lists ? ["List"] : []),
       ...(event?.sectionsEnabled ? ["Section"] : []),
       "Attending",
       "Status",
@@ -285,6 +303,7 @@ export async function exportGuestsCsv(eventId: string): Promise<string> {
       g.phone,
       g.groupName ?? "",
       g.allowedCount,
+      ...(lists ? [g.coHost?.label ?? "Your list"] : []),
       ...(event?.sectionsEnabled ? [g.section ? SECTION_LABELS[g.section].en : ""] : []),
       g.attendingCount ?? "",
       g.status,

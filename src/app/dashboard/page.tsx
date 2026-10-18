@@ -5,6 +5,7 @@ import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
 import { cardPreviewProps } from "@/server/events/preview";
 import { pickTemplate } from "@/server/whatsapp/compose";
+import { coHostedEvents } from "@/server/events/cohosts";
 
 import { fmt } from "@/lib/i18n/config";
 import { buttonClasses } from "@/components/ui/button";
@@ -23,12 +24,15 @@ export default async function DashboardHome() {
   const { dict, locale } = await getI18n();
   const d = dict.dashboard;
 
-  const events = await db.event.findMany({
-    where: { userId: user.id, deletedAt: null, customDraft: false },
-    orderBy: { startsAt: "asc" },
-  });
+  const [events, keeping] = await Promise.all([
+    db.event.findMany({
+      where: { userId: user.id, deletedAt: null, customDraft: false },
+      orderBy: { startsAt: "asc" },
+    }),
+    coHostedEvents(user.id),
+  ]);
 
-  if (!events.length) {
+  if (!events.length && !keeping.length) {
     return <EventsEmptyState firstName={user.name.split(" ")[0]} />;
   }
 
@@ -64,6 +68,33 @@ export default async function DashboardHome() {
   const upcoming = cards.filter((c) => !c.past);
   const past = cards.filter((c) => c.past).reverse();
 
+  // Lists this user keeps for other people's events, with their own guests' replies.
+  const theirs = keeping.length
+    ? await db.guest.groupBy({ by: ["coHostId", "rsvpStatus"], where: { coHostId: { in: keeping.map((k) => k.id) }, isTest: false }, _count: true })
+    : [];
+  const listCount = (coHostId: string, status?: string) =>
+    theirs.filter((g) => g.coHostId === coHostId && (!status || g.rsvpStatus === status)).reduce((s, g) => s + g._count, 0);
+  const kept: EventCardData[] = await Promise.all(
+    keeping.map(async (k) => {
+      const e = k.event;
+      const showAr = locale === "ar";
+      return {
+        id: e.id,
+        title: showAr && e.titleAr ? e.titleAr : e.title,
+        hostNames: showAr && e.hostNamesAr ? e.hostNamesAr : e.hostNames,
+        type: e.type,
+        plan: e.plan,
+        dateLabel: whenLabel(e, locale, { style: "long" }),
+        venue: showAr && e.venueNameAr ? e.venueNameAr : e.venueName,
+        preview: await cardPreviewProps(e),
+        counts: { total: listCount(k.id), accepted: listCount(k.id, "ACCEPTED"), declined: listCount(k.id, "DECLINED"), pending: listCount(k.id, "PENDING") },
+        steps: computeSteps(e, 0, false),
+        past: !e.dateTbd && e.startsAt < now,
+        coHost: { label: k.label, owner: e.user.name || e.user.email },
+      };
+    }),
+  );
+
   return (
     <div className="animate-fade-up">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -85,6 +116,22 @@ export default async function DashboardHome() {
           </h2>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {upcoming.map((c) => (
+              <EventCard key={c.id} data={c} dict={dict} locale={locale} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {kept.length ? (
+        <section className={upcoming.length ? "mt-16" : "mt-12"} aria-labelledby="keeping-h">
+          <div className="mb-6 flex items-center gap-4">
+            <h2 id="keeping-h" className="font-display text-2xl text-ink">
+              {d.cohosts.keeping}
+            </h2>
+            <span className="hairline flex-1" aria-hidden />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {kept.map((c) => (
               <EventCard key={c.id} data={c} dict={dict} locale={locale} />
             ))}
           </div>

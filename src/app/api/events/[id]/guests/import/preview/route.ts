@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { badRequest, ok, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getGuestAccess } from "@/server/events/cohosts";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 import { defaultCountryFor, previewImport } from "@/server/guests/service";
 
@@ -11,7 +11,7 @@ export const POST = route<Ctx>("guests.import.preview", async (req: NextRequest,
   const user = await requireApiUser();
   const { id } = await ctx.params;
   await enforceRateLimit(`import:${user.id}`, 30, 600);
-  const event = await getOwnedEvent(user, id);
+  const { event } = await getGuestAccess(user, id);
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) throw badRequest("missing_file", "Choose a CSV or Excel file.");

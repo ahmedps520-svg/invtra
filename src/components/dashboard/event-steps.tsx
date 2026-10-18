@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Check, LayoutGrid } from "lucide-react";
+import { Check, LayoutGrid, Send, Users } from "lucide-react";
 import { useI18n } from "@/components/i18n/provider";
 import { cn } from "@/lib/utils";
 import { STEP_KEYS, STEP_PATHS, stepHref, type StepKey, type StepState } from "./steps";
@@ -73,6 +73,41 @@ export function EventStepNav({ eventId, steps }: { eventId: string; steps: StepS
                 </span>
                 {d[k]}
                 <span className="sr-only">{done ? ` — ${d.done}` : ` — ${d.todo}`}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/** A co-host's tabs: their guest list and sending to it. */
+export function CoHostNav({ eventId }: { eventId: string }) {
+  const { dict } = useI18n();
+  const d = dict.dashboard.steps;
+  const pathname = usePathname() ?? "";
+  const tabs = [
+    { key: "guests", href: stepHref(eventId, "guests"), label: d.guests, icon: <Users className="size-3.5" /> },
+    { key: "send", href: stepHref(eventId, "send"), label: d.send, icon: <Send className="size-3.5 rtl:-scale-x-100" /> },
+  ];
+  return (
+    <nav aria-label={d.label}>
+      <ol className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper/70 p-1.5 shadow-soft">
+        {tabs.map((t) => {
+          const active = pathname.startsWith(t.href);
+          return (
+            <li key={t.key}>
+              <Link
+                href={t.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-300 ease-luxe",
+                  active ? "bg-ink text-ivory shadow-soft" : "text-ink-soft hover:bg-sand hover:text-ink",
+                )}
+              >
+                {t.icon}
+                {t.label}
               </Link>
             </li>
           );

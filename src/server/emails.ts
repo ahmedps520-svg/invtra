@@ -311,3 +311,39 @@ export function unpaidReminderEmail(o: {
     blocks,
   };
 }
+
+/** The invitation to keep one's own guest list for someone else's event. */
+export function coHostInviteEmail(o: { locale: string; inviter: string; label: string; event: string; link: string }): Mail {
+  const ar = o.locale === "ar";
+  const blocks: EmailBlock[] = [
+    { kind: "p", text: ar ? "مرحبًا،" : "Hi," },
+    {
+      kind: "p",
+      text: ar
+        ? ["لديك دعوة من ", { b: o.inviter }, " لإدارة قائمة ضيوف ", { b: o.label }, " في ", { b: o.event }, " على إنفترا."]
+        : [{ b: o.inviter }, " has invited you to keep the guest list for ", { b: o.label }, " for ", { b: o.event }, " on INVTRA."],
+    },
+    {
+      kind: "p",
+      text: ar
+        ? "تضيف ضيوفك بنفسك وترسل لكل ضيف دعوته من واتساب الخاص بك، وتتابع ردودهم لحظة بلحظة. لا يرى أحد قائمتك غيرك وصاحب المناسبة."
+        : "You add your own guests, send each of them their invitation from your own WhatsApp, and follow their replies as they come in. Only you and the event's host see your list.",
+    },
+    { kind: "button", label: ar ? "افتح قائمة الضيوف" : "Open the guest list", href: o.link },
+    {
+      kind: "p",
+      muted: true,
+      text: ar
+        ? "سجّل الدخول أو أنشئ حسابًا مجانيًا لقبول الدعوة. هذا الرابط لك وحدك — إن لم تكن تتوقعه فتجاهل هذه الرسالة."
+        : "Sign in, or create a free account, to accept. This link is just for you — if you weren't expecting it, you can ignore this email.",
+    },
+  ];
+  return {
+    lang: ar ? "ar" : "en",
+    subject: ar ? `دعوة لإدارة قائمة ضيوف ${o.event}` : `${o.inviter} invited you to keep the guest list for ${o.event}`,
+    preheader: ar ? `قائمة ضيوف ${o.label} — أضف ضيوفك وأرسل دعواتهم.` : `The guest list for ${o.label} — add your guests and send their invitations.`,
+    eyebrow: ar ? "قائمة الضيوف" : "Guest list",
+    title: o.event,
+    blocks,
+  };
+}

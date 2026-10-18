@@ -3,23 +3,27 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ExternalLink, MapPin, ScanLine } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
-import { findOwnedEvent } from "@/server/events/access";
+import { db } from "@/server/db";
+import { findGuestAccess } from "@/server/events/cohosts";
 
 import { fmt } from "@/lib/i18n/config";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
-import { EventStepNav } from "@/components/dashboard/event-steps";
+import { CoHostNav, EventStepNav } from "@/components/dashboard/event-steps";
 import { loadSteps } from "../../_lib/progress";
 import { whenLabel } from "@/lib/event-when";
 
 export default async function EventLayout({ children, params }: { children: React.ReactNode; params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/dashboard/events/${id}`);
-  const event = await findOwnedEvent(user.id, id);
-  if (!event) notFound();
+  const access = await findGuestAccess(user, id);
+  if (!access) notFound();
+  const { event, coHost } = access;
   const { dict, locale } = await getI18n();
   const d = dict.dashboard;
-  const { steps } = await loadSteps(event);
+  // Co-hosts see their own list and sending; everything else stays with the owner.
+  const steps = coHost ? null : (await loadSteps(event)).steps;
+  const owner = coHost ? await db.user.findUnique({ where: { id: event.userId }, select: { name: true, email: true } }) : null;
 
   const ar = locale === "ar";
   const title = ar && event.titleAr ? event.titleAr : event.title;
@@ -57,26 +61,31 @@ export default async function EventLayout({ children, params }: { children: Reac
               <ExternalLink className="size-3.5" />
               {d.header.viewGuestPage}
             </a>
-            {/* Arrivals and door scans on the night. */}
-            <Link href={`/dashboard/events/${event.id}/checkin`} className={buttonClasses("outline", "sm")}>
-              <ScanLine className="size-3.5" />
-              {dict.door.checkin.open}
-            </Link>
-            {event.firstSentAt ? (
-              <Badge tone="sage" dot>
-                {d.header.sent}
-              </Badge>
-            ) : null}
-            {event.plan ? (
-              <Badge tone="bronze">{fmt(d.header.plan, { plan: dict.common.plans[event.plan] })}</Badge>
+            {coHost ? (
+              <Badge tone="bronze">{fmt(d.cohosts.badge, { label: coHost.label })}</Badge>
             ) : (
-              <Badge>{d.header.noPlan}</Badge>
+              <>
+                {/* Arrivals and door scans on the night. */}
+                <Link href={`/dashboard/events/${event.id}/checkin`} className={buttonClasses("outline", "sm")}>
+                  <ScanLine className="size-3.5" />
+                  {dict.door.checkin.open}
+                </Link>
+                {event.firstSentAt ? (
+                  <Badge tone="sage" dot>
+                    {d.header.sent}
+                  </Badge>
+                ) : null}
+                {event.plan ? (
+                  <Badge tone="bronze">{fmt(d.header.plan, { plan: dict.common.plans[event.plan] })}</Badge>
+                ) : (
+                  <Badge>{d.header.noPlan}</Badge>
+                )}
+              </>
             )}
           </div>
         </div>
-        <div className="mt-8">
-          <EventStepNav eventId={event.id} steps={steps} />
-        </div>
+        {owner ? <p className="mt-3 text-sm text-ink-faint">{fmt(d.cohosts.hostedBy, { owner: owner.name || owner.email })}</p> : null}
+        <div className="mt-8">{steps ? <EventStepNav eventId={event.id} steps={steps} /> : <CoHostNav eventId={event.id} />}</div>
       </header>
       <div className="mt-10">{children}</div>
     </div>

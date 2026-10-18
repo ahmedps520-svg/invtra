@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
+import type { Prisma } from "@prisma/client";
+import { db } from "@/server/db";
 import { findEditableEvent } from "@/server/events/access";
 import { buildInvitationVM } from "@/server/invitations/view-model";
 import { InvitationExperience } from "@/components/invitation/experience";
@@ -12,17 +14,21 @@ export const metadata: Metadata = { title: "Preview", robots: { index: false, fo
 type Props = { params: Promise<{ eventId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 /**
- * Host-only preview of the guest website with a sample guest. Embedded by the design
+ * The host's (or a co-host's) preview of the guest website with a sample guest. Embedded by the design
  * editor, which streams draft designs into it with postMessage.
  */
 export default async function PreviewPage({ params, searchParams }: Props) {
   const { eventId } = await params;
   const sp = await searchParams;
   const user = await requireUser(`/preview/${eventId}`);
-  const event = await findEditableEvent(user, eventId, {
+  const include = {
     scheduleItems: { orderBy: { sortOrder: "asc" } },
     galleryImages: { orderBy: { sortOrder: "asc" } },
-  });
+  } satisfies Prisma.EventInclude;
+  // Co-hosts can look too (read-only): it's what their guests will see.
+  const event =
+    (await findEditableEvent(user, eventId, include)) ??
+    (await db.event.findFirst({ where: { id: eventId, deletedAt: null, coHosts: { some: { userId: user.id } } }, include }));
   if (!event) notFound();
   const theme = typeof sp.theme === "string" && isThemeKey(sp.theme) ? sp.theme : undefined;
   const state = sp.state === "pending" ? "PENDING" : sp.state === "declined" ? "DECLINED" : "ACCEPTED";

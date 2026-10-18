@@ -1,8 +1,7 @@
-import { notFound } from "next/navigation";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
-import { findOwnedEvent } from "@/server/events/access";
+import { ownerEventOrList } from "@/app/dashboard/_lib/access";
 import { eventStats } from "@/server/events/service";
 import { cardPreviewProps } from "@/server/events/preview";
 import { sendReadiness, staleAcceptedCount } from "@/server/sending/service";
@@ -21,8 +20,7 @@ export async function generateMetadata() {
 export default async function EventOverviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/dashboard/events/${id}`);
-  const event = await findOwnedEvent(user.id, id);
-  if (!event) notFound();
+  const event = await ownerEventOrList(user.id, id);
 
   const [stats, activity, batch, stale, preview, readiness, reminders, video] = await Promise.all([
     eventStats(event.id),

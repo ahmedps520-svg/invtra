@@ -1,11 +1,10 @@
-import { notFound } from "next/navigation";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { requireUser } from "@/server/auth/guards";
 import { confirmTapReturn } from "@/server/payments/tap-webhook";
 import { countryForTimezone } from "@/lib/timezone-country";
 import { getI18n } from "@/server/i18n";
-import { findOwnedEvent } from "@/server/events/access";
+import { ownerEventOrList } from "@/app/dashboard/_lib/access";
 import { cardPreviewProps } from "@/server/events/preview";
 import { sendReadiness } from "@/server/sending/service";
 import { messagePreview } from "@/server/sending/preview";
@@ -30,8 +29,7 @@ export default async function ReviewPage({
   const { id } = await params;
   const sp = await searchParams;
   const user = await requireUser(`/dashboard/events/${id}/review`);
-  const event = await findOwnedEvent(user.id, id);
-  if (!event) notFound();
+  const event = await ownerEventOrList(user.id, id);
 
   const msgLocale = eventLocale(event);
   const [readiness, preview, message, rows, themeRow] = await Promise.all([

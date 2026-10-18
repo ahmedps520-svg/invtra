@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { ok, parseJson, requireApiUser, route } from "@/server/http";
-import { getOwnedEvent } from "@/server/events/access";
+import { getGuestAccess, idsInScope } from "@/server/events/cohosts";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 import { resendToGuests } from "@/server/sending/service";
 
@@ -11,7 +11,7 @@ export const POST = route<Ctx>("guests.resend-many", async (req: NextRequest, ct
   const user = await requireApiUser();
   const { id } = await ctx.params;
   await enforceRateLimit(`resend:${user.id}`, 60, 600);
-  const event = await getOwnedEvent(user, id);
+  const access = await getGuestAccess(user, id);
   const { ids } = await parseJson(req, z.object({ ids: z.array(z.string()).min(1).max(2000) }));
-  return ok(await resendToGuests(user.id, event, ids));
+  return ok(await resendToGuests(user.id, access.event, await idsInScope(access, ids)));
 });
