@@ -141,6 +141,7 @@ export default async function PayPage({ params, searchParams }: Props) {
       receiptNumber,
       paidAt: order.paidAt ?? order.updatedAt,
       plan: order.plan,
+      product: order.product,
       promo: order.promo,
       guestLimit: order.guestLimit,
       amount: order.amount,

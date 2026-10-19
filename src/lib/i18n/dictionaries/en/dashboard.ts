@@ -1,4 +1,5 @@
 import type { EventType } from "@prisma/client";
+import { orders } from "./orders";
 
 /**
  * Customer dashboard copy. Plural-sensitive strings are `Plural` objects; render them
@@ -24,6 +25,7 @@ export type OccasionFieldText = {
 const p = (one: string, other: string): Plural => ({ one, other });
 
 export const dashboard = {
+  orders,
   meta: {
     events: "My events",
     newEvent: "New event",
@@ -1245,6 +1247,13 @@ export const dashboard = {
     joinOwn: "This is your own event — you already manage every guest list.",
   },
   errors: {
+    order_incomplete: "Finish your design before submitting the order.",
+    order_not_editable: "This order is with our team and can no longer be changed.",
+    already_purchased: "This event has already been paid for.",
+    order_not_waiting: "We're not waiting for anything on this order.",
+    order_in_review: "Your order is with our team — the product, design and features can't change until it's been checked.",
+    preview_only: "The full-quality file is available after your payment is approved.",
+    too_many_files: "You've reached the maximum number of files.",
     test_own_number: "Test messages only go to your own number ({phone}). You can change it in Settings.",
     whatsapp_not_ready: "INVTRA’s WhatsApp can’t send right now. Please try again later, or send from your own WhatsApp.",
     generic: "Something went wrong. Please try again.",

@@ -9,8 +9,11 @@ import { findGuestAccess } from "@/server/events/cohosts";
 import { fmt } from "@/lib/i18n/config";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
-import { CoHostNav, EventStepNav } from "@/components/dashboard/event-steps";
-import { loadSteps } from "../../_lib/progress";
+import { CoHostNav, EventStepNav, OrderStepNav } from "@/components/dashboard/event-steps";
+import { orderStepKeys } from "@/components/dashboard/order-steps";
+import { computeOrderSteps, loadSteps } from "../../_lib/progress";
+import { currentOrder } from "@/server/orders/service";
+import { isUnlocked } from "@/server/render/preview";
 import { whenLabel } from "@/lib/event-when";
 
 export default async function EventLayout({ children, params }: { children: React.ReactNode; params: Promise<{ id: string }> }) {
@@ -21,8 +24,12 @@ export default async function EventLayout({ children, params }: { children: Reac
   const { event, coHost } = access;
   const { dict, locale } = await getI18n();
   const d = dict.dashboard;
-  // Co-hosts see their own list and sending; everything else stays with the owner.
-  const steps = coHost ? null : (await loadSteps(event)).steps;
+  // Co-hosts see their own list and sending; everything else stays with the owner. Until the
+  // event is paid for, the owner goes through the order wizard instead.
+  const ordering = !coHost && !isUnlocked(event);
+  const order = ordering ? await currentOrder(event.id) : null;
+  const steps = coHost || ordering ? null : (await loadSteps(event)).steps;
+  const orderSteps = ordering ? computeOrderSteps(event, order) : null;
   const owner = coHost ? await db.user.findUnique({ where: { id: event.userId }, select: { name: true, email: true } }) : null;
 
   const ar = locale === "ar";
@@ -77,6 +84,14 @@ export default async function EventLayout({ children, params }: { children: Reac
                 ) : null}
                 {event.plan ? (
                   <Badge tone="bronze">{fmt(d.header.plan, { plan: dict.common.plans[event.plan] })}</Badge>
+                ) : order && order.stage !== "DRAFT" ? (
+                  <Link href={`/dashboard/orders/${order.id}`}>
+                    <Badge tone={order.stage === "REJECTED" || order.stage === "INFO_REQUIRED" ? "rosewood" : "ochre"} dot>
+                      {d.orders.stages[order.stage]}
+                    </Badge>
+                  </Link>
+                ) : event.purchasedAt ? (
+                  <Badge tone="bronze">{d.orders.products[event.product]}</Badge>
                 ) : (
                   <Badge>{d.header.noPlan}</Badge>
                 )}
@@ -85,7 +100,15 @@ export default async function EventLayout({ children, params }: { children: Reac
           </div>
         </div>
         {owner ? <p className="mt-3 text-sm text-ink-faint">{fmt(d.cohosts.hostedBy, { owner: owner.name || owner.email })}</p> : null}
-        <div className="mt-8">{steps ? <EventStepNav eventId={event.id} steps={steps} /> : <CoHostNav eventId={event.id} />}</div>
+        <div className="mt-8">
+          {orderSteps ? (
+            <OrderStepNav eventId={event.id} keys={orderStepKeys(event.product)} steps={orderSteps} />
+          ) : steps ? (
+            event.product === "PHOTO_ONLY" ? null : <EventStepNav eventId={event.id} steps={steps} />
+          ) : (
+            <CoHostNav eventId={event.id} />
+          )}
+        </div>
       </header>
       <div className="mt-10">{children}</div>
     </div>

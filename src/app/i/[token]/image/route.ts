@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { loadPublicInvitation } from "@/server/invitations/public";
 import { renderPersonalInvitation } from "@/server/invitations/render";
+import { isUnlocked, previewResponse, renderProtectedPreview } from "@/server/render/preview";
 import { clientIp } from "@/server/http";
 import { rateLimit } from "@/server/security/rate-limit";
 
@@ -10,6 +11,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ token: stri
   if (!(await rateLimit(`img:${clientIp(req)}`, 30, 600)).ok) return new NextResponse(null, { status: 429 });
   const data = await loadPublicInvitation(token);
   if (!data || data.state !== "active" || data.guest.rsvpStatus !== "ACCEPTED") return new NextResponse(null, { status: 404 });
+  // Not paid for yet (e.g. the host's own test): only the protected preview.
+  if (!isUnlocked(data.event)) return previewResponse(await renderProtectedPreview(data.event));
   const { png } = await renderPersonalInvitation(data.event, data.guest, data.invitation);
   return new NextResponse(new Uint8Array(png), {
     headers: {

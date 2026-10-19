@@ -62,8 +62,15 @@ export async function queueUnpaidReminders(now = new Date()): Promise<number> {
       createdAt: { lte: new Date(now.getTime() - FIRST_AFTER) },
       OR: [{ dateTbd: true }, { startsAt: { gt: new Date(now.getTime() + DAY) } }],
       user: { status: "ACTIVE", role: "CUSTOMER", emailVerifiedAt: { not: null }, emailReminders: true },
-      // Paying by bank transfer right now: don't nag.
-      orders: { none: { status: "PENDING", createdAt: { gt: new Date(now.getTime() - 7 * DAY) } } },
+      purchasedAt: null,
+      // Paying by bank transfer right now, or an order is with staff: don't nag.
+      orders: { none: {
+          OR: [
+            { status: "PENDING", createdAt: { gt: new Date(now.getTime() - 7 * DAY) } },
+            { status: "PENDING", stage: { in: ["SUBMITTED", "PENDING_VERIFICATION", "INFO_REQUIRED"] } },
+          ],
+        },
+      },
     },
     orderBy: { updatedAt: "desc" },
     select: { id: true, userId: true, payReminders: true, payRemindedAt: true },
@@ -113,7 +120,8 @@ export async function sendUnpaidReminder(eventId: string, n: number) {
     locale: u.locale,
     event: (ar ? event.titleAr || event.title : event.title) || "INVTRA",
     n,
-    reviewUrl: appUrl(`/dashboard/events/${event.id}/review`),
+    // The order wizard's review step (price and the protected preview), then payment.
+    reviewUrl: appUrl(`/dashboard/events/${event.id}/summary`),
     designUrl: appUrl(`/dashboard/events/${event.id}/design`),
     cardUrl: cardImageUrl(event.id),
     priceFrom: Number.isFinite(from) ? formatMoney(from, catalogue.currency, ar ? "ar" : "en") : "",

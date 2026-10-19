@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
+
 import { useRouter } from "next/navigation";
+import type { Product } from "@prisma/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Baby, Briefcase, Cake, ChevronDown, Flower2, Gem, Gift, GraduationCap, Heart, HeartHandshake, MoonStar, PartyPopper, Sparkles } from "lucide-react";
 import type { ZodIssue } from "zod";
 import { useI18n } from "@/components/i18n/provider";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
@@ -227,6 +230,8 @@ export function EventForm({
   occasion,
   relaxed: relaxedProp = false,
   custom,
+  product = "INVITATION",
+  continueHref,
 }: {
   mode: "create" | "edit";
   eventId?: string;
@@ -242,7 +247,12 @@ export function EventForm({
    * with the event id). The page shows its own heading.
    */
   custom?: { saveUrl: string; next: string; submitLabel: string };
+  /** What's being ordered: Photo only needs just what's printed on the invitation. */
+  product?: Product;
+  /** Order wizard: where "Continue" goes once the details are saved. */
+  continueHref?: string;
 }) {
+  const photoOnly = product === "PHOTO_ONLY";
   const relaxed = relaxedProp || Boolean(custom);
   const { dict, locale } = useI18n();
   const d = dict.dashboard.form;
@@ -361,7 +371,7 @@ export function EventForm({
       if (mode === "create") {
         const res = await api<{ event: { id: string } }>("/api/events", {
           method: "POST",
-          body: themeKey && isThemeKey(themeKey) ? { ...payload, themeKey } : payload,
+          body: { ...(themeKey && isThemeKey(themeKey) ? { ...payload, themeKey } : payload), product },
         });
         setLeaving(true);
         router.push(`/dashboard/events/${res.event.id}/design`);
@@ -624,7 +634,9 @@ export function EventForm({
           </details>
         </Section>
 
-        {/* Men's & women's sections */}
+        {photoOnly ? null : (
+          <>
+            {/* Men's & women's sections */}
         <Section title={d.sections.split.title} description={d.sections.split.description}>
           <SectionsEditor
             enabled={form.sectionsEnabled}
@@ -748,6 +760,8 @@ export function EventForm({
             ) : null}
           </AnimatePresence>
         </Section>
+          </>
+        )}
       </Card>
 
       <div className="sticky bottom-0 z-30 -mx-4 mt-8 border-t border-line bg-ivory/90 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
@@ -760,9 +774,15 @@ export function EventForm({
               </motion.span>
             ) : null}
           </AnimatePresence>
-          <Button type="submit" size="lg" loading={saving} disabled={mode === "edit" && !dirty && !custom}>
+          {continueHref && mode === "edit" && !dirty ? (
+            <Link href={continueHref} className={buttonClasses("primary", "lg")}>
+              {dict.dashboard.orders.productStep.continue}
+            </Link>
+          ) : (
+            <Button type="submit" size="lg" loading={saving} disabled={mode === "edit" && !dirty && !custom}>
             {custom ? custom.submitLabel : saving ? (mode === "create" ? d.creating : d.saving) : mode === "create" ? d.create : d.save}
           </Button>
+          )}
         </div>
       </div>
 

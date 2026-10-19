@@ -77,6 +77,8 @@ describe("opting out", () => {
 
     await expect(whatsapp().sendTemplate({ to: number, templateName: "x", languageCode: "en", components: [] })).rejects.toBeInstanceOf(WhatsAppOptedOutError);
     await expect(whatsapp().sendText({ to: number, body: "hello" })).rejects.toBeInstanceOf(WhatsAppOptedOutError);
+    // Senders pass the WhatsApp id (no "+"): still blocked.
+    await expect(whatsapp().sendText({ to: toWhatsAppId(number), body: "hello" })).rejects.toBeInstanceOf(WhatsAppOptedOutError);
     // The confirmation itself still goes to the person who asked.
     await expect(whatsapp().sendText({ to: number, body: "confirmed", allowOptedOut: true })).resolves.toMatchObject({ messageId: expect.any(String) });
 

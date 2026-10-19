@@ -2,6 +2,7 @@ import type { Event } from "@prisma/client";
 import { db } from "@/server/db";
 import { cardContent } from "@/server/events/design";
 import { cardPreviewProps } from "@/server/events/preview";
+import { isUnlocked } from "@/server/render/preview";
 import { staleAcceptedCount } from "@/server/sending/service";
 import { mediaUrl } from "@/server/storage";
 import { uploadView } from "@/server/uploads";
@@ -16,7 +17,7 @@ import type { EditorProps } from "@/components/editor/types";
  */
 export async function editorProps(
   event: Event,
-  opts: { premiumIncluded?: boolean; nav?: EditorProps["nav"]; detailsHref?: string; advanced?: boolean } = {},
+  opts: { premiumIncluded?: boolean; nav?: EditorProps["nav"]; detailsHref?: string; advanced?: boolean; staff?: boolean } = {},
 ): Promise<EditorProps> {
   const [
     preview,
@@ -69,6 +70,7 @@ export async function editorProps(
       hostNames: event.hostNames,
       hostNamesAr: event.hostNamesAr,
       plan: event.plan,
+      protectedPreview: !opts.staff && !isUnlocked(event),
       hasSchedule: scheduleCount > 0,
       hasDetails: Boolean(
         event.dressCode ||

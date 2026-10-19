@@ -47,6 +47,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ orderI
             receiptNumber,
             paidAt: order.paidAt ?? order.updatedAt,
             plan: order.plan,
+            product: order.product,
             promo: order.promo,
             code: order.promoCode?.code ?? null,
             discount: order.discount,

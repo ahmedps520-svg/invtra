@@ -243,15 +243,38 @@ export async function applyPaidOrder(orderId: string, details: PaidDetails): Pro
       return { order, applied: false, duplicatePayment };
     }
     if (order.status === "REFUNDED") throw conflict("order_refunded", "This order was refunded and can't be marked paid again.");
+    if (details.expectStages && !details.expectStages.includes(order.stage)) {
+      throw conflict("order_not_submitted", "This order isn't waiting for payment verification.");
+    }
 
     const now = new Date();
     const receiptNumber = order.receiptNumber ?? (await nextReceiptNumber(tx, now));
+    // Wizard orders (with a product) go on to production or delivery; plan orders are done once paid.
+    const stage = order.product ? "APPROVED" : "DELIVERED";
     const paid = await tx.order.update({
       where: { id: orderId },
-      data: { status: "PAID", paidAt: now, receiptNumber, note: appendNote(order.note, details.note) },
+      data: {
+        status: "PAID",
+        paidAt: now,
+        receiptNumber,
+        note: appendNote(order.note, details.note),
+        stage,
+        approvedAt: now,
+        decidedById: details.actorId ?? null,
+        ...(order.product ? {} : { deliveredAt: now }),
+      },
     });
-    // The receipt goes out by email (and WhatsApp for payment-link orders) once this commits.
-    await enqueue("payment.receipt", { orderId, channel: "email" }, { tx, eventId: order.eventId ?? undefined });
+    await tx.orderHistory.create({
+      data: { orderId, actorId: details.actorId ?? null, from: order.stage, to: stage, note: details.note ?? `Paid (${details.provider})` },
+    });
+    if (order.product) {
+      // Renders the final file or hands the order to the designers; the confirmation email (with
+      // the receipt) goes out from there.
+      await enqueue("order.fulfil", { orderId }, { tx, dedupeKey: `order.fulfil:${orderId}`, eventId: order.eventId ?? undefined });
+    } else {
+      // The receipt goes out by email (and WhatsApp for payment-link orders) once this commits.
+      await enqueue("payment.receipt", { orderId, channel: "email" }, { tx, eventId: order.eventId ?? undefined });
+    }
     if (order.payToken && !whatsappOff()) {
       const phone = await tx.user.findUnique({ where: { id: order.userId }, select: { phone: true } });
       if (phone?.phone) await enqueue("payment.receipt", { orderId, channel: "whatsapp" }, { tx, eventId: order.eventId ?? undefined });
@@ -269,12 +292,15 @@ export async function applyPaidOrder(orderId: string, details: PaidDetails): Pro
     });
 
     if (order.eventId) {
-      const event = await tx.event.findUnique({ where: { id: order.eventId }, select: { id: true, plan: true, guestLimit: true } });
-      if (event) {
+      const event = await tx.event.findUnique({ where: { id: order.eventId }, select: { id: true, plan: true, guestLimit: true, purchasedAt: true } });
+      if (event && !order.plan) {
+        // Photo only: no plan, but the full-quality design is now theirs.
+        await tx.event.update({ where: { id: event.id }, data: { purchasedAt: event.purchasedAt ?? now } });
+      } else if (event && order.plan) {
         const plan = higherPlan(event.plan, order.plan);
         await tx.event.update({
           where: { id: event.id },
-          data: { plan, guestLimit: Math.max(event.guestLimit, order.guestLimit) },
+          data: { plan, guestLimit: Math.max(event.guestLimit, order.guestLimit), purchasedAt: event.purchasedAt ?? now },
         });
         await recordActivity(tx, event.id, "plan.purchased", {
           plan: order.plan,
@@ -312,10 +338,12 @@ export async function applyPaidOrder(orderId: string, details: PaidDetails): Pro
 
 /** Recompute an event's plan from its remaining PAID orders (after a refund). */
 async function recomputeEventPlan(tx: Tx, eventId: string) {
-  const paid = await tx.order.findMany({ where: { eventId, status: "PAID" }, select: { plan: true, guestLimit: true } });
-  const plan = paid.reduce<PlanTier | null>((best, o) => (planRank(o.plan) > planRank(best) ? o.plan : best), null);
+  const paid = await tx.order.findMany({ where: { eventId, status: "PAID" }, select: { plan: true, guestLimit: true, paidAt: true } });
+  const plan = paid.reduce<PlanTier | null>((best, o) => (o.plan && planRank(o.plan) > planRank(best) ? o.plan : best), null);
   const guestLimit = paid.reduce((m, o) => Math.max(m, o.guestLimit), 0);
-  await tx.event.update({ where: { id: eventId }, data: { plan, guestLimit } });
+  // Without a paid order the full-quality design is locked again.
+  const purchasedAt = paid.length ? undefined : null;
+  await tx.event.update({ where: { id: eventId }, data: { plan, guestLimit, purchasedAt } });
   return { plan, guestLimit };
 }
 
@@ -425,7 +453,7 @@ export async function grantPlan(input: { eventId: string; plan: PlanTier; guestL
     await tx.payment.create({
       data: { orderId: order.id, provider: "manual", amount: 0, currency: order.currency, status: "SUCCEEDED", raw: json({ grant: true, actorId: input.actorId }) },
     });
-    const updated = await tx.event.update({ where: { id: event.id }, data: { plan: input.plan, guestLimit: input.guestLimit } });
+    const updated = await tx.event.update({ where: { id: event.id }, data: { plan: input.plan, guestLimit: input.guestLimit, purchasedAt: event.purchasedAt ?? now } });
     await recordActivity(tx, event.id, "plan.purchased", { plan: input.plan, orderId: order.id, amount: 0, currency: order.currency, guestLimit: input.guestLimit, granted: true });
     return { order, event: updated, previous: { plan: event.plan, guestLimit: event.guestLimit } };
   });
@@ -437,7 +465,9 @@ export type CustomerOrder = {
   id: string;
   eventId: string | null;
   eventTitle: string | null;
-  plan: PlanTier;
+  plan: PlanTier | null;
+  product: Order["product"];
+  stage: Order["stage"];
   guestLimit: number;
   amount: number;
   currency: string;
@@ -466,6 +496,8 @@ export function serializeCustomerOrder(
     eventId: order.eventId,
     eventTitle: order.event?.title ?? null,
     plan: order.plan,
+    product: order.product,
+    stage: order.stage,
     guestLimit: order.guestLimit,
     amount: order.amount,
     currency: order.currency,
@@ -539,10 +571,10 @@ export async function undoTestPayment(orderId: string): Promise<Order> {
     });
     if (order.eventId) {
       const others = await tx.order.findMany({ where: { eventId: order.eventId, status: "PAID", id: { not: orderId } } });
-      const plan = others.reduce<PlanTier | null>((p, o) => higherPlan(p, o.plan), null);
+      const plan = others.reduce<PlanTier | null>((p, o) => (o.plan ? higherPlan(p, o.plan) : p), null);
       await tx.event.update({
         where: { id: order.eventId },
-        data: { plan, guestLimit: others.reduce((m, o) => Math.max(m, o.guestLimit), 0) },
+        data: { plan, guestLimit: others.reduce((m, o) => Math.max(m, o.guestLimit), 0), ...(others.length ? {} : { purchasedAt: null }) },
       });
     }
     return reopened;

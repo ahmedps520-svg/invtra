@@ -3,7 +3,11 @@ import { Plus } from "lucide-react";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
-import { cardPreviewProps } from "@/server/events/preview";
+import { cardView } from "@/server/events/preview";
+import { isUnlocked } from "@/server/render/preview";
+import { currentOrder } from "@/server/orders/service";
+import { nextOrderStep } from "@/components/dashboard/order-steps";
+import type { Event } from "@prisma/client";
 import { pickTemplate } from "@/server/whatsapp/compose";
 import { coHostedEvents } from "@/server/events/cohosts";
 
@@ -11,7 +15,7 @@ import { fmt } from "@/lib/i18n/config";
 import { buttonClasses } from "@/components/ui/button";
 import { EventCard, type EventCardData } from "@/components/dashboard/event-card";
 import { EventsEmptyState } from "@/components/dashboard/events-empty";
-import { computeSteps } from "./_lib/progress";
+import { computeOrderSteps, computeSteps } from "./_lib/progress";
 import { whenLabel } from "@/lib/event-when";
 
 export async function generateMetadata() {
@@ -58,10 +62,11 @@ export default async function DashboardHome() {
         plan: e.plan,
         dateLabel: whenLabel(e, locale, { style: "long" }),
         venue: showAr && e.venueNameAr ? e.venueNameAr : e.venueName,
-        preview: await cardPreviewProps(e),
+        preview: await cardView(e),
         counts: { total, accepted: count(e.id, "ACCEPTED"), declined: count(e.id, "DECLINED"), pending: count(e.id, "PENDING") },
         steps: computeSteps(e, total, Boolean(template)),
         past: !e.dateTbd && e.startsAt < now,
+        ...(isUnlocked(e) ? {} : { order: await orderProgress(e) }),
       };
     }),
   );
@@ -86,7 +91,7 @@ export default async function DashboardHome() {
         plan: e.plan,
         dateLabel: whenLabel(e, locale, { style: "long" }),
         venue: showAr && e.venueNameAr ? e.venueNameAr : e.venueName,
-        preview: await cardPreviewProps(e),
+        preview: await cardView(e),
         counts: { total: listCount(k.id), accepted: listCount(k.id, "ACCEPTED"), declined: listCount(k.id, "DECLINED"), pending: listCount(k.id, "PENDING") },
         steps: computeSteps(e, 0, false),
         past: !e.dateTbd && e.startsAt < now,
@@ -155,4 +160,11 @@ export default async function DashboardHome() {
       ) : null}
     </div>
   );
+}
+
+/** Where an unpaid event's order stands: the wizard's next step, or the submitted order. */
+async function orderProgress(e: Event) {
+  const order = await currentOrder(e.id);
+  const next = nextOrderStep(computeOrderSteps(e, order), e.product);
+  return { next, stage: order && order.stage !== "DRAFT" ? order.stage : null, orderId: order?.id ?? null };
 }

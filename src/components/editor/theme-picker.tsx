@@ -14,7 +14,8 @@ import { getTheme, type ThemeKey } from "@/lib/themes/registry";
 import { cn } from "@/lib/utils";
 import { useEditor, withTheme } from "./editor-context";
 import { SitePreview } from "./site-preview";
-import { useCardProps, useMounted } from "./use-card-props";
+import { useMounted } from "./use-card-props";
+import { EditorCard } from "./editor-card";
 
 export function ThemePicker() {
   const { dict } = useI18n();
@@ -59,7 +60,8 @@ export function ThemePicker() {
                         themeKey={th.key}
                         design={designs[th.key]}
                         language={event.language}
-                        content={content}
+                        // Before payment the gallery shows each design with sample wording, not the host's own card.
+                        content={event.protectedPreview ? undefined : content}
                         title={name}
                         className="h-full w-full"
                       />
@@ -122,7 +124,6 @@ function ThemePreviewDialog({ themeKey, onClose }: { themeKey: ThemeKey | null; 
   const key = themeKey ?? shownKey;
   const previewDraft = useMemo(() => (key ? withTheme(draft, key) : draft), [draft, key]);
   // Always show the theme's own artwork here, even if the customer uses their own image.
-  const card = useCardProps({ themeKey: previewDraft.themeKey, design: previewDraft.design, imageMode: "GENERATED" });
 
   if (!key) return null;
   const name = dict.themes[key].name;
@@ -189,7 +190,8 @@ function ThemePreviewDialog({ themeKey, onClose }: { themeKey: ThemeKey | null; 
         <div className={cn(tab === "card" ? "block" : "hidden", "lg:block")}>
           <p className="eyebrow mb-4 hidden lg:block">{t.cardTab}</p>
           <div className="paper-grain flex justify-center rounded-2xl bg-sand/70 p-5 sm:p-8">
-            <CardPreview {...card} title={fmt(t.previewOf, { name })} className="w-full max-w-[420px] rounded-[3px] shadow-lift" />
+            <EditorCard
+              override={{ themeKey: previewDraft.themeKey, design: previewDraft.design, imageMode: "GENERATED" }} title={fmt(t.previewOf, { name })} className="w-full max-w-[420px] rounded-[3px] shadow-lift" />
           </div>
         </div>
         <div className={cn(tab === "site" ? "block" : "hidden", "lg:block")}>

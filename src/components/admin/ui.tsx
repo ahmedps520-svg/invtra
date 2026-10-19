@@ -286,6 +286,13 @@ const TONES: Record<string, Tone> = {
   INVITATION_SENT: "sage",
   VIEWED: "bronze",
   QR_SCANNED: "bronze",
+  // order stages
+  SUBMITTED: "ochre",
+  PENDING_VERIFICATION: "ochre",
+  INFO_REQUIRED: "rosewood",
+  IN_PRODUCTION: "bronze",
+  READY: "slate",
+  SKIPPED: "neutral",
   // plans
   BASIC: "neutral",
   PREMIUM: "bronze",

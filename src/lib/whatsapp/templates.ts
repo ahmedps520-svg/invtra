@@ -21,6 +21,8 @@ export const TEMPLATE_VARIABLES = [
   "customer_name",
   "package_amount",
   "receipt_number",
+  // Order updates to a customer
+  "order_reference",
 ] as const;
 
 export type TemplateVariable = (typeof TEMPLATE_VARIABLES)[number];

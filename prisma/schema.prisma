@@ -30,24 +30,26 @@ enum AccountStatus {
 }
 
 model User {
-  id               String        @id @default(cuid())
-  email            String        @unique
-  name             String
-  passwordHash     String // "" for accounts created with Sign in with Apple (no password yet)
-  appleSub         String?       @unique // Sign in with Apple user id
-  role             Role          @default(CUSTOMER)
-  status           AccountStatus @default(ACTIVE)
-  deactivatedAt    DateTime?
-  deactivationNote String?
-  locale           String        @default("en")
-  phone            String?
-  emailVerifiedAt  DateTime? // proved they own the email (code, password reset link or Apple)
-  verifyBy         DateTime? // unverified accounts lock after this until the email is verified
-  source           String? // where they came from, first touch: "code:TIKTOK10", "invitation", "utm:tiktok"
-  emailReminders   Boolean       @default(true) // reminder emails about invitations they haven't sent yet
-  lastLoginAt      DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  email             String        @unique
+  name              String
+  passwordHash      String // "" for accounts created with Sign in with Apple (no password yet)
+  appleSub          String?       @unique // Sign in with Apple user id
+  role              Role          @default(CUSTOMER)
+  status            AccountStatus @default(ACTIVE)
+  deactivatedAt     DateTime?
+  deactivationNote  String?
+  locale            String        @default("en")
+  phone             String?
+  emailVerifiedAt   DateTime? // proved they own the email (code, password reset link or Apple)
+  verifyBy          DateTime? // unverified accounts lock after this until the email is verified
+  source            String? // where they came from, first touch: "code:TIKTOK10", "invitation", "utm:tiktok"
+  emailReminders    Boolean       @default(true) // reminder emails about invitations they haven't sent yet
+  // Asked for order updates on WhatsApp (explicit opt-in, required before INVTRA messages them).
+  whatsappUpdatesAt DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   sessions       Session[]
   passwordResets PasswordResetToken[]
@@ -57,6 +59,7 @@ model User {
   orders         Order[]
   uploads        Upload[]
   sendBatches    SendBatch[]
+  notifications  Notification[]
 
   @@index([role])
   @@index([createdAt])
@@ -137,6 +140,20 @@ enum PlanTier {
   BASIC
   PREMIUM
   CUSTOM
+}
+
+/// What the customer is buying (step 1 of creating an event).
+enum Product {
+  INVITATION // digital invitation: the design plus guest pages, replies, QR check-in and sending
+  CUSTOM_DESIGN // INVTRA's designers create a one-off design, with everything the digital invitation has
+  PHOTO_ONLY // just the finished invitation image, no guest list or sending
+}
+
+/// Where the design comes from (step 3).
+enum DesignSource {
+  TEMPLATE // one of INVTRA's designs, filled in by the customer
+  REQUEST // INVTRA designs it from the customer's brief and reference images, after payment is approved
+  UPLOAD // the customer's own finished design (imageMode CUSTOM)
 }
 
 model Event {
@@ -223,6 +240,15 @@ model Event {
   messageTemplate   MessageTemplate? @relation(fields: [messageTemplateId], references: [id], onDelete: SetNull)
   templateVariables Json? // overrides for template variables (e.g. how the couple names read)
 
+  // What's being bought, how it's designed and the optional extras (src/lib/products.ts)
+  product      Product      @default(INVITATION)
+  designSource DesignSource @default(TEMPLATE)
+  designBrief  String? // what the customer wants from a custom design (REQUEST)
+  features     Json? // { qr: "add" | "skip" | "later", whatsapp: boolean, tier: "BASIC" | "PREMIUM" }
+  // When an order for this event was approved: from then on the full-quality design is served
+  // (before that only low-resolution watermarked previews leave the server).
+  purchasedAt  DateTime?
+
   // Plan
   plan          PlanTier?
   guestLimit    Int       @default(0)
@@ -297,6 +323,7 @@ enum UploadKind {
   BACKGROUND
   CUSTOM_INVITATION
   MUSIC
+  REFERENCE // inspiration images for a custom design request
 }
 
 model Upload {
@@ -598,6 +625,7 @@ enum TemplatePurpose {
   PAYMENT_RECEIPT // payment confirmation with the receipt (URL button /pay/{{1}})
   REMINDER // the day before: accepted guests get the time and place (URL button /i/{{1}})
   NUDGE // guests who haven't replied yet: a gentle reminder with Accept / Decline
+  ORDER_UPDATE // to a customer who opted in: their order is approved and the files are ready (URL button /o/{{1}})
 }
 
 enum TemplateStatus {
@@ -698,6 +726,7 @@ enum MessagePurpose {
   PAYMENT_RECEIPT // to a host: payment received + receipt
   REMINDER // day-before reminder to an accepted guest
   NUDGE // reminder to a guest who hasn't replied
+  ORDER_UPDATE // to a customer: order approved, files ready
   OTHER
 }
 
@@ -808,24 +837,74 @@ enum PaymentStatus {
   REFUNDED
 }
 
+/// Where an order is in its life, from the customer's draft to the files in their hands.
+/// `status` (above) stays the money side: PENDING until staff approve the payment, then PAID.
+enum OrderStage {
+  DRAFT // being put together in the wizard
+  SUBMITTED // the customer submitted the order
+  PENDING_VERIFICATION // waiting for staff to confirm the bank transfer
+  INFO_REQUIRED // staff asked the customer for more information about the payment
+  REJECTED // staff couldn't confirm the payment (with a reason)
+  APPROVED // payment confirmed by staff
+  IN_PRODUCTION // INVTRA's designers are making a custom design
+  READY // the final files exist; delivery is under way
+  DELIVERED // the customer has been sent their files
+  CANCELLED
+}
+
+enum OrderFileKind {
+  RECEIPT // the customer's transfer receipt (evidence only — never proof of payment)
+  FINAL // a deliverable, available to the customer only once the order is approved
+}
+
+enum DeliveryChannel {
+  EMAIL
+  WHATSAPP
+  IN_APP
+}
+
+enum OrderDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED // not set up or not allowed (e.g. WhatsApp not connected, or no opt-in)
+}
+
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventId     String?
-  event       Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  plan        PlanTier
-  guestLimit  Int
-  amount      Int // minor units
-  currency    String
-  status      OrderStatus @default(PENDING)
-  provider    String // "mock" | "manual" | "stripe" | "tap"
-  providerRef String? // e.g. Stripe Checkout Session id, Tap charge id
-  note        String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  paidAt      DateTime?
-  refundedAt  DateTime? // when it was marked refunded (VAT is credited in that month)
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId    String?
+  event      Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  plan       PlanTier? // null for orders without a plan (Photo Only)
+  guestLimit Int
+  amount     Int // minor units
+  currency   String
+  status     OrderStatus @default(PENDING)
+
+  // Orders from the event wizard (null product = a plan purchase or upgrade from before it)
+  product           Product?
+  designSource      DesignSource?
+  lines             Json? // price breakdown shown to the customer: [{ key, amount }]
+  stage             OrderStage    @default(DRAFT)
+  transferReference String? // what the customer quoted with their bank transfer
+  customerNote      String? // the customer's reply when staff ask for more information
+  submittedAt       DateTime?
+  decidedById       String? // the admin who approved or rejected the payment
+  approvedAt        DateTime?
+  rejectedAt        DateTime?
+  rejectionReason   String?
+  infoRequestedAt   DateTime?
+  infoRequest       String? // what staff asked the customer for
+  readyAt           DateTime?
+  deliveredAt       DateTime?
+  provider          String // "mock" | "manual" | "stripe" | "tap"
+  providerRef       String? // e.g. Stripe Checkout Session id, Tap charge id
+  note              String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  paidAt            DateTime?
+  refundedAt        DateTime? // when it was marked refunded (VAT is credited in that month)
 
   // Custom packages prepared by INVTRA staff (Admin → Custom events)
   payToken      String?   @unique // secret for the public payment link /pay/<token>
@@ -840,11 +919,79 @@ model Order {
   promoCode     PromoCode? @relation(fields: [promoCodeId], references: [id], onDelete: Restrict)
   discount      Int        @default(0) // minor units taken off the price by the code (amount is what's paid)
 
-  payments Payment[]
+  payments   Payment[]
+  files      OrderFile[]
+  history    OrderHistory[]
+  deliveries OrderDelivery[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([stage, createdAt])
   @@index([promoCodeId])
+}
+
+/// Files attached to an order: the customer's transfer receipt and the final deliverables.
+/// Stored privately; served only through routes that check who is asking and the order's stage.
+model OrderFile {
+  id           String        @id @default(cuid())
+  orderId      String
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind         OrderFileKind
+  key          String        @unique
+  name         String
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  uploadedById String?
+  createdAt    DateTime      @default(now())
+
+  @@index([orderId, kind])
+}
+
+/// Every change of an order's stage and every payment decision, with who made it.
+model OrderHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actorId   String? // null = the system (e.g. delivery jobs)
+  from      OrderStage?
+  to        OrderStage
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+/// One row per order and channel, so files are delivered once however often a job runs.
+model OrderDelivery {
+  id        String              @id @default(cuid())
+  orderId   String
+  order     Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  channel   DeliveryChannel
+  status    OrderDeliveryStatus @default(PENDING)
+  attempts  Int                 @default(0)
+  error     String?
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([orderId, channel])
+}
+
+/// In-app notifications (the bell in the dashboard). `dedupeKey` makes each one appear once.
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // "order.approved", "order.delivered", "order.rejected", "order.info_required", "order.in_production"
+  data      Json? // values for the message, e.g. { reference, title, reason }
+  href      String
+  dedupeKey String    @unique
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }
 
 /// Discount codes made by staff (Admin → Discount codes): e.g. TIKTOK10, or one per influencer.

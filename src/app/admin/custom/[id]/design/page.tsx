@@ -21,6 +21,7 @@ export default async function CustomDesignPage({ params, searchParams }: { param
   const query = forHost.includes("@") ? `?for=${encodeURIComponent(forHost)}` : "";
   const { event, order, draft } = await customStepPage(id, "design", query);
   const props = await editorProps(event, {
+    staff: true,
     premiumIncluded: true, // a custom package includes every design
     advanced: true,
     detailsHref: `/admin/custom/${event.id}/details`,

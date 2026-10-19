@@ -55,7 +55,9 @@ class Guarded implements WhatsAppProvider {
 
 /** The number asked not to receive messages from INVTRA. */
 export async function isOptedOut(phone: string) {
-  return Boolean(await db.whatsAppOptOut.findUnique({ where: { phone }, select: { phone: true } }));
+  // Senders pass WhatsApp ids ("9665…"); opt-outs are stored in E.164 ("+9665…").
+  const e164 = `+${phone.replace(/\D/g, "")}`;
+  return Boolean(await db.whatsAppOptOut.findUnique({ where: { phone: e164 }, select: { phone: true } }));
 }
 
 /**

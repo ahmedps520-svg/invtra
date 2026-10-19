@@ -1,13 +1,28 @@
-import type { OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
+import type { OrderStage, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { badRequest, notFound } from "@/server/http";
 import { audit } from "@/server/log";
 import { applyPaidOrder, cancelOrder, markOrderRefunded } from "@/server/payments/service";
+import { approveOrder } from "@/server/orders/service";
 import { paging, type SearchParams, oneOf, str } from "./params";
 
 export const ORDER_STATUSES: OrderStatus[] = ["PENDING", "PAID", "CANCELLED", "REFUNDED", "FAILED"];
 export const PAYMENT_STATUSES: PaymentStatus[] = ["PENDING", "SUCCEEDED", "FAILED", "REFUNDED"];
 export const PAYMENT_PROVIDERS = ["mock", "manual", "stripe", "tap"] as const;
+export const ORDER_STAGES: OrderStage[] = [
+  "DRAFT",
+  "SUBMITTED",
+  "PENDING_VERIFICATION",
+  "INFO_REQUIRED",
+  "REJECTED",
+  "APPROVED",
+  "IN_PRODUCTION",
+  "READY",
+  "DELIVERED",
+  "CANCELLED",
+];
+/** Orders staff need to act on: payments to check, and custom designs to make. */
+export const TODO_STAGES: OrderStage[] = ["SUBMITTED", "PENDING_VERIFICATION", "IN_PRODUCTION"];
 
 function searchWhere(q: string): Prisma.OrderWhereInput | undefined {
   if (!q) return undefined;
@@ -28,8 +43,14 @@ export async function listOrders(sp: SearchParams) {
   const q = str(sp, "q");
   const status = oneOf(sp, "status", ORDER_STATUSES);
   const provider = oneOf(sp, "provider", PAYMENT_PROVIDERS);
+  const stage = str(sp, "stage") === "todo" ? "todo" : oneOf(sp, "stage", ORDER_STAGES);
   const { page, pageSize, skip, take } = paging(sp);
-  const where: Prisma.OrderWhereInput = { ...(status ? { status } : {}), ...(provider ? { provider } : {}), ...(searchWhere(q) ?? {}) };
+  const where: Prisma.OrderWhereInput = {
+    ...(status ? { status } : {}),
+    ...(provider ? { provider } : {}),
+    ...(stage === "todo" ? { stage: { in: TODO_STAGES }, product: { not: null } } : stage ? { stage } : {}),
+    ...(searchWhere(q) ?? {}),
+  };
   const [total, rows] = await Promise.all([
     db.order.count({ where }),
     db.order.findMany({
@@ -91,6 +112,8 @@ export async function adminMarkPaid(actorId: string, orderId: string, note: stri
   const order = await db.order.findUnique({ where: { id: orderId } });
   if (!order) throw notFound("Order");
   if (order.status === "PAID") throw badRequest("already_paid", "This order is already paid.");
+  // Wizard orders go through the verification checks (submitted, not yet decided).
+  if (order.product) return approveOrder(actorId, orderId, note);
   const r = await applyPaidOrder(orderId, { provider: "manual", providerPaymentId: null, actorId, note: `Marked paid by admin: ${note}`, raw: { markedBy: actorId, reference: note } });
   await audit(actorId, "admin.order.mark_paid", "order", orderId, { note, previousStatus: order.status, amount: order.amount, currency: order.currency, eventId: order.eventId });
   return r;

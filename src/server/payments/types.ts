@@ -1,4 +1,4 @@
-import type { Order } from "@prisma/client";
+import type { Order, OrderStage } from "@prisma/client";
 
 /**
  * Provider-agnostic payment interface.
@@ -47,4 +47,6 @@ export interface PaidDetails {
   /** Admin who recorded the payment (manual), for the audit trail. */
   actorId?: string | null;
   note?: string | null;
+  /** Only apply when the order is in one of these stages (checked under the row lock). */
+  expectStages?: OrderStage[];
 }

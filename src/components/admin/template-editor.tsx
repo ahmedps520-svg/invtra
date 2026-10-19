@@ -25,7 +25,7 @@ export type TemplateFormValues = {
   metaName: string;
   language: string;
   locale: string;
-  purpose: "INVITATION" | "UPDATE" | "REMINDER" | "NUDGE" | "PAYMENT_REQUEST" | "PAYMENT_RECEIPT";
+  purpose: "INVITATION" | "UPDATE" | "REMINDER" | "NUDGE" | "PAYMENT_REQUEST" | "PAYMENT_RECEIPT" | "ORDER_UPDATE";
   category: string;
   headerType: string;
   body: string;
@@ -57,6 +57,7 @@ const VARIABLE_LABEL: Record<TemplateVariable, string> = {
   customer_name: "Customer (host) name",
   package_amount: "Package amount",
   receipt_number: "Receipt number",
+  order_reference: "Order number",
 };
 const PREFERRED: TemplateVariable[] = ["guest_name", "host_names", "event_name", "event_date", "event_time", "venue"];
 
@@ -285,6 +286,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
                       <option value="NUDGE">Reply reminder (nudge)</option>
                       <option value="PAYMENT_REQUEST">Payment request</option>
                       <option value="PAYMENT_RECEIPT">Payment receipt</option>
+                    <option value="ORDER_UPDATE">Order ready</option>
                     </Select>
                   </Field>
                   <Field id="t-locale" label="Serves">

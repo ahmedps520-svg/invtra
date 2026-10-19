@@ -1,5 +1,6 @@
 import type { EventType } from "@prisma/client";
 import type { dashboard as en, OccasionFieldText, Plural } from "../en/dashboard";
+import { orders } from "./orders";
 
 const guestsN: Plural = {
   zero: "لا يوجد ضيوف",
@@ -11,6 +12,7 @@ const guestsN: Plural = {
 };
 
 export const dashboard: typeof en = {
+  orders,
   meta: {
     events: "مناسباتي",
     newEvent: "مناسبة جديدة",
@@ -1451,6 +1453,13 @@ export const dashboard: typeof en = {
     joinOwn: "هذه مناسبتك — أنت تدير كل قوائم الضيوف أصلًا.",
   },
   errors: {
+    order_incomplete: "أكمل تصميمك قبل إرسال الطلب.",
+    order_not_editable: "طلبك لدى فريقنا ولم يعد بالإمكان تعديله.",
+    already_purchased: "تم الدفع لهذه المناسبة مسبقًا.",
+    order_not_waiting: "لا ننتظر منك شيئًا في هذا الطلب.",
+    order_in_review: "طلبك لدى فريقنا — لا يمكن تغيير المنتج أو التصميم أو الإضافات حتى تتم مراجعته.",
+    preview_only: "يتاح الملف بالجودة الكاملة بعد تأكيد الدفع.",
+    too_many_files: "وصلت إلى الحد الأقصى لعدد الملفات.",
     test_own_number: "تُرسل الرسائل التجريبية إلى رقمك فقط ({phone}). يمكنك تغييره من الإعدادات.",
     whatsapp_not_ready: "لا يمكن الإرسال من واتساب إنفترا حاليًا. حاول لاحقًا، أو أرسل من واتساب الخاص بك.",
     generic: "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",

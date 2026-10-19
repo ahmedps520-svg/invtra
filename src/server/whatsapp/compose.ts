@@ -64,6 +64,7 @@ export function templateValues(event: EventForValues, guest: Pick<Guest, "name">
     customer_name: "",
     package_amount: "",
     receipt_number: "",
+    order_reference: "",
   };
 }
 

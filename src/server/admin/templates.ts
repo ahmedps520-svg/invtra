@@ -1,7 +1,7 @@
 import { Prisma, type MessageTemplate } from "@prisma/client";
 
 /** What a template is for (see TemplatePurpose in prisma/schema.prisma). */
-export const TEMPLATE_PURPOSES = ["INVITATION", "UPDATE", "REMINDER", "NUDGE", "PAYMENT_REQUEST", "PAYMENT_RECEIPT"] as const;
+export const TEMPLATE_PURPOSES = ["INVITATION", "UPDATE", "REMINDER", "NUDGE", "PAYMENT_REQUEST", "PAYMENT_RECEIPT", "ORDER_UPDATE"] as const;
 export type TemplatePurposeName = (typeof TEMPLATE_PURPOSES)[number];
 import { z } from "zod";
 import { db } from "@/server/db";
@@ -72,7 +72,10 @@ export function templateShapeErrors(t: {
     if (qr.length || url.length !== 1 || !b || b.type !== "URL") errors.buttons = "This kind of template needs exactly one URL button.";
     else if (!/^https?:\/\/[^\s{}]+\{\{1\}\}$/.test(b.url)) {
       errors["buttons.0.url"] =
-        t.purpose === "UPDATE" || t.purpose === "REMINDER" ? "The URL must be https://… and end with {{1}} (the invitation code)." : "The URL must be https://… and end with {{1}} (the payment-link code).";
+        t.purpose === "UPDATE" || t.purpose === "REMINDER" ? "The URL must be https://… and end with {{1}} (the invitation code)."
+          : t.purpose === "ORDER_UPDATE"
+            ? "The URL must be https://… and end with {{1}} (the order id)."
+            : "The URL must be https://… and end with {{1}} (the payment-link code).";
     }
   }
   return errors;

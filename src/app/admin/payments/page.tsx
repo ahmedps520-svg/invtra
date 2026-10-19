@@ -10,8 +10,10 @@ import { env } from "@/server/env";
 import {
   listOrders,
   listPayments,
+  ORDER_STAGES,
   ORDER_STATUSES,
   PAYMENT_PROVIDERS,
+  TODO_STAGES,
   PAYMENT_STATUSES,
   paymentSummary,
 } from "@/server/admin/payments";
@@ -32,7 +34,11 @@ import {
 import { dt, guestLimit, money, num, plural } from "@/components/admin/format";
 import { cn, truncate } from "@/lib/utils";
 import { BankForm } from "@/components/admin/bank-form";
-import { bankDetails } from "@/server/payments/bank";
+import { bankDetails, orderReference } from "@/server/payments/bank";
+import { productPrices } from "@/server/orders/pricing";
+import { ProductPricesForm } from "@/components/admin/product-prices-form";
+import { buttonClasses } from "@/components/ui/button";
+import { productName } from "@/lib/products";
 
 export const metadata: Metadata = { title: "Payments & orders" };
 
@@ -51,17 +57,18 @@ export default async function PaymentsPage({
   await requireAdmin();
   const sp = await searchParams;
   const view = str(sp, "view") === "payments" ? "payments" : "orders";
-  const [summary, orders, payments, orderCount, attemptCount] = await Promise.all([
+  const [summary, orders, payments, orderCount, attemptCount, todo] = await Promise.all([
     paymentSummary(),
     view === "orders" ? listOrders(sp) : null,
     view === "payments" ? listPayments(sp) : null,
     db.order.count(),
     db.payment.count(),
+    db.order.count({ where: { product: { not: null }, stage: { in: TODO_STAGES } } }),
   ]);
   const params = currentParams(
     sp,
     view === "orders"
-      ? ["q", "status", "provider", "view"]
+      ? ["q", "status", "stage", "provider", "view"]
       : ["q", "pstatus", "provider", "view"],
   );
   const pendingTotal = Object.values(summary.pending).reduce(
@@ -79,9 +86,25 @@ export default async function PaymentsPage({
         description={`Checkout provider: ${PROVIDER_LABEL[env().PAYMENT_PROVIDER]} · prices in ${env().PAYMENT_CURRENCY}. Manual payments are confirmed here.`}
       />
 
+      {todo ? (
+        <Link
+          href="/admin/payments?stage=todo"
+          className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-ochre/30 bg-ochre-soft px-5 py-4 text-sm text-ink transition hover:border-ochre/60"
+        >
+          <span>
+            <span className="font-medium">
+              {num(todo)} {todo === 1 ? "order needs" : "orders need"} you
+            </span>{" "}
+            — payments to verify or custom designs to deliver.
+          </span>
+          <span className="font-medium text-bronze-700">Review →</span>
+        </Link>
+      ) : null}
+
       {env().PAYMENT_PROVIDER === "manual" ? (
-        <div className="mb-8">
+        <div className="mb-8 grid gap-6 xl:grid-cols-2">
           <BankForm initial={await bankDetails()} />
+          <ProductPricesForm initial={await productPrices()} currency={env().PAYMENT_CURRENCY} />
         </div>
       ) : null}
 
@@ -179,6 +202,12 @@ export default async function PaymentsPage({
               },
               {
                 type: "select",
+                name: "stage",
+                label: "Stage",
+                options: [{ value: "todo", label: "Needs staff (verify or deliver)" }, ...ORDER_STAGES.map((s) => ({ value: s, label: humanize(s) }))],
+              },
+              {
+                type: "select",
                 name: "provider",
                 label: "Provider",
                 options: PAYMENT_PROVIDERS.map((p) => ({
@@ -200,7 +229,9 @@ export default async function PaymentsPage({
                 cell: (o) => (
                   <div className="min-w-[180px]">
                     <p className="text-ink">
-                      {planName(o.plan)}{" "}
+                      <Link href={`/admin/orders/${o.id}`} className="font-medium hover:underline">
+                        {o.product ? productName(o.product) : planName(o.plan)}
+                      </Link>{" "}
                       {o.promo ? <span className="me-1 rounded-full bg-[#e7f3ec] px-2 py-0.5 text-[11px] font-medium text-[#00502A]">{offerName(o.promo)}</span> : null}
                       {o.promoCode ? (
                         <Link
@@ -215,7 +246,7 @@ export default async function PaymentsPage({
                         · {guestLimit(o.guestLimit)} guests
                       </span>
                     </p>
-                    <Mono className="text-ink-faint">{o.id}</Mono>
+                    <Mono className="text-ink-faint">{orderReference(o.id)}</Mono>
                     {o.note ? (
                       <p
                         className="mt-0.5 line-clamp-2 max-w-[280px] text-[12px] text-ink-faint"
@@ -287,7 +318,12 @@ export default async function PaymentsPage({
               {
                 key: "status",
                 header: "Status",
-                cell: (o) => <StatusBadge status={o.status} />,
+                cell: (o) => (
+                  <div className="flex flex-col items-start gap-1">
+                    <StatusBadge status={o.status} />
+                    {o.product ? <StatusBadge status={o.stage} /> : null}
+                  </div>
+                ),
               },
               {
                 key: "actions",
@@ -295,7 +331,11 @@ export default async function PaymentsPage({
                 align: "end",
                 cell: (o) => (
                   <div className="flex justify-end gap-1.5">
-                    {o.status === "PENDING" ||
+                    {o.product ? (
+                      <Link href={`/admin/orders/${o.id}`} className={buttonClasses(TODO_STAGES.includes(o.stage) ? "primary" : "outline", "sm")}>
+                        {o.stage === "IN_PRODUCTION" ? "Deliver" : TODO_STAGES.includes(o.stage) ? "Verify" : "Open"}
+                      </Link>
+                    ) : o.status === "PENDING" ||
                     o.status === "FAILED" ||
                     o.status === "CANCELLED" ? (
                       <AdminAction

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Palette, RefreshCw, Send, Sparkles } from "lucide-react";
-import { CardPreview } from "@/components/invitation/card-preview";
+import { EventCard } from "@/components/invitation/event-card";
+import type { CardView } from "@/lib/card/view";
 import { useI18n } from "@/components/i18n/provider";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card, CardHeader, ProgressBar } from "@/components/ui/card";
@@ -26,7 +27,7 @@ import { errorMessage, plural } from "./i18n";
 import { ResponseRing, Tile } from "./stats";
 import { stepHref } from "./steps";
 
-type PreviewProps = React.ComponentProps<typeof CardPreview>;
+type PreviewProps = CardView;
 
 export type OverviewStats = {
   total: number;
@@ -305,7 +306,7 @@ export function EventOverview({
               }
             />
             <div className="paper-grain flex justify-center bg-sand px-8 py-8">
-              <CardPreview {...preview} className="w-full max-w-[260px] rounded-[3px] shadow-lift ring-1 ring-ink/5" title={eventTitle} />
+              <EventCard view={preview} className="w-full max-w-[260px] rounded-[3px] shadow-lift ring-1 ring-ink/5" title={eventTitle} />
             </div>
           </Card>
 

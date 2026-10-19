@@ -1,6 +1,6 @@
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
-import { ownerEventOrList } from "@/app/dashboard/_lib/access";
+import { guestPagesOrOverview, ownerEventOrList } from "@/app/dashboard/_lib/access";
 import { checkinDashboard } from "@/server/door/dashboard";
 import { CheckinDashboard } from "@/components/dashboard/checkin/checkin-dashboard";
 
@@ -14,6 +14,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const user = await requireUser(`/dashboard/events/${id}/checkin`);
   const event = await ownerEventOrList(user.id, id);
+  guestPagesOrOverview(event);
   const { locale } = await getI18n();
   const data = await checkinDashboard(event);
   return (

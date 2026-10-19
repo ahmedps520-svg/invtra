@@ -9,6 +9,7 @@ import { assertEventUpload } from "@/server/uploads";
 import { staleAcceptedCount } from "@/server/sending/service";
 import { deepMerge, designPatchSchema, designSchema } from "@/lib/design/schema";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
+import { designSourcesFor } from "@/lib/products";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -67,6 +68,11 @@ export const PATCH = route<Ctx>("events.design", async (req: NextRequest, ctx) =
     (custom !== undefined && (custom?.key ?? null) !== event.customImageKey) ||
     JSON.stringify(design) !== JSON.stringify(eventDesign(event));
   if (cardChanged) data.contentVersion = { increment: 1 };
+  // Keep the wizard's design choice in step with the editor: an uploaded design or one of ours.
+  if (imageMode !== event.imageMode && event.designSource !== "REQUEST") {
+    const source = imageMode === "CUSTOM" ? "UPLOAD" : "TEMPLATE";
+    if (designSourcesFor(event.product).includes(source)) data.designSource = source;
+  }
   const updated = await db.event.update({ where: { id: event.id }, data });
   return ok({ design, themeKey, imageMode: updated.imageMode, cardChanged, staleAccepted: await staleAcceptedCount(updated) });
 });

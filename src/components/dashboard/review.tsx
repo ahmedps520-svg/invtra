@@ -12,7 +12,8 @@ import {
   Info,
   ShieldCheck,
 } from "lucide-react";
-import { CardPreview } from "@/components/invitation/card-preview";
+import { EventCard } from "@/components/invitation/event-card";
+import type { CardView } from "@/lib/card/view";
 import { useI18n } from "@/components/i18n/provider";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,7 +35,7 @@ import { stepHref } from "./steps";
 import { TestSend } from "./test-send";
 import { Bubble, ChatFrame, ChatNote, MessageText } from "./whatsapp-preview";
 
-type PreviewProps = React.ComponentProps<typeof CardPreview>;
+type PreviewProps = CardView;
 
 export type ReviewTemplate = {
   id: string;
@@ -387,8 +388,7 @@ export function ReviewStep(props: ReviewData) {
                     <Bubble
                       header={
                         template.headerType === "IMAGE" ? (
-                          <CardPreview
-                            {...preview}
+                          <EventCard view={preview}
                             guest={null}
                             qrPlaceholder={false}
                             className="rounded-lg"
@@ -425,12 +425,14 @@ export function ReviewStep(props: ReviewData) {
                 <p className="text-[11px] uppercase tracking-[0.16em] text-ink-faint">
                   {d.after.personal}
                 </p>
-                <CardPreview
-                  {...preview}
+                <EventCard view={preview}
                   className="w-full max-w-[300px] rounded-[3px] shadow-lift ring-1 ring-ink/5"
                   title={d.after.personal}
                 />
-                <a
+                  {preview.locked ? (
+                    <p className="max-w-[300px] text-center text-[12px] leading-relaxed text-ink-faint">{dict.dashboard.orders.lockedDownload}</p>
+                  ) : (
+                    <a
                   href={`/api/events/${eventId}/card?sample=1&download=1`}
                   className={buttonClasses("outline", "sm")}
                   download
@@ -438,7 +440,8 @@ export function ReviewStep(props: ReviewData) {
                   <Download className="size-3.5" />
                   {d.after.download}
                 </a>
-              </div>
+                  )}
+                </div>
               <div className="bg-ivory/60 px-5 py-7 sm:px-8">
                 <ChatFrame
                   title={dict.dashboard.whatsapp.business}
@@ -455,8 +458,7 @@ export function ReviewStep(props: ReviewData) {
                   ) : null}
                   <Bubble
                     header={
-                      <CardPreview
-                        {...preview}
+                      <EventCard view={preview}
                         className="rounded-lg"
                         title={d.after.personal}
                       />

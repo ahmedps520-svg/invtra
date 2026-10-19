@@ -20,7 +20,10 @@ export type JobType =
   | "wallet.push"
   | "event.unpaid_reminder"
   | "event.status_video"
-  | "whatsapp.opt_out_ack";
+  | "whatsapp.opt_out_ack"
+  | "order.fulfil"
+  | "order.deliver"
+  | "order.email";
 
 export const PRIORITY = { bulk: 0, normal: 5, interactive: 10 } as const;
 

@@ -135,6 +135,11 @@ export default async function TemplatesPage() {
     { purpose: "NUDGE", title: "Reply reminders", description: "Guests who haven't replied get a gentle reminder with Accept / Decline (hosts send these)." },
     { purpose: "PAYMENT_REQUEST", title: "Payment requests", description: "Custom packages: sends the host the payment link (Admin → Custom events)." },
     { purpose: "PAYMENT_RECEIPT", title: "Payment receipts", description: "Confirms a payment to the host with a link to the receipt." },
+    {
+      purpose: "ORDER_UPDATE",
+      title: "Order ready",
+      description: "Tells a customer who asked for WhatsApp updates that their payment is approved and their files are ready (URL button to the order).",
+    },
   ] as const;
   const approved = templates.filter((t) => t.status === "APPROVED" && t.isActive);
 

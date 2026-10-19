@@ -96,6 +96,7 @@ export const SAMPLE_VALUES: Record<TemplateVariable, string> = {
   customer_name: "Sara",
   package_amount: "SAR 2,500",
   receipt_number: "INVTRA-2026-0042",
+  order_reference: "INV-7K2Q9XWD",
 };
 
 type Component =

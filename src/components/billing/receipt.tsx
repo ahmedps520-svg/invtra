@@ -1,6 +1,8 @@
 import { Logo } from "@/components/brand/logo";
 import { formatDate, formatMoney, intlLocale } from "@/lib/format";
+import type { Product } from "@prisma/client";
 import { planName } from "@/lib/plans";
+import { productName } from "@/lib/products";
 import { offerName } from "@/lib/offers";
 import { guestsLabel } from "@/server/payments/receipts";
 import type { CompanyDetails } from "@/server/legal";
@@ -13,7 +15,9 @@ import { PrintButton } from "./print-button";
 export type ReceiptData = {
   receiptNumber: string;
   paidAt: Date;
-  plan: string;
+  plan: string | null;
+  /** What was ordered in the wizard (null for plan purchases). */
+  product?: Product | null;
   guestLimit: number;
   /** Bought with a limited-time offer (its name is shown instead of the plan). */
   promo?: string | null;
@@ -54,7 +58,7 @@ export function Receipt({ data, t, ar, company }: { data: ReceiptData; t: PayCop
   const locale = ar ? "ar" : "en";
   const tz = data.event?.timezone ?? "Asia/Riyadh";
   const eventTitle = (ar ? data.event?.titleAr || data.event?.title : data.event?.title) ?? "";
-  const plan = offerName(data.promo, ar ? "ar" : "en") ?? (data.plan === "CUSTOM" ? t.customPlan : `${planName(data.plan)}${ar ? "" : " plan"}`);
+  const plan = offerName(data.promo, ar ? "ar" : "en") ?? (data.product ? productName(data.product, ar) : data.plan === "CUSTOM" ? t.customPlan : `${planName(data.plan)}${ar ? "" : " plan"}`);
   // VAT-registered (a VAT number is set): show the VAT inside the price, to the halala.
   const rate = vatRate();
   const vat = company?.vat && rate ? vatInside(data.amount, rate) : null;

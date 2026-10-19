@@ -1,11 +1,13 @@
+import { redirect } from "next/navigation";
 import { db } from "@/server/db";
+import { isUnlocked } from "@/server/render/preview";
 import { env } from "@/server/env";
 import { requireUser } from "@/server/auth/guards";
 import { confirmTapReturn } from "@/server/payments/tap-webhook";
 import { countryForTimezone } from "@/lib/timezone-country";
 import { getI18n } from "@/server/i18n";
-import { ownerEventOrList } from "@/app/dashboard/_lib/access";
-import { cardPreviewProps } from "@/server/events/preview";
+import { guestPagesOrOverview, ownerEventOrList } from "@/app/dashboard/_lib/access";
+import { cardView } from "@/server/events/preview";
 import { sendReadiness } from "@/server/sending/service";
 import { messagePreview } from "@/server/sending/preview";
 import { eventLocale, systemText, templateValues } from "@/server/whatsapp/compose";
@@ -30,11 +32,14 @@ export default async function ReviewPage({
   const sp = await searchParams;
   const user = await requireUser(`/dashboard/events/${id}/review`);
   const event = await ownerEventOrList(user.id, id);
+  guestPagesOrOverview(event);
+  // Until the event is paid for, the order wizard's review and payment steps take its place.
+  if (!isUnlocked(event)) redirect(`/dashboard/events/${event.id}/summary`);
 
   const msgLocale = eventLocale(event);
   const [readiness, preview, message, rows, themeRow] = await Promise.all([
     sendReadiness(event),
-    cardPreviewProps(event),
+    cardView(event),
     messagePreview(event),
     db.messageTemplate.findMany({
       where: { purpose: "INVITATION", status: "APPROVED", isActive: true, locale: msgLocale },

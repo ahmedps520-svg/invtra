@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { CreditCard, LogOut, Settings, Shield, Smartphone } from "lucide-react";
+import { NotificationBell } from "./notification-bell";
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/provider";
@@ -67,6 +68,7 @@ export function DashboardTopBar({
         </nav>
         <div className="ms-auto flex items-center gap-1.5">
           <LanguageSwitcher locale={locale} compact />
+          <NotificationBell />
           <UserMenu user={user} />
         </div>
       </div>

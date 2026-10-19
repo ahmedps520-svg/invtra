@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
+import { guestPagesOrOverview } from "@/app/dashboard/_lib/access";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
 import { getI18n } from "@/server/i18n";
 import { findGuestAccess } from "@/server/events/cohosts";
-import { cardPreviewProps } from "@/server/events/preview";
+import { cardView } from "@/server/events/preview";
 import { sendReadiness } from "@/server/sending/service";
 import { messagePreview } from "@/server/sending/preview";
 import { SendPanel } from "@/components/dashboard/send-panel";
@@ -22,6 +23,7 @@ export default async function SendPage({ params }: { params: Promise<{ id: strin
   const user = await requireUser(`/dashboard/events/${id}/send`);
   const access = await findGuestAccess(user, id);
   if (!access) notFound();
+  guestPagesOrOverview(access.event);
   const { event, coHost, scope } = access;
   const { dict, locale } = await getI18n();
 
@@ -37,7 +39,7 @@ export default async function SendPage({ params }: { params: Promise<{ id: strin
 
   const [readiness, preview, message, latest, failedCount, manualReady, manualGuests] = await Promise.all([
     sendReadiness(event),
-    cardPreviewProps(event),
+    cardView(event),
     messagePreview(event),
     db.sendBatch.findFirst({ where: { eventId: event.id, kind: { in: ["INITIAL", "RESEND"] } }, orderBy: { createdAt: "desc" } }),
     db.guest.count({ where: { eventId: event.id, isTest: false, status: "FAILED" } }),

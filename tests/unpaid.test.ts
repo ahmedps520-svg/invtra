@@ -119,7 +119,7 @@ describe("the email", () => {
     expect(mail.to).toBe(user.email);
     expect(mail.subject).toBe(`Your invitation for ${event.title} is ready to send`);
     expect(mail.html).toContain(cardImageUrl(event.id).replace(/&/g, "&amp;"));
-    expect(mail.html).toContain(`/dashboard/events/${event.id}/review`);
+    expect(mail.html).toContain(`/dashboard/events/${event.id}/summary`);
     expect(mail.text).toContain("You have 1 guest on your list.");
     expect(mail.unsubscribe).toBe(stopRemindersApiUrl(user.id));
 

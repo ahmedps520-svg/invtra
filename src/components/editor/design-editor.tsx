@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Send } from "lucide-react";
-import { CardPreview } from "@/components/invitation/card-preview";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
@@ -26,7 +25,8 @@ import { QrPanel } from "./qr-panel";
 import { ThemePicker } from "./theme-picker";
 import type { EditorProps } from "./types";
 import { TypographyPanel } from "./typography-panel";
-import { useCardProps, useMediaQuery } from "./use-card-props";
+import { useMediaQuery } from "./use-card-props";
+import { EditorCard } from "./editor-card";
 import { WebsitePanel } from "./website-panel";
 import { WordingPanel } from "./wording-panel";
 
@@ -301,7 +301,6 @@ function EditorFooter() {
 function MobilePreviewButton({ onOpen }: { onOpen: () => void }) {
   const { dict } = useI18n();
   const { status } = useEditor();
-  const card = useCardProps();
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:hidden">
       <button
@@ -311,7 +310,7 @@ function MobilePreviewButton({ onOpen }: { onOpen: () => void }) {
         className="pointer-events-auto flex h-14 items-center gap-3 rounded-full bg-ink py-2 pe-6 ps-2 text-ivory shadow-lift ring-1 ring-black/10 transition active:scale-[0.98]"
       >
         <span aria-hidden="true" className="block h-10 w-8 overflow-hidden rounded-[3px] bg-sand ring-1 ring-white/20">
-          <CardPreview {...card} title={dict.editor.preview.card} className="h-full w-full [&>svg]:h-full [&>svg]:object-cover" />
+          <EditorCard title={dict.editor.preview.card} fit="cover" className="h-full w-full [&>svg]:h-full [&>svg]:object-cover" />
         </span>
         <span className="flex items-center gap-2 text-sm font-medium tracking-wide">
           <Eye className="size-4 text-bronze-300" />

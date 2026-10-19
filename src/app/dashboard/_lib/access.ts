@@ -14,3 +14,8 @@ export async function ownerEventOrList<I extends Prisma.EventInclude | undefined
   if (coHost) redirect(`/dashboard/events/${eventId}/guests`);
   notFound();
 }
+
+/** Photo only has no guests, sending or check-in: those pages go back to the event. */
+export function guestPagesOrOverview(event: { id: string; product: string }) {
+  if (event.product === "PHOTO_ONLY") redirect(`/dashboard/events/${event.id}`);
+}

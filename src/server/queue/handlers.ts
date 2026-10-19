@@ -1,4 +1,5 @@
 import type { Event, Job } from "@prisma/client";
+import { deliverOrder, fulfilOrder, sendOrderEmail, type OrderEmailKind } from "@/server/orders/delivery";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { logError } from "@/server/log";
@@ -6,6 +7,8 @@ import { recordActivity } from "@/server/activity";
 import { updateGuest } from "@/server/guests/status";
 import { ensureInvitation, invitationUrl } from "@/server/invitations";
 import { renderPersonalInvitation, renderTeaser } from "@/server/invitations/render";
+import { isUnlocked, protectImage, renderProtectedPreview } from "@/server/render/preview";
+import { storage } from "@/server/storage";
 import { eventIsActive } from "@/server/rsvp";
 import { whatsapp, throttleSend } from "@/server/whatsapp";
 import { WhatsAppApiError } from "@/server/whatsapp/errors";
@@ -54,6 +57,9 @@ export const handlers: Record<JobType, (job: Job, payload: Payload) => Promise<v
     });
   },
   "nudge.send": (_job, p) => sendFollowUp(String(p.guestId), "NUDGE"),
+  "order.fulfil": (_job, p) => fulfilOrder(String(p.orderId)),
+  "order.deliver": (_job, p) => deliverOrder(String(p.orderId)),
+  "order.email": (_job, p) => sendOrderEmail(String(p.orderId), String(p.kind) as OrderEmailKind),
   "wallet.push": async (_job, p) => void (await pushWalletUpdates(Array.isArray(p.serials) ? p.serials.map(String) : [])),
   "mock.webhook": async (_job, p) => {
     const raw = JSON.stringify(p.body);
@@ -107,7 +113,7 @@ async function sendInvitationRequest(job: Job, guestId: string) {
   let headerImageKey: string | null = null;
   if (template.headerType === "IMAGE") {
     // Guests in a section with its own time or place get that section's card.
-    const teaser = await renderTeaser(event, guest);
+    const teaser = await sendableTeaser(event, guest);
     headerImageKey = teaser.key;
     headerMediaId = await teaserMediaId(event, teaser);
   }
@@ -157,12 +163,45 @@ async function sendInvitationRequest(job: Job, guestId: string) {
   }
 }
 
+/**
+ * The teaser to send. Before the event is paid for (the host's own test messages) it's the
+ * protected preview — low resolution and watermarked — never the design itself.
+ */
+async function sendableTeaser(event: Event, guest: Parameters<typeof renderTeaser>[1]) {
+  const teaser = await renderTeaser(event, guest);
+  if (isUnlocked(event)) return { ...teaser, mime: "image/png" };
+  const key = `renders/${event.id}/teaser-${teaser.version}-preview.jpg`;
+  let png = await storage().get(key);
+  if (!png) {
+    png = await protectImage(teaser.png);
+    await storage().put(key, png, "image/jpeg");
+  }
+  return { key, png, version: `${teaser.version}-preview`, variant: teaser.variant, mime: "image/jpeg" };
+}
+
+/** The guest's image to send: their personal card, or only the protected preview before payment. */
+async function sendableInvitationImage(
+  event: Event,
+  guest: Parameters<typeof renderPersonalInvitation>[1],
+  invitation: Parameters<typeof renderPersonalInvitation>[2],
+) {
+  if (isUnlocked(event)) return { ...(await renderPersonalInvitation(event, guest, invitation)), mime: "image/png" };
+  const version = `preview-${event.contentVersion}`;
+  const key = `renders/${event.id}/${invitation.id}-${version}.jpg`;
+  let png = await storage().get(key);
+  if (!png) {
+    png = await renderProtectedPreview(event);
+    await storage().put(key, png, "image/jpeg");
+  }
+  return { key, version, png, mime: "image/jpeg" };
+}
+
 /** WhatsApp media id for the teaser card, uploaded once per design version (and section) and reused. */
-async function teaserMediaId(event: Event, teaser: { version: string; png: Buffer; variant: string | null }): Promise<string> {
+async function teaserMediaId(event: Event, teaser: { version: string; png: Buffer; variant: string | null; mime: string }): Promise<string> {
   const now = new Date();
   if (!teaser.variant) {
     if (event.teaserMediaId && event.teaserMediaVersion === teaser.version && event.teaserMediaExpiresAt && event.teaserMediaExpiresAt > now) return event.teaserMediaId;
-    const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: "image/png", filename: "invitation.png" });
+    const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: teaser.mime, filename: teaser.mime === "image/png" ? "invitation.png" : "invitation-preview.jpg" });
     await db.event.update({
       where: { id: event.id },
       data: { teaserMediaId: up.mediaId, teaserMediaVersion: teaser.version, teaserMediaExpiresAt: new Date(Date.now() + MEDIA_TTL_MS) },
@@ -172,7 +211,7 @@ async function teaserMediaId(event: Event, teaser: { version: string; png: Buffe
   const cache = (event.sectionTeaserMedia ?? {}) as Record<string, { id: string; expiresAt: string }>;
   const hit = cache[teaser.version];
   if (hit && new Date(hit.expiresAt) > now) return hit.id;
-  const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: "image/png", filename: "invitation.png" });
+  const up = await whatsapp().uploadMedia({ data: teaser.png, mimeType: teaser.mime, filename: teaser.mime === "image/png" ? "invitation.png" : "invitation-preview.jpg" });
   // Keep only current entries (old design versions are never used again).
   const fresh = Object.fromEntries(Object.entries(cache).filter(([, v]) => new Date(v.expiresAt) > now).slice(-4));
   const next = { ...fresh, [teaser.version]: { id: up.mediaId, expiresAt: new Date(Date.now() + MEDIA_TTL_MS).toISOString() } };
@@ -224,11 +263,11 @@ async function deliverInvitation(guestId: string, reason: string) {
   if (reason === "repeat" && guest.invitationSentAt && Date.now() - guest.invitationSentAt.getTime() < 2 * 60_000) return;
 
   const invitation = guest.invitation ?? (await ensureInvitation(guest));
-  const image = await renderPersonalInvitation(event, guest, invitation);
+  const image = await sendableInvitationImage(event, guest, invitation);
 
   let mediaId = invitation.waMediaId;
   if (!mediaId || invitation.waMediaVersion !== image.version || !invitation.waMediaExpiresAt || invitation.waMediaExpiresAt < new Date()) {
-    const up = await whatsapp().uploadMedia({ data: image.png, mimeType: "image/png", filename: "invitation.png" });
+    const up = await whatsapp().uploadMedia({ data: image.png, mimeType: image.mime, filename: image.mime === "image/png" ? "invitation.png" : "invitation-preview.jpg" });
     mediaId = up.mediaId;
     await db.invitation.update({
       where: { id: invitation.id },

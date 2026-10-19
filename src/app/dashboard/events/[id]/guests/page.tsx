@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { guestPagesOrOverview } from "@/app/dashboard/_lib/access";
 import type { GuestStatus } from "@prisma/client";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
@@ -30,6 +31,7 @@ export default async function GuestsPage({
   // The owner sees every list; a co-host only their own.
   const access = await findGuestAccess(user, id);
   if (!access) notFound();
+  guestPagesOrOverview(access.event);
   const { event, coHost, scope } = access;
 
   const raw = typeof sp.status === "string" ? sp.status : null;

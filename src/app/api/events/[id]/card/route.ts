@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/server/db";
-import { requireApiUser, route } from "@/server/http";
+import { HttpError, requireApiUser, route } from "@/server/http";
+import { isUnlocked } from "@/server/render/preview";
 import { getEditableEvent } from "@/server/events/access";
 import { buildEventCardSvg, renderPersonalInvitation } from "@/server/invitations/render";
 import { ensureInvitation } from "@/server/invitations";
@@ -16,6 +17,9 @@ export const GET = route<Ctx>("events.card", async (req: NextRequest, ctx) => {
   const user = await requireApiUser();
   const { id } = await ctx.params;
   const event = await getEditableEvent(user, id);
+  // The full-quality card is only for paid-for events (staff can always check it).
+  if (!isUnlocked(event) && user.role !== "ADMIN")
+    throw new HttpError(403, "preview_only", "The full-quality file is available after your payment is approved.");
   const guestId = req.nextUrl.searchParams.get("guestId");
   let png: Buffer;
   let filename = "invitation-sample.png";

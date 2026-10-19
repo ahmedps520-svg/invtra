@@ -1,4 +1,5 @@
-import type { Event, Prisma } from "@prisma/client";
+import type { Event, Prisma, Product } from "@prisma/client";
+import { designSourceFor } from "@/lib/products";
 import { db } from "@/server/db";
 import { recordActivity } from "@/server/activity";
 import { cancelPendingJobs } from "@/server/queue/queue";
@@ -94,17 +95,23 @@ const OCCASION_THEME: Partial<Record<EventInput["type"], ThemeKey>> = {
   GRADUATION: "confetti",
 };
 
-export async function createEvent(userId: string, input: EventDetails, preferredTheme?: string | null) {
+export async function createEvent(userId: string, input: EventDetails, preferredTheme?: string | null, product: Product = "INVITATION") {
   const byLanguage: ThemeKey = input.language === "AR" ? "arabic" : input.language === "BILINGUAL" ? "bilingual" : DEFAULT_THEME;
   const themeKey: ThemeKey = isThemeKey(preferredTheme) ? preferredTheme : (OCCASION_THEME[input.type] ?? byLanguage);
   const theme = getTheme(themeKey);
+  // Photo only is a picture to share or print: no personal QR code on it, nothing to send.
+  const photo = product === "PHOTO_ONLY";
+  const design = photo ? { ...theme.defaults, card: { ...theme.defaults.card, qr: { ...theme.defaults.card.qr, enabled: false } } } : theme.defaults;
   return db.$transaction(async (tx) => {
     const event = await tx.event.create({
       data: {
         userId,
         ...toEventData(input),
         themeKey,
-        design: theme.defaults as unknown as Prisma.InputJsonValue,
+        design: design as unknown as Prisma.InputJsonValue,
+        product,
+        designSource: designSourceFor(product, "TEMPLATE"),
+        ...(photo ? { features: { qr: "skip", whatsapp: false, tier: "BASIC" }, allowWebRsvp: false, autoReminder: false } : {}),
         scheduleItems: {
           create: input.schedule.map((s, i) => ({ ...s, sortOrder: i })),
         },

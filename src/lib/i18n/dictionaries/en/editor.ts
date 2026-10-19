@@ -370,6 +370,7 @@ export const editor = {
     open: "Preview",
     cardCaption: "What each guest receives on WhatsApp once they accept — with their own QR code.",
     sampleNote: "Shown with a sample guest.",
+    protectedNote: "Low-resolution, watermarked preview. Your full-quality file is delivered once your payment is approved.",
     download: "Download preview",
     downloading: "Preparing…",
     siteCaption: "The personal page that opens from the invitation.",

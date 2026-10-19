@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Download, Film, Music2, RefreshCw, Share2, Volume2, VolumeX } from "lucide-react";
-import { CardPreview } from "@/components/invitation/card-preview";
+import { EventCard } from "@/components/invitation/event-card";
+import type { CardView } from "@/lib/card/view";
 import { useI18n } from "@/components/i18n/provider";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import type { StatusVideo } from "@/server/video/status";
 import { errorMessage } from "./i18n";
 import { stepHref } from "./steps";
 
-type PreviewProps = React.ComponentProps<typeof CardPreview>;
+type PreviewProps = CardView;
 
 /**
  * "Video for your Status" on the event overview: the card animated as a 9:16 video. The host
@@ -160,7 +161,7 @@ export function StatusVideoCard({
                 {t.youreInvited}
               </p>
               <div className="absolute inset-x-[7.5%] top-[21.5%]">
-                <CardPreview {...preview} guest={null} qrPlaceholder={false} className="w-full shadow-[0_10px_22px_rgb(0_0_0/0.45)]" />
+                <EventCard view={preview} guest={null} qrPlaceholder={false} className="w-full shadow-[0_10px_22px_rgb(0_0_0/0.45)]" />
               </div>
               {rendering ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/45 text-[12.5px] font-medium text-white backdrop-blur-[1.5px]">

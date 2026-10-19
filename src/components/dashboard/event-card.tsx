@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MapPin } from "lucide-react";
-import { CardPreview } from "@/components/invitation/card-preview";
+import { EventCard as InvitationCard } from "@/components/invitation/event-card";
+import type { CardView } from "@/lib/card/view";
 import { Badge } from "@/components/ui/badge";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
@@ -8,9 +9,11 @@ import { fmt } from "@/lib/i18n/config";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { plural } from "./i18n";
+import type { OrderStage } from "@prisma/client";
 import { doneCount, nextStep, stepHref, STEP_KEYS, type StepState } from "./steps";
+import { ORDER_STEP_LABEL, orderStepHref, type OrderStepKey } from "./order-steps";
 
-type PreviewProps = React.ComponentProps<typeof CardPreview>;
+type PreviewProps = CardView;
 
 export type EventCardData = {
   id: string;
@@ -24,6 +27,8 @@ export type EventCardData = {
   counts: { total: number; accepted: number; declined: number; pending: number };
   steps: StepState;
   past: boolean;
+  /** Not paid for yet: the order wizard's next step, or where the submitted order stands. */
+  order?: { next: OrderStepKey | null; stage: OrderStage | null; orderId: string | null };
   /** On a co-host's dashboard: their list for someone else's event (counts are their list's). */
   coHost?: { label: string; owner: string };
 };
@@ -42,8 +47,15 @@ export function StepDots({ steps, label, className }: { steps: StepState; label:
 export function EventCard({ data, dict, locale }: { data: EventCardData; dict: Dictionary; locale: Locale }) {
   const d = dict.dashboard;
   const next = nextStep(data.steps);
-  const nextLabel = next ? d.events.nextSteps[next === "event" ? "design" : next] : d.events.nextSteps.done;
-  const href = data.coHost ? stepHref(data.id, "guests") : next && next !== "event" ? stepHref(data.id, next) : stepHref(data.id, "overview");
+  const o = data.order;
+  // Until the event is paid for, "continue" leads through the order wizard (or to the submitted order).
+  let nextLabel = next ? d.events.nextSteps[next === "event" ? "design" : next] : d.events.nextSteps.done;
+  let href = next && next !== "event" ? stepHref(data.id, next) : stepHref(data.id, "overview");
+  if (o) {
+    nextLabel = o.next ? `${d.orders.steps[ORDER_STEP_LABEL[o.next]]} →` : o.stage ? d.orders.stages[o.stage] : d.events.nextSteps.done;
+    href = o.next ? orderStepHref(data.id, o.next) : o.orderId ? `/dashboard/orders/${o.orderId}` : stepHref(data.id, "overview");
+  }
+  if (data.coHost) href = stepHref(data.id, "guests");
   const counts = [
     { label: d.events.accepted, value: data.counts.accepted, tone: "bg-sage" },
     { label: d.events.declined, value: data.counts.declined, tone: "bg-rosewood" },
@@ -59,8 +71,8 @@ export function EventCard({ data, dict, locale }: { data: EventCardData; dict: D
     >
       <div className="paper-grain relative flex h-64 items-center justify-center overflow-hidden border-b border-line bg-sand">
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-mist/60 to-transparent" aria-hidden />
-        <CardPreview
-          {...data.preview}
+        <InvitationCard
+          view={data.preview}
           guest={null}
           qrPlaceholder={false}
           title={data.title}

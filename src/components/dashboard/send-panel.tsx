@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, CircleAlert, PauseCircle, Send } from "lucide-react";
-import { CardPreview } from "@/components/invitation/card-preview";
+import { EventCard } from "@/components/invitation/event-card";
+import type { CardView } from "@/lib/card/view";
 import { useI18n } from "@/components/i18n/provider";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,7 +20,7 @@ import { errorMessage, plural } from "./i18n";
 import { stepHref } from "./steps";
 import { Bubble, ChatFrame } from "./whatsapp-preview";
 
-type PreviewProps = React.ComponentProps<typeof CardPreview>;
+type PreviewProps = CardView;
 export type BatchState = { id: string; total: number; sent: number; failed: number; skipped: number; status: string; kind?: string };
 type Phase = "ready" | "sending" | "done" | "nothing" | "notReady";
 
@@ -199,12 +200,12 @@ export function SendPanel({
 
             <div className="mt-8 grid items-center gap-8 rounded-3xl border border-line bg-ivory/60 px-6 py-8 sm:px-10 md:grid-cols-2">
               <div className="paper-grain flex justify-center rounded-2xl bg-sand px-6 py-8">
-                <CardPreview {...preview} guest={null} qrPlaceholder={false} className="w-full max-w-[240px] rounded-[3px] shadow-lift ring-1 ring-ink/5" />
+                <EventCard view={preview} guest={null} qrPlaceholder={false} className="w-full max-w-[240px] rounded-[3px] shadow-lift ring-1 ring-ink/5" />
               </div>
               {message ? (
                 <ChatFrame title={dict.dashboard.whatsapp.business} subtitle={dict.dashboard.whatsapp.verified}>
                   <Bubble
-                    header={message.headerImage ? <CardPreview {...preview} guest={null} qrPlaceholder={false} className="rounded-lg" /> : undefined}
+                    header={message.headerImage ? <EventCard view={preview} guest={null} qrPlaceholder={false} className="rounded-lg" /> : undefined}
                     body={message.body}
                     footer={message.footer}
                     buttons={message.buttons.map((text) => ({ text }))}

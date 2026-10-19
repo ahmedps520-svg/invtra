@@ -52,6 +52,8 @@ export interface EditorEvent {
   hostNames: string;
   hostNamesAr: string | null;
   plan: PlanTier | null;
+  /** Not paid for yet: the card is shown only as the server's low-resolution, watermarked preview. */
+  protectedPreview: boolean;
   /** Event details that feed optional website sections (to hint when a section would be empty). */
   hasSchedule: boolean;
   hasDetails: boolean;

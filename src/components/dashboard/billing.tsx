@@ -16,12 +16,17 @@ import { plural } from "./i18n";
 import { PlanCards, usePlans } from "./plan-picker";
 import { offerName } from "@/lib/offers";
 import { stepHref } from "./steps";
+import type { OrderStage } from "@prisma/client";
+import { STAGE_TONE } from "./orders/order-detail";
 
 type Order = {
   id: string;
   eventId: string | null;
   eventTitle: string | null;
-  plan: "BASIC" | "PREMIUM" | "CUSTOM";
+  plan: "BASIC" | "PREMIUM" | "CUSTOM" | null;
+  /** Ordered in the wizard (null for plan purchases). */
+  product?: "INVITATION" | "CUSTOM_DESIGN" | "PHOTO_ONLY" | null;
+  stage?: OrderStage;
   guestLimit: number;
   amount: number;
   currency: string;
@@ -70,6 +75,8 @@ export function BillingPage({
   highlightOrder: string | null;
 }) {
   const { dict, locale } = useI18n();
+  const itemName = (o: Order) =>
+    offerName(o.promo, locale) ?? (o.product ? dict.dashboard.orders.products[o.product] : o.plan ? dict.common.plans[o.plan] : "");
   const d = dict.dashboard.billing;
   const plans = usePlans();
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -160,7 +167,7 @@ export function BillingPage({
                   </div>
                   {e.plan !== "PREMIUM" && e.plan !== "CUSTOM" ? (
                     <Link
-                      href={`${stepHref(e.id, "review")}#plan`}
+                      href={e.plan ? `${stepHref(e.id, "review")}#plan` : `/dashboard/events/${e.id}/summary`}
                       className="inline-flex items-center gap-1.5 text-[13px] font-medium text-bronze-700 hover:text-bronze-900"
                     >
                       {e.plan ? d.upgrade : d.choosePlan}
@@ -255,7 +262,7 @@ export function BillingPage({
                           {o.eventTitle ?? d.deletedEvent}
                         </p>
                         <p className="mt-0.5 text-[13px] text-ink-faint">
-                          {date(o.createdAt)} · {offerName(o.promo, locale) ?? dict.common.plans[o.plan]}
+                          {date(o.createdAt)} · {itemName(o)}
                         </p>
                       </div>
                       <div className="text-end">
@@ -263,8 +270,8 @@ export function BillingPage({
                           {formatMoney(o.amount, o.currency, locale)}
                         </p>
                         <CodeNote order={o} locale={locale} />
-                        <Badge tone={STATUS_TONE[o.status]} className="mt-1">
-                          {d.status[o.status]}
+                        <Badge tone={o.product && o.stage ? STAGE_TONE[o.stage] : STATUS_TONE[o.status]} className="mt-1">
+                          {o.product && o.stage ? dict.dashboard.orders.stages[o.stage] : d.status[o.status]}
                         </Badge>
                         <OrderLinks order={o} />
                       </div>
@@ -287,6 +294,13 @@ export function BillingPage({
 function OrderLinks({ order: o }: { order: Order }) {
   const { dict } = useI18n();
   const d = dict.dashboard.billing;
+  if (o.product) {
+    return (
+      <Link href={`/dashboard/orders/${o.id}`} className="mt-1.5 block text-[12.5px] font-medium text-bronze-700 underline-offset-4 hover:underline">
+        {dict.dashboard.orders.done.view}
+      </Link>
+    );
+  }
   if (o.payUrl) {
     return (
       <a
@@ -322,6 +336,8 @@ function OrderRows({
   date: (iso: string) => string;
 }) {
   const { dict, locale } = useI18n();
+  const itemName = (o: Order) =>
+    offerName(o.promo, locale) ?? (o.product ? dict.dashboard.orders.products[o.product] : o.plan ? dict.common.plans[o.plan] : "");
   const d = dict.dashboard.billing;
   return (
     <>
@@ -348,17 +364,15 @@ function OrderRows({
           )}
         </td>
         <td className="px-3 py-3.5 text-ink-soft">
-          {offerName(o.promo, locale) ?? dict.common.plans[o.plan]} ·{" "}
-          {o.guestLimit >= UNLIMITED_GUESTS
-            ? d.unlimited
-            : fmt(d.guestLimit, { n: formatNumber(o.guestLimit, locale) })}
+          {itemName(o)}
+          {o.plan ? ` · ${o.guestLimit >= UNLIMITED_GUESTS ? d.unlimited : fmt(d.guestLimit, { n: formatNumber(o.guestLimit, locale) })}` : null}
         </td>
         <td className="px-3 py-3.5 text-end font-medium text-ink tabular-nums">
           {formatMoney(o.amount, o.currency, locale)}
           <CodeNote order={o} locale={locale} />
         </td>
         <td className="px-6 py-3.5 text-end">
-          <Badge tone={STATUS_TONE[o.status]}>{d.status[o.status]}</Badge>
+          <Badge tone={o.product && o.stage ? STAGE_TONE[o.stage] : STATUS_TONE[o.status]}>{o.product && o.stage ? dict.dashboard.orders.stages[o.stage] : d.status[o.status]}</Badge>
           <OrderLinks order={o} />
         </td>
       </tr>

@@ -3,6 +3,7 @@ import { getI18n } from "@/server/i18n";
 import { ownerEventOrList } from "@/app/dashboard/_lib/access";
 import { eventToInput } from "@/server/events/service";
 import { EventForm } from "@/components/dashboard/event-form";
+import { isUnlocked } from "@/server/render/preview";
 
 export async function generateMetadata() {
   const { dict } = await getI18n();
@@ -15,7 +16,10 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
   const event = await ownerEventOrList(user.id, id, { scheduleItems: { orderBy: { sortOrder: "asc" } } });
   return (
     <div className="mx-auto max-w-5xl">
-      <EventForm mode="edit" eventId={event.id} initial={eventToInput(event)} relaxed={event.custom} />
+      <EventForm mode="edit" eventId={event.id} initial={eventToInput(event)} relaxed={event.custom}
+        product={event.product}
+        continueHref={isUnlocked(event) ? undefined : `/dashboard/events/${event.id}/design`}
+      />
     </div>
   );
 }

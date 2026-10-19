@@ -148,6 +148,8 @@ The standard set lives in `src/server/whatsapp/catalog.ts` and is loaded by `npm
 | payment_request_ar | invtra_payment_request_ar | ar | Payment link for a custom package |
 | payment_receipt_en | invtra_payment_receipt | en | Receipt after a custom package is paid (URL button `/pay/{{1}}`) |
 | payment_receipt_ar | invtra_payment_receipt_ar | ar | Receipt after a custom package is paid |
+| order_ready_en | invtra_order_ready | en | Order approved, files ready (only to customers who opted in) |
+| order_ready_ar | invtra_order_ready_ar | ar | Order approved, files ready (only to customers who opted in) |
 
 Invitations and reply reminders are **Marketing** templates; the rest are **Utility**. Invitation
 and update templates have an **image header** (the event's invitation design without any QR) and,

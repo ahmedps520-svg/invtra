@@ -1,4 +1,5 @@
 import type { Order } from "@prisma/client";
+import { adminRecipients } from "@/server/admin/recipients";
 import { db } from "@/server/db";
 import { appUrl, env } from "@/server/env";
 import { sendEmail } from "@/server/email";
@@ -224,7 +225,7 @@ export async function monthCsv(month: string): Promise<string> {
       l.order.user.name,
       l.order.user.email,
       l.order.event?.title ?? "",
-      l.order.plan,
+      l.order.plan ?? l.order.product ?? "",
       fixed(l.amount, l.order.currency),
       fixed(l.vat, l.order.currency),
       fixed(l.amount - l.vat, l.order.currency),
@@ -238,14 +239,6 @@ export async function monthCsv(month: string): Promise<string> {
 }
 
 // ── Monthly statement ───────────────────────────────────────────────────────
-
-async function adminRecipients(): Promise<string[]> {
-  const admins = await db.user.findMany({ where: { role: "ADMIN", status: "ACTIVE" }, select: { email: true } });
-  const list = admins.map((a) => a.email.toLowerCase());
-  const configured = env().ADMIN_EMAIL?.toLowerCase();
-  if (configured) list.push(configured);
-  return [...new Set(list)];
-}
 
 /**
  * Save last month's statement and email it to the admins (runs hourly in the worker; does

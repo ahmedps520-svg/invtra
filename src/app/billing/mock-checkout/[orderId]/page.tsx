@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { productName } from "@/lib/products";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FlaskConical, ShieldCheck } from "lucide-react";
@@ -44,7 +45,7 @@ export default async function MockCheckoutPage({ params }: { params: Promise<{ o
           <section aria-labelledby="summary" className="rounded-2xl border border-line bg-paper p-6 shadow-soft sm:p-8">
             <p className="eyebrow">Order summary</p>
             <h1 id="summary" className="mt-3 font-display text-3xl leading-tight text-ink sm:text-4xl">
-              INVTRA {planLabel(order.plan)}
+              INVTRA {order.plan ? planLabel(order.plan) : productName(order.product)}
             </h1>
             {order.event ? <p className="mt-2 text-sm text-ink-soft">{order.event.title}</p> : null}
 
@@ -52,7 +53,7 @@ export default async function MockCheckoutPage({ params }: { params: Promise<{ o
               <div className="flex justify-between gap-4 py-3">
                 <dt className="text-ink-faint">Plan</dt>
                 <dd className="text-ink">
-                  {planLabel(order.plan)}
+                  {order.plan ? planLabel(order.plan) : productName(order.product)}
                   {upgrade ? <span className="ms-2 text-ink-faint">(upgrade from {planLabel(order.event!.plan!)})</span> : null}
                 </dd>
               </div>
