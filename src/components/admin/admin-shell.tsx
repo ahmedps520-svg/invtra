@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Apple, ArrowLeft, CalendarHeart, CreditCard, FileText, Filter, LayoutDashboard, LogOut, Menu as MenuIcon, MessageSquare, Palette, Percent, ScanLine, ScrollText, Sparkles, TicketPercent, UserSearch, Users, X } from "lucide-react";
+import { AlertTriangle, Apple, ArrowLeft, CalendarHeart, CreditCard, FileText, Filter, LayoutDashboard, LogOut, Menu as MenuIcon, MessageSquare, Palette, Percent, ScanLine, ScrollText, ShieldCheck, Sparkles, TicketPercent, UserSearch, Users, X } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ function sections(b: AdminBadges): { label?: string; items: NavItem[] }[] {
     {
       label: "WhatsApp",
       items: [
+        { href: "/admin/whatsapp", label: "WhatsApp & Meta", icon: <ShieldCheck /> },
         { href: "/admin/messages", label: "Messages", icon: <MessageSquare /> },
         { href: "/admin/templates", label: "Templates", icon: <FileText />, badge: b.pendingTemplates || undefined },
       ],

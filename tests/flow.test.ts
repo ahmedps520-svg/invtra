@@ -180,7 +180,8 @@ describe("invitation pipeline", () => {
     const [req] = await messages(khalid.id, "INVITATION_REQUEST");
     const content = req.content as { body: string; buttons: { payload: string }[] };
     expect(content.body).toContain("Dear Khalid");
-    expect(content.buttons.map((b) => b.payload)).toEqual([buttonPayload("ACCEPT", khalid.invitation!.token), buttonPayload("DECLINE", khalid.invitation!.token)]);
+    // Accept, Decline, and a one-tap way to stop receiving messages.
+    expect(content.buttons.map((b) => b.payload)).toEqual(["ACCEPT", "DECLINE", "STOP"].map((a) => buttonPayload(a as "ACCEPT", khalid.invitation!.token)));
 
     const noWa = await guestByPhone(P.noWa);
     expect(noWa.status).toBe("FAILED");

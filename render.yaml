@@ -38,6 +38,21 @@ services:
         sync: false # you'll be asked for it when creating the Blueprint
       - key: ADMIN_PASSWORD
         sync: false
+      # ── Who runs INVTRA: shown in the footer, Terms, Privacy and receipts. Meta's business
+      # verification compares the website with your Commercial Registration, so enter these
+      # exactly as they appear on it (Render → Environment). See Admin → WhatsApp & Meta. ──
+      - key: LEGAL_ENTITY_NAME
+        sync: false
+      - key: LEGAL_CR_NUMBER
+        sync: false
+      - key: LEGAL_VAT_NUMBER
+        sync: false
+      - key: LEGAL_ADDRESS
+        sync: false
+      # Meta Business Suite → Settings → Brand safety → Domains → invtra.store → "Meta-tag
+      # verification": paste the content="…" value here, redeploy, then press Verify.
+      - key: META_DOMAIN_VERIFICATION
+        sync: false
       - key: WHATSAPP_APP_SECRET
         generateValue: true # replace with your Meta App Secret when connecting WhatsApp
       - key: WHATSAPP_VERIFY_TOKEN

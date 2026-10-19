@@ -530,6 +530,7 @@ export const dashboard = {
     checkedInWith: "{name} checked in · party of {n}",
     planPurchased: "{plan} plan activated",
     planPurchasedGeneric: "Your plan is active",
+    optedOut: "{name} asked not to receive more WhatsApp messages",
     coHostJoined: "{label} joined to keep their own guest list",
     customOffered: "Your custom package is ready to pay",
     unknown: "Event updated",
@@ -1244,6 +1245,8 @@ export const dashboard = {
     joinOwn: "This is your own event — you already manage every guest list.",
   },
   errors: {
+    test_own_number: "Test messages only go to your own number ({phone}). You can change it in Settings.",
+    whatsapp_not_ready: "INVTRA’s WhatsApp can’t send right now. Please try again later, or send from your own WhatsApp.",
     generic: "Something went wrong. Please try again.",
     no_plan: "Choose a plan before sending invitations.",
     not_ready: "This event isn't ready to send yet — check the Review step.",

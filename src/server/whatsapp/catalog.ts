@@ -3,7 +3,12 @@ import type { TemplateButton, TemplateVariable } from "@/lib/whatsapp/templates"
 import { EVENT_TYPES } from "@/lib/events/types";
 
 /**
- * INVTRA's standard WhatsApp templates. `npm run db:seed` loads them into the
+ * INVTRA's standard WhatsApp templates.
+ *
+ * Categories follow Meta's rules: an invitation (or a nudge to reply to one) starts a
+ * conversation the guest didn't ask for, so it's MARKETING, with a "Stop messages" button.
+ * Reminders, updates to an accepted invitation, and payment messages to the host follow from
+ * something the recipient did, so they're UTILITY. `npm run db:seed` loads them into the
  * MessageTemplate table; admins submit them to Meta for approval from /admin/templates
  * (or create them in WhatsApp Manager with the same name + language and press "Sync").
  */
@@ -29,13 +34,16 @@ export interface CatalogTemplate {
 const ALL: EventType[] = [...EVENT_TYPES];
 const BABY: EventType[] = ["NEWBORN", "AQIQAH"];
 const PARTY: EventType[] = ["BABY_SHOWER", "BIRTHDAY", "GRADUATION", "ANNIVERSARY", "OTHER"];
+// Every message that starts a conversation carries a one-tap way to stop receiving messages.
 const ACCEPT_DECLINE_EN: TemplateButton[] = [
   { type: "QUICK_REPLY", text: "Accept Invitation", action: "ACCEPT" },
   { type: "QUICK_REPLY", text: "Decline", action: "DECLINE" },
+  { type: "QUICK_REPLY", text: "Stop messages", action: "STOP" },
 ];
 const ACCEPT_DECLINE_AR: TemplateButton[] = [
   { type: "QUICK_REPLY", text: "قبول الدعوة", action: "ACCEPT" },
   { type: "QUICK_REPLY", text: "اعتذار", action: "DECLINE" },
+  { type: "QUICK_REPLY", text: "إيقاف الرسائل", action: "STOP" },
 ];
 
 export function templateCatalog(appUrl: string): CatalogTemplate[] {
@@ -50,7 +58,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_formal_wedding",
       language: "en",
       locale: "en",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "Dear {{1}}, you are warmly invited to celebrate the wedding of {{2}} on {{3}}.\n\nWe would be honoured to have you celebrate this special occasion with us. Would you like to accept this invitation?",
       variables: ["guest_name", "host_names", "event_date"],
@@ -68,7 +76,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_elegant_invite",
       language: "en",
       locale: "en",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "Dear {{1}}, with great pleasure, we invite you to join us for {{2}} on {{3}} at {{4}}.\n\nPlease let us know if you will be attending.",
       variables: ["guest_name", "event_name", "event_date", "venue"],
@@ -86,7 +94,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_formal_wedding_ar",
       language: "ar",
       locale: "ar",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "أهلًا {{1}}،\n\nيسعدنا دعوتكم لحضور حفل زفاف {{2}} يوم {{3}}.\n\nيشرفنا أن تشاركونا فرحتنا. هل تودّون قبول الدعوة؟",
       variables: ["guest_name", "host_names_ar", "event_date_ar"],
@@ -104,7 +112,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_elegant_invite_ar",
       language: "ar",
       locale: "ar",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "أهلًا {{1}}،\n\nيسعدنا دعوتكم لمشاركتنا {{2}} يوم {{3}} في {{4}}.\n\nنرجو إعلامنا بحضوركم.",
       variables: ["guest_name", "event_name_ar", "event_date_ar", "venue_ar"],
@@ -122,7 +130,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_bilingual_invite",
       language: "ar",
       locale: "bilingual",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "أهلًا {{1}}، يسعدنا دعوتكم لحضور {{2}} يوم {{3}}.\n\nYou are warmly invited to {{4}} on {{5}}.\n\nهل تقبلون الدعوة؟ Would you like to accept this invitation?",
       variables: ["guest_name", "event_name_ar", "event_date_ar", "event_name", "event_date"],
@@ -130,6 +138,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       buttons: [
         { type: "QUICK_REPLY", text: "Accept · قبول", action: "ACCEPT" },
         { type: "QUICK_REPLY", text: "Decline · اعتذار", action: "DECLINE" },
+        { type: "QUICK_REPLY", text: "Stop · إيقاف الرسائل", action: "STOP" },
       ],
       eventTypes: ALL,
       sortOrder: 5,
@@ -143,7 +152,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_newborn_visit",
       language: "en",
       locale: "en",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "Dear {{1}}, with hearts full of joy we welcome our little one, {{2}}.\n\nWe would love for you to visit us on {{3}} at {{4}}. Will you be joining us?",
       variables: ["guest_name", "host_names", "event_date", "venue"],
@@ -161,7 +170,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_newborn_visit_ar",
       language: "ar",
       locale: "ar",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "أهلًا {{1}}،\n\nبقلوب يغمرها الفرح نستقبل مولودنا {{2}}، ويسعدنا أن تشاركونا فرحتنا بزيارتكم يوم {{3}} في {{4}}.\n\nهل تقبلون الدعوة؟",
       variables: ["guest_name", "host_names_ar", "event_date_ar", "venue_ar"],
@@ -179,7 +188,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_celebration_invite",
       language: "en",
       locale: "en",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "Hi {{1}}, you're invited to {{2}} on {{3}} at {{4}}.\n\nIt wouldn't be the same without you. Will you celebrate with us?",
       variables: ["guest_name", "event_name", "event_date", "venue"],
@@ -197,7 +206,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_celebration_invite_ar",
       language: "ar",
       locale: "ar",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "IMAGE",
       body: "أهلًا {{1}}،\n\nأنتم مدعوون إلى {{2}} يوم {{3}} في {{4}}.\n\nلن تكتمل فرحتنا إلا بوجودكم، هل تشاركوننا؟",
       variables: ["guest_name", "event_name_ar", "event_date_ar", "venue_ar"],
@@ -287,7 +296,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_rsvp_reminder",
       language: "en",
       locale: "en",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "NONE",
       body: "Dear {{1}}, {{2}} would love to know whether you can join them for {{3}} on {{4}}. Please let us know below.",
       variables: ["guest_name", "host_names", "event_name", "event_date"],
@@ -305,7 +314,7 @@ export function templateCatalog(appUrl: string): CatalogTemplate[] {
       metaName: "invtra_rsvp_reminder_ar",
       language: "ar",
       locale: "ar",
-      category: "UTILITY",
+      category: "MARKETING",
       headerType: "NONE",
       body: "عزيزنا {{1}}، يسعد {{2}} معرفة إمكانية حضوركم {{3}} يوم {{4}}. نرجو تأكيد ردّكم أدناه.",
       variables: ["guest_name", "host_names_ar", "event_name_ar", "event_date_ar"],

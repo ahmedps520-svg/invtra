@@ -147,7 +147,7 @@ export default async function TemplatesPage() {
           mock
             ? "WhatsApp is in mock mode — submitting approves templates locally (simulated) and nothing is sent to Meta."
             : e.WHATSAPP_PROVIDER === "off"
-              ? "INVTRA's WhatsApp number isn't connected: hosts send invitations from their own WhatsApp and INVTRA sends nothing. Connect it (steps below) to use these templates."
+              ? "INVTRA's WhatsApp number isn't connected: hosts send invitations from their own WhatsApp and INVTRA sends nothing. See Admin → WhatsApp & Meta for what's needed to connect it."
               : `Templates are reviewed by Meta for WhatsApp Business Account ${e.WHATSAPP_BUSINESS_ACCOUNT_ID}. Only approved, enabled templates are used for sending.`
         }
         actions={

@@ -7,8 +7,9 @@ import { isDeliveryProgress, updateGuest } from "@/server/guests/status";
 import { enqueue, PRIORITY } from "@/server/queue/queue";
 import { respond } from "@/server/rsvp";
 import { fromWhatsAppId } from "@/lib/phone";
-import { parseButtonPayload } from "@/lib/whatsapp/templates";
+import { optOutKeyword, parseButtonPayload } from "@/lib/whatsapp/templates";
 import { failureReason } from "./errors";
+import { invalidateAccountStatus } from "./account";
 import { verifyWebhookSignature } from "./signature";
 
 /**
@@ -40,10 +41,27 @@ type WaMessage = {
   interactive?: { type?: string; button_reply?: { id?: string; title?: string } };
 };
 
+type WaTemplateUpdate = {
+  event?: string;
+  message_template_id?: number | string;
+  message_template_name?: string;
+  message_template_language?: string;
+  reason?: string | null;
+};
+
 type WaPayload = {
   object?: string;
-  entry?: { id?: string; changes?: { field?: string; value?: { statuses?: WaStatus[]; messages?: WaMessage[] } }[] }[];
+  entry?: {
+    id?: string;
+    changes?: {
+      field?: string;
+      value?: { metadata?: { phone_number_id?: string }; statuses?: WaStatus[]; messages?: WaMessage[] } & WaTemplateUpdate;
+    }[];
+  }[];
 };
+
+/** Webhook fields that mean the account's ability to send may have changed. */
+const ACCOUNT_FIELDS = new Set(["account_update", "account_review_update", "phone_number_name_update", "phone_number_quality_update", "business_capability_update"]);
 
 export async function handleWhatsAppWebhook(rawBody: string, signature: string | null): Promise<{ status: number; body?: string }> {
   const secret = env().WHATSAPP_APP_SECRET;
@@ -59,9 +77,23 @@ export async function handleWhatsAppWebhook(rawBody: string, signature: string |
   }
   if (payload.object !== "whatsapp_business_account") return { status: 200 };
 
+  const e = env();
   for (const entry of payload.entry ?? []) {
     for (const change of entry.changes ?? []) {
-      if (change.field !== "messages" || !change.value) continue;
+      if (!change.value || !change.field) continue;
+      if (change.field === "message_template_status_update") {
+        const v = change.value;
+        await once(`wa:tpl:${v.message_template_id}:${v.event}`, v, () => handleTemplateStatus(v));
+        continue;
+      }
+      if (ACCOUNT_FIELDS.has(change.field)) {
+        await invalidateAccountStatus(); // re-checked with Meta before the next send
+        continue;
+      }
+      if (change.field !== "messages") continue;
+      // Only INVTRA's own number: events for any other number on the same Meta app are ignored.
+      const forNumber = change.value.metadata?.phone_number_id;
+      if (e.WHATSAPP_PROVIDER === "cloud" && forNumber && forNumber !== e.WHATSAPP_PHONE_NUMBER_ID) continue;
       for (const st of change.value.statuses ?? []) await once(`wa:st:${st.id}:${st.status}`, st, () => handleStatus(st));
       for (const msg of change.value.messages ?? []) await once(`wa:in:${msg.id}`, msg, () => handleInbound(msg));
     }
@@ -184,6 +216,16 @@ async function handleInbound(m: WaMessage) {
       },
     },
   });
+  // "Stop messages" (button) or a plain STOP / START reply: honoured for the number, from any event.
+  const optOut = parsed?.action === "STOP" ? "STOP" : parsed ? null : optOutKeyword(m.text?.body ?? m.button?.text);
+  if (optOut) {
+    await setOptOut(phone, optOut, parsed ? "button" : "keyword", m.id);
+    if (optOut === "STOP" && guestId && eventId) {
+      const guest = await db.guest.findUnique({ where: { id: guestId }, select: { name: true } });
+      await recordActivity(db, eventId, "guest.opted_out", { name: guest?.name ?? "" }, guestId);
+    }
+    return;
+  }
   if (!guestId) return;
 
   // Any message from the guest opens WhatsApp's 24-hour customer-service window.
@@ -218,4 +260,45 @@ async function handleInbound(m: WaMessage) {
       }
       return;
   }
+}
+
+/**
+ * A number asks to stop (or start again) receiving WhatsApp messages from INVTRA. Stopping also
+ * cancels anything already queued for that number; either way they get a short confirmation
+ * (they've just written to us, so WhatsApp's reply window is open).
+ */
+async function setOptOut(phone: string, action: "STOP" | "START", source: "button" | "keyword", messageId: string) {
+  if (action === "STOP") {
+    await db.whatsAppOptOut.upsert({ where: { phone }, create: { phone, source }, update: {} });
+    const guests = await db.guest.findMany({ where: { phone }, select: { id: true } });
+    for (const g of guests) {
+      await db.job.updateMany({
+        where: { status: "PENDING", payload: { path: ["guestId"], equals: g.id } },
+        data: { status: "CANCELLED", completedAt: new Date() },
+      });
+    }
+  } else {
+    await db.whatsAppOptOut.deleteMany({ where: { phone } });
+  }
+  await enqueue("whatsapp.opt_out_ack", { phone, action }, { priority: PRIORITY.interactive, dedupeKey: `optout:${messageId}` });
+}
+
+const TEMPLATE_EVENT: Record<string, "APPROVED" | "REJECTED" | "PAUSED" | "DISABLED" | undefined> = {
+  APPROVED: "APPROVED",
+  REINSTATED: "APPROVED",
+  REJECTED: "REJECTED",
+  PAUSED: "PAUSED",
+  DISABLED: "DISABLED",
+  PENDING_DELETION: "DISABLED",
+  DELETED: "DISABLED",
+};
+
+/** Meta reviewed (or paused, or disabled) a template: keep the local status in step. */
+async function handleTemplateStatus(v: WaTemplateUpdate) {
+  const status = v.event ? TEMPLATE_EVENT[v.event] : undefined;
+  if (!status || v.message_template_id === undefined) return;
+  await db.messageTemplate.updateMany({
+    where: { metaTemplateId: String(v.message_template_id) },
+    data: { status, rejectedReason: status === "REJECTED" ? (v.reason ?? "Rejected by Meta") : null, lastSyncedAt: new Date() },
+  });
 }

@@ -70,6 +70,11 @@ const schema = z
     // Support chat: the "Chat with us on WhatsApp" button (digits with country code; empty hides it).
     SUPPORT_WHATSAPP: z.string().default("966557663974"),
 
+    // Site ownership tags (Meta's is needed to verify invtra.store in Meta Business Suite).
+    META_DOMAIN_VERIFICATION: z.string().optional(),
+    GOOGLE_SITE_VERIFICATION: z.string().optional(),
+    BING_SITE_VERIFICATION: z.string().optional(),
+
     // The "video for your Status" (Dashboard → event): path to the ffmpeg binary.
     FFMPEG_PATH: z.string().default("ffmpeg"),
 

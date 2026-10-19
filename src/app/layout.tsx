@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
     other: {
       ...(process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : {}),
-      ...(process.env.META_DOMAIN_VERIFICATION ? { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION } : {}),
+      ...(process.env.META_DOMAIN_VERIFICATION ? { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION.trim() } : {}),
     },
   },
 };

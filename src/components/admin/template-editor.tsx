@@ -101,10 +101,13 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const isEdit = Boolean(initial?.id);
 
-  const qr = (action: "ACCEPT" | "DECLINE") => f.buttons.find((b) => b.type === "QUICK_REPLY" && b.action === action)?.text ?? "";
+  const qr = (action: "ACCEPT" | "DECLINE" | "STOP") => f.buttons.find((b) => b.type === "QUICK_REPLY" && b.action === action)?.text ?? "";
   const urlBtn = f.buttons.find((b) => b.type === "URL") as Extract<TemplateButton, { type: "URL" }> | undefined;
   const [acceptText, setAcceptText] = useState(qr("ACCEPT") || "Accept Invitation");
   const [declineText, setDeclineText] = useState(qr("DECLINE") || "Decline");
+  // A "Stop messages" button lets guests opt out in one tap (needed for Marketing templates).
+  const [stopText, setStopText] = useState(qr("STOP") || "Stop messages");
+  const [withStop, setWithStop] = useState(isEdit ? Boolean(qr("STOP")) : true);
   const [urlText, setUrlText] = useState(urlBtn?.text ?? "View Invitation");
   const [url, setUrl] = useState(urlBtn?.url ?? `${appUrl.replace(/\/$/, "")}/i/{{1}}`);
 
@@ -123,6 +126,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
       ? [
           { type: "QUICK_REPLY", text: acceptText, action: "ACCEPT" },
           { type: "QUICK_REPLY", text: declineText, action: "DECLINE" },
+          ...(withStop ? [{ type: "QUICK_REPLY" as const, text: stopText, action: "STOP" as const }] : []),
         ]
       : [{ type: "URL", text: urlText, url }];
 
@@ -178,6 +182,7 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
       for (const [k, v] of Object.entries(err.fields ?? {})) {
         if (k === "buttons.0.text") fields[replyButtons ? "acceptText" : "urlText"] = v;
         else if (k === "buttons.1.text") fields.declineText = v;
+        else if (k === "buttons.2.text") fields.stopText = v;
         else if (k === "buttons.0.url") fields.url = v;
         else if (k.startsWith("variables")) fields.variables = v.startsWith("Invalid enum") ? "Choose a variable for every placeholder" : v;
         else fields[k] = v;
@@ -383,6 +388,18 @@ export function TemplateEditor({ initial, appUrl, trigger }: { initial?: Templat
                   <Field id="t-decline" label="Decline button" optional={`(${declineText.length}/25)`} error={errors.declineText}>
                     <Input id="t-decline" dir="auto" maxLength={25} value={declineText} onChange={(e) => setDeclineText(e.target.value)} />
                   </Field>
+                  <div className="sm:col-span-2">
+                    <Checkbox
+                      checked={withStop}
+                      onChange={setWithStop}
+                      label="Add a “Stop messages” button (guests can opt out in one tap — recommended, and expected for Marketing templates)"
+                    />
+                  </div>
+                  {withStop ? (
+                    <Field id="t-stop" label="Stop button" optional={`(${stopText.length}/25)`} error={errors.stopText}>
+                      <Input id="t-stop" dir="auto" maxLength={25} value={stopText} onChange={(e) => setStopText(e.target.value)} />
+                    </Field>
+                  ) : null}
                   {errors.buttons ? <p className="text-[13px] text-rosewood sm:col-span-2">{errors.buttons}</p> : null}
                 </div>
               ) : (

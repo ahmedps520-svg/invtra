@@ -52,6 +52,9 @@ async function makeEvent(userId: string) {
   });
 }
 
+afterAll(async () => {
+  await db.setting.deleteMany({ where: { key: "whatsapp.status" } });
+});
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -313,7 +316,15 @@ describe("admin actions", () => {
     expect((await db.event.findUniqueOrThrow({ where: { id: event.id } })).deactivatedAt).toBeNull();
   });
 
-  it("retries a failed invitation request exactly once", async () => {
+  it("retries a failed invitation request exactly once — only while Meta says the account can send", async () => {
+    const account = await import("@/server/whatsapp/account");
+    // Meta reports the display name still under review: nothing may be queued.
+    stubFetch((url) =>
+      url.includes("/PNID?")
+        ? { body: { display_phone_number: "+966 55 766 3974", status: "CONNECTED", name_status: "PENDING_REVIEW" } }
+        : { body: { name: "INVTRA", account_review_status: "APPROVED" } },
+    );
+    expect(await account.whatsappAccountStatus({ fresh: true })).toMatchObject({ ok: false, problems: ["name_not_approved"] });
     const admin = await makeUser("actor3", "ADMIN");
     const customer = await makeUser("cust3");
     const event = await makeEvent(customer.id);
@@ -321,6 +332,14 @@ describe("admin actions", () => {
     const msg = await db.whatsAppMessage.create({
       data: { eventId: event.id, guestId: guest.id, direction: "OUTBOUND", purpose: "INVITATION_REQUEST", provider: "mock", phone: guest.phone, type: "template", status: "FAILED", errorCode: "131026" },
     });
+    await expect(messages.retryInvitationRequest(admin.id, msg.id)).rejects.toMatchObject({ code: "whatsapp_not_ready" });
+    // Approved: the retry goes ahead.
+    stubFetch((url) =>
+      url.includes("/PNID?")
+        ? { body: { display_phone_number: "+966 55 766 3974", verified_name: "INVTRA", status: "CONNECTED", name_status: "APPROVED", quality_rating: "GREEN" } }
+        : { body: { name: "INVTRA", account_review_status: "APPROVED", business_verification_status: "pending" } },
+    );
+    expect(await account.whatsappAccountStatus({ fresh: true })).toMatchObject({ ok: true, problems: [] });
     await messages.retryInvitationRequest(admin.id, msg.id);
     const g = await db.guest.findUniqueOrThrow({ where: { id: guest.id } });
     expect(g).toMatchObject({ deliveryStatus: "QUEUED", deliveryError: null, status: "PENDING" });

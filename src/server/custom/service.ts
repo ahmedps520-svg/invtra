@@ -29,7 +29,7 @@ import { zonedToUtc } from "@/lib/time";
 import { whenLabel } from "@/lib/event-when";
 import { guestsLabel } from "@/server/payments/receipts";
 import { oneOf, paging, str, type SearchParams } from "@/server/admin/params";
-import { assertWhatsAppOn } from "@/server/whatsapp";
+import { assertWhatsAppReady } from "@/server/whatsapp";
 
 /**
  * Custom events, prepared by INVTRA staff (Admin → Custom events), in this order:
@@ -453,7 +453,7 @@ export async function sendPaymentRequest(
   const result: { whatsapp: boolean; email: boolean; emailError?: string } = { whatsapp: false, email: false };
 
   if (channels.whatsapp) {
-    assertWhatsAppOn();
+    await assertWhatsAppReady();
     if (!order.user.phone)
       throw badRequest(
         "phone_required",

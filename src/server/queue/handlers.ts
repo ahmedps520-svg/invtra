@@ -43,6 +43,16 @@ export const handlers: Record<JobType, (job: Job, payload: Payload) => Promise<v
   "reminder.send": (_job, p) => sendFollowUp(String(p.guestId), "REMINDER"),
   "event.unpaid_reminder": (_job, p) => sendUnpaidReminder(String(p.eventId), Number(p.n) || 1),
   "event.status_video": (_job, p) => renderStatusVideo(String(p.eventId), String(p.version)),
+  "whatsapp.opt_out_ack": async (_job, p) => {
+    const stop = p.action === "STOP";
+    await whatsapp().sendText({
+      to: String(p.phone),
+      allowOptedOut: true,
+      body: stop
+        ? "You won't receive any more WhatsApp messages from INVTRA. Reply START if you change your mind.\nلن تصلك رسائل أخرى من إنفترا على واتساب. أرسل START إذا غيّرت رأيك."
+        : "You'll receive WhatsApp messages from INVTRA again. Reply STOP at any time to stop them.\nستصلك رسائل إنفترا على واتساب مجددًا. أرسل STOP في أي وقت لإيقافها.",
+    });
+  },
   "nudge.send": (_job, p) => sendFollowUp(String(p.guestId), "NUDGE"),
   "wallet.push": async (_job, p) => void (await pushWalletUpdates(Array.isArray(p.serials) ? p.serials.map(String) : [])),
   "mock.webhook": async (_job, p) => {

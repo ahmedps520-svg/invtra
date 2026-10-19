@@ -60,7 +60,9 @@ The sender number must be registered on the **Cloud API**. A number that is in u
 6. **WhatsApp Manager → Payment settings**: add a payment method (SAR is supported). Without
    one, template sends fail (error 131042).
 7. **Business verification** (Business Settings → Security Center, with the Commercial
-   Registration): new portfolios can message **250** different people per 24 hours; verifying
+   Registration). Meta compares the website with the documents, so first set `LEGAL_ENTITY_NAME`,
+   `LEGAL_CR_NUMBER` and `LEGAL_ADDRESS` exactly as on the registration and verify the domain
+   (`META_DOMAIN_VERIFICATION`) — Admin → WhatsApp & Meta lists anything missing. Then: new portfolios can message **250** different people per 24 hours; verifying
    raises it to **2,000** at once (it also rises with good-quality volume), then 10K → 100K →
    unlimited automatically.
 8. Set the environment on the server (Render → invtra → Environment):
@@ -83,8 +85,21 @@ WHATSAPP_APP_ID=…              # only for submitting IMAGE-header templates fr
 | Utility | 0.0401 | 0.0107 |
 | Service replies (after 1,000 free per month) | 0.0401 | 0.0107 |
 
-INVTRA submits invitations as **Utility**, but Meta may approve them as **Marketing** (its own
-Marketing example is an event invitation) — the category is decided by Meta at approval.
+Invitations and reply reminders are submitted as **Marketing**: they start a conversation the
+guest didn't ask for (Meta's own Marketing example is an event invitation), and submitting them
+as Utility gets them rejected or re-categorised. Each carries a **Stop messages** quick reply.
+Reminders, updates to an accepted invitation and payment messages to hosts follow something the
+recipient did, so they're **Utility**.
+
+**Opt-out.** A guest who taps *Stop messages*, or replies STOP / إيقاف, is added to a
+suppression list: INVTRA sends nothing more to that number — from any event — until they reply
+START. They get a one-line confirmation either way, and the host sees it in the event's activity.
+
+**Sending only when Meta allows it.** Before every send INVTRA checks (cached for 5 minutes, and
+refreshed by the account webhooks) that the number is connected, its display name approved and
+the WhatsApp Business Account approved. If not, nothing is sent and the batch stops with a clear
+message. Admin → **WhatsApp & Meta** shows the status, what Meta's reviewers check on the website,
+and the steps only you can do in Meta Business Suite.
 
 ## 2. Webhook
 
@@ -92,8 +107,13 @@ In the Meta App → WhatsApp → Configuration (Use cases → Customize → Conf
 
 - **Callback URL:** `https://invtra.store/api/webhooks/whatsapp`
 - **Verify token:** the value of `WHATSAPP_VERIFY_TOKEN`
-- Subscribe to the **messages** field (delivers incoming button replies *and* outgoing
-  message statuses: sent / delivered / read / failed).
+- Subscribe to these fields:
+  - **messages** — incoming button replies and STOP/START, *and* outgoing message statuses
+    (sent / delivered / read / failed).
+  - **message_template_status_update** — Meta's review decisions (approved, rejected with the
+    reason, paused, disabled), applied to the template list automatically.
+  - **account_update**, **account_review_update**, **phone_number_name_update**,
+    **phone_number_quality_update** — refresh the account status INVTRA checks before sending.
 - If no events arrive, subscribe the app to the WhatsApp account once:
   `curl -X POST "https://graph.facebook.com/v23.0/<WABA_ID>/subscribed_apps" -H "Authorization: Bearer <ACCESS_TOKEN>"`
 
@@ -129,11 +149,12 @@ The standard set lives in `src/server/whatsapp/catalog.ts` and is loaded by `npm
 | payment_receipt_en | invtra_payment_receipt | en | Receipt after a custom package is paid (URL button `/pay/{{1}}`) |
 | payment_receipt_ar | invtra_payment_receipt_ar | ar | Receipt after a custom package is paid |
 
-All are **Utility** templates. Invitation and update templates have an **image header** (the
-event's invitation design without any QR) and, for invitations, two **quick-reply** buttons.
+Invitations and reply reminders are **Marketing** templates; the rest are **Utility**. Invitation
+and update templates have an **image header** (the event's invitation design without any QR) and,
+for invitations, three **quick-reply** buttons: Accept, Decline and Stop messages.
 The reminder templates have no header: the day-before reminder has a URL button to the guest's
 invitation, and the reply reminder has the same Accept / Decline buttons as the invitation
-(the answer is recorded exactly like the first one). Submit all four from Admin → Templates.
+(the answer is recorded exactly like the first one). Submit them all from Admin → Templates.
 The four payment templates go to the event **host**, not to guests: they have no header and a
 single URL button that opens the host's payment page (which becomes the receipt once paid).
 Until `invtra_payment_request` is approved, Admin → Custom events sends the link by email only

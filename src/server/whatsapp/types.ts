@@ -33,6 +33,8 @@ export interface SendCtaParams {
 export interface SendTextParams {
   to: string;
   body: string;
+  /** Only for confirming an opt-out or opt-in to the person who just asked. */
+  allowOptedOut?: boolean;
 }
 
 export interface SendResult {

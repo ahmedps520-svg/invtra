@@ -8,7 +8,7 @@ import { eventForGuest } from "@/server/events/sections";
 import { mapsLinks } from "@/server/invitations/view-model";
 import { guestLocale, pickTemplate, templateValues } from "@/server/whatsapp/compose";
 import { sectionLine, whatsappLink } from "@/server/sending/manual";
-import { assertWhatsAppOn, whatsappOff } from "@/server/whatsapp";
+import { assertWhatsAppReady, whatsappOff } from "@/server/whatsapp";
 
 /**
  * Reminders.
@@ -111,7 +111,7 @@ function repliesOpen(event: Event, now = new Date()) {
 
 /** The host asks INVTRA to remind everyone who hasn't replied yet. */
 export async function startNudges(event: Event) {
-  assertWhatsAppOn();
+  await assertWhatsAppReady();
   if (!repliesOpen(event)) throw badRequest("replies_closed", "Replies for this event are closed.");
   const guests = await nudgeable(event);
   if (!guests.length) throw badRequest("nothing_to_send", "There is no one to remind right now.");

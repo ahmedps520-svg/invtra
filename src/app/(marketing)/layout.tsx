@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
-import { getI18n } from "@/server/i18n";
+import { getI18n, liveDictionary } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { companyDetails } from "@/server/legal";
-import { pickNamespaces, type Dictionary } from "@/lib/i18n";
+import type { Dictionary } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -17,7 +17,7 @@ import { env } from "@/server/env";
  * the dictionary sent to the browser.
  */
 function clientDict(locale: "en" | "ar"): Pick<Dictionary, "marketing"> {
-  const { marketing } = pickNamespaces(locale, ["marketing"]);
+  const { marketing } = liveDictionary(locale);
   const slim: Partial<Dictionary["marketing"]> = { ...marketing };
   delete slim.legal;
   return { marketing: slim as Dictionary["marketing"] };

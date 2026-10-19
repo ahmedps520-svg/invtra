@@ -42,6 +42,11 @@ const BY_CODE: Record<number, FailureReason> = {
   190: "configuration",
   200: "configuration",
   131005: "configuration",
+  131031: "configuration",
+  131037: "configuration",
+  131042: "configuration",
+  131045: "configuration",
+  133000: "configuration",
   133010: "configuration",
 };
 

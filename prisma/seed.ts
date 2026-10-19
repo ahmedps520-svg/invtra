@@ -14,7 +14,11 @@ const db = new PrismaClient();
 
 async function main() {
   const appUrl = process.env.APP_URL || "http://localhost:3000";
-  const mock = (process.env.WHATSAPP_PROVIDER ?? "mock") === "mock";
+  // The live site never simulates WhatsApp: there, templates only become APPROVED when Meta
+  // approves them (Admin → Templates → Submit / Sync). Only a development database marks them
+  // usable straight away.
+  const live = process.env.NODE_ENV === "production" && process.env.LOCAL_TEST_MODE !== "true";
+  const mock = !live && (process.env.WHATSAPP_PROVIDER ?? "mock") === "mock";
 
   for (const [i, t] of THEME_LIST.entries()) {
     await db.invitationTheme.upsert({
@@ -42,13 +46,21 @@ async function main() {
       eventTypes: t.eventTypes,
       sortOrder: t.sortOrder,
     };
-    await db.messageTemplate.upsert({
-      where: { key: t.key },
+    const existing = await db.messageTemplate.findUnique({ where: { key: t.key }, select: { status: true, metaTemplateId: true } });
+    if (!existing) {
       // With the mock provider templates are usable immediately; with the real Cloud API
       // they start as DRAFT until submitted to / approved by Meta (Admin → Templates).
-      create: { key: t.key, ...data, status: mock ? "APPROVED" : "DRAFT" },
-      update: data,
-    });
+      await db.messageTemplate.create({ data: { key: t.key, ...data, status: mock ? "APPROVED" : "DRAFT" } });
+    } else if (existing.status === "DRAFT" || existing.status === "REJECTED" || (mock && !existing.metaTemplateId)) {
+      // Not (or not successfully) submitted yet: take the catalog's latest wording, category and buttons.
+      await db.messageTemplate.update({ where: { key: t.key }, data });
+    } else {
+      // Submitted to Meta: what Meta reviewed stays as it is; only INVTRA's own labels follow the catalog.
+      await db.messageTemplate.update({
+        where: { key: t.key },
+        data: { name: t.name, nameAr: t.nameAr, description: t.description, eventTypes: t.eventTypes, sortOrder: t.sortOrder },
+      });
+    }
   }
 
   const email = process.env.ADMIN_EMAIL?.toLowerCase();
@@ -65,7 +77,6 @@ async function main() {
   }
 
   // The live site has no demo account (its password is public); it's switched off if it exists.
-  const live = process.env.NODE_ENV === "production" && process.env.LOCAL_TEST_MODE !== "true";
   if (live) {
     const demo = await db.user.findUnique({ where: { email: "demo@invtra.store" } });
     if (demo && demo.status === "ACTIVE") {

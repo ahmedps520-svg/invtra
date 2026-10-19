@@ -11,7 +11,8 @@ import { planAllowsTheme, TEST_SEND_LIMIT } from "@/lib/plans";
 import { getTheme } from "@/lib/themes/registry";
 import { defaultCountryFor } from "@/server/guests/service";
 import { cancelBatch } from "./batch";
-import { assertWhatsAppOn, whatsappOff } from "@/server/whatsapp";
+import { assertWhatsAppReady, whatsappOff } from "@/server/whatsapp";
+import { whatsappAccountStatus } from "@/server/whatsapp/account";
 
 export type ReadinessCheck = {
   key: "details" | "date" | "design" | "guests" | "template" | "plan" | "theme_plan" | "whatsapp";
@@ -28,10 +29,9 @@ export async function sendReadiness(event: Event) {
     db.invitationTheme.findUnique({ where: { key: event.themeKey } }),
   ]);
   const premiumTheme = themeRow?.isPremium ?? getTheme(event.themeKey).premium;
+  // Connected and, as Meta reports it, allowed to send (number, display name and account approved).
   const e = env();
-  const whatsappReady =
-    e.WHATSAPP_PROVIDER === "mock" ||
-    (e.WHATSAPP_PROVIDER === "cloud" && Boolean(e.WHATSAPP_ACCESS_TOKEN && e.WHATSAPP_PHONE_NUMBER_ID && e.WHATSAPP_APP_SECRET));
+  const whatsappReady = e.WHATSAPP_PROVIDER === "mock" || (e.WHATSAPP_PROVIDER === "cloud" && (await whatsappAccountStatus()).ok);
   const checks: ReadinessCheck[] = [
     // Custom events (prepared by INVTRA) may leave the hosts, venue or address out on purpose.
     { key: "details", ok: Boolean(event.title && (event.custom || (event.hostNames && event.venueName && event.address))) },
@@ -57,7 +57,7 @@ export async function sendReadiness(event: Event) {
  * Messages are sent by the background worker — never from the browser.
  */
 export async function startInitialBatch(userId: string, event: Event) {
-  assertWhatsAppOn();
+  await assertWhatsAppReady();
   const readiness = await sendReadiness(event);
   if (!readiness.ready) throw badRequest("not_ready", "This event isn't ready to send yet.", Object.fromEntries(readiness.checks.filter((c) => !c.ok).map((c) => [c.key, "not_ready"])));
   const running = await db.sendBatch.findFirst({ where: { eventId: event.id, status: { in: ["QUEUED", "RUNNING"] }, kind: { in: ["INITIAL", "RESEND"] } } });
@@ -97,7 +97,7 @@ async function createRequestBatch(userId: string, event: Event, guests: Pick<Gue
  *  - declined → skipped (they've answered; the host can change it manually)
  */
 export async function resendToGuests(userId: string, event: Event, guestIds: string[]) {
-  assertWhatsAppOn();
+  await assertWhatsAppReady();
   if (!event.plan) throw badRequest("no_plan", "Choose a plan before sending invitations.");
   const guests = await db.guest.findMany({ where: { eventId: event.id, id: { in: guestIds }, isTest: false } });
   const cooldown = Date.now() - 10 * 60_000;
@@ -113,7 +113,7 @@ export async function resendToGuests(userId: string, event: Event, guestIds: str
 
 /** After the host edits the event: send the updated invitation to everyone who accepted. */
 export async function sendUpdateToAccepted(userId: string, event: Event) {
-  assertWhatsAppOn();
+  await assertWhatsAppReady();
   const guests = await db.guest.findMany({
     where: {
       eventId: event.id,
@@ -142,9 +142,17 @@ export async function staleAcceptedCount(event: Pick<Event, "id" | "contentVersi
  * number, using a hidden test guest. Limited per event before a plan is purchased.
  */
 export async function sendTest(userId: string, event: Event, rawPhone: string, name: string) {
-  assertWhatsAppOn();
+  await assertWhatsAppReady();
   const phone = normalizePhone(rawPhone, defaultCountryFor(event.timezone));
   if (!phone.ok) throw badRequest("invalid_phone", "Enter a valid WhatsApp number.", { phone: "Enter a valid number" });
+  // Tests go to the host's own number only — never to someone who didn't ask for a message.
+  // The first test sets the account's number; after that only that number can receive tests.
+  const owner = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { phone: true } });
+  const own = owner.phone ? normalizePhone(owner.phone, defaultCountryFor(event.timezone)) : null;
+  if (own?.ok && own.e164 !== phone.e164) {
+    throw badRequest("test_own_number", "Test messages only go to the number on your account.", { phone: own.e164 });
+  }
+  if (!owner.phone) await db.user.update({ where: { id: userId }, data: { phone: phone.e164 } });
   if (!event.plan && event.testSendsUsed >= TEST_SEND_LIMIT) {
     throw badRequest("test_limit", `You've used your ${TEST_SEND_LIMIT} free test sends. Choose a plan to continue.`);
   }

@@ -35,8 +35,11 @@ export const CUSTOMIZABLE_VARIABLES: TemplateVariable[] = [
   "venue_ar",
 ];
 
+/** Quick-reply actions: answer the invitation, or ask INVTRA to stop sending messages. */
+export type ReplyAction = "ACCEPT" | "DECLINE" | "STOP";
+
 export type TemplateButton =
-  | { type: "QUICK_REPLY"; text: string; action: "ACCEPT" | "DECLINE" }
+  | { type: "QUICK_REPLY"; text: string; action: ReplyAction }
   | { type: "URL"; text: string; url: string };
 
 export interface TemplateShape {
@@ -69,14 +72,22 @@ export function namedBody(template: Pick<TemplateShape, "body" | "variables">): 
 }
 
 /** Quick-reply payloads carry the action and the invitation token. */
-export function buttonPayload(action: "ACCEPT" | "DECLINE", token: string) {
+export function buttonPayload(action: ReplyAction, token: string) {
   return `INVTRA|${action}|${token}`;
 }
 
-export function parseButtonPayload(payload: string | undefined | null): { action: "ACCEPT" | "DECLINE"; token: string } | null {
+export function parseButtonPayload(payload: string | undefined | null): { action: ReplyAction; token: string } | null {
   if (!payload) return null;
-  const m = payload.match(/^INVTRA\|(ACCEPT|DECLINE)\|([A-Z0-9]{6,16})$/);
-  return m ? { action: m[1] as "ACCEPT" | "DECLINE", token: m[2] } : null;
+  const m = payload.match(/^INVTRA\|(ACCEPT|DECLINE|STOP)\|([A-Z0-9]{6,16})$/);
+  return m ? { action: m[1] as ReplyAction, token: m[2] } : null;
+}
+
+/** A plain reply asking to stop (or start again) receiving messages: "STOP", "إيقاف", "START"… */
+export function optOutKeyword(text: string | undefined | null): "STOP" | "START" | null {
+  const t = (text ?? "").trim().toLowerCase().replace(/[.!؟?]+$/, "");
+  if (/^(stop|unsubscribe|stop messages|إيقاف|ايقاف|إيقاف الرسائل|ايقاف الرسائل|الغاء الاشتراك|إلغاء الاشتراك)$/.test(t)) return "STOP";
+  if (/^(start|subscribe|تشغيل|اشتراك)$/.test(t)) return "START";
+  return null;
 }
 
 export function isTemplateButtons(v: unknown): v is TemplateButton[] {

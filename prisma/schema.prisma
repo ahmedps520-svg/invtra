@@ -416,6 +416,16 @@ model Guest {
 }
 
 /**
+ * Numbers that asked not to hear from INVTRA on WhatsApp (the "Stop messages" button, or a
+ * reply such as STOP). Nothing is sent to them again — from any event — until they reply START.
+ */
+model WhatsAppOptOut {
+  phone     String   @id // E.164
+  source    String // "button" | "keyword"
+  createdAt DateTime @default(now())
+}
+
+/**
  * Someone the owner invited to keep their own guest list for the event (e.g. the groom's
  * family). They sign in with their own account, see and send only their own guests, and
  * can't change the event, its design or its plan. Removing them moves their guests to the

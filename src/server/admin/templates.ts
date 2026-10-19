@@ -21,7 +21,7 @@ export const TEMPLATE_LANGUAGES = ["en", "en_US", "en_GB", "ar"] as const;
 export const EDITABLE_STATUSES = ["DRAFT", "REJECTED"] as const;
 
 const buttonSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("QUICK_REPLY"), text: z.string().trim().min(1, "Button text is required").max(25, "Max 25 characters"), action: z.enum(["ACCEPT", "DECLINE"]) }),
+  z.object({ type: z.literal("QUICK_REPLY"), text: z.string().trim().min(1, "Button text is required").max(25, "Max 25 characters"), action: z.enum(["ACCEPT", "DECLINE", "STOP"]) }),
   z.object({ type: z.literal("URL"), text: z.string().trim().min(1, "Button text is required").max(25, "Max 25 characters"), url: z.string().trim().max(2000) }),
 ]);
 
@@ -59,12 +59,15 @@ export function templateShapeErrors(t: {
   const qr = t.buttons.filter((b) => b.type === "QUICK_REPLY");
   const url = t.buttons.filter((b) => b.type === "URL");
   if (t.purpose === "INVITATION" || t.purpose === "NUDGE") {
-    // Reply reminders carry the same Accept / Decline buttons as the invitation.
-    const actions = qr.map((b) => (b.type === "QUICK_REPLY" ? b.action : null)).sort();
-    if (url.length || qr.length !== 2 || actions[0] !== "ACCEPT" || actions[1] !== "DECLINE") {
-      errors.buttons = "Invitation templates need exactly two quick-reply buttons: one Accept and one Decline.";
+    // Reply reminders carry the same Accept / Decline buttons as the invitation, and either can
+    // add a "Stop messages" button so guests can opt out in one tap.
+    const actions = qr.map((b) => (b.type === "QUICK_REPLY" ? b.action : null));
+    const count = (a: string) => actions.filter((x) => x === a).length;
+    if (url.length || count("ACCEPT") !== 1 || count("DECLINE") !== 1 || count("STOP") > 1 || qr.length !== 2 + count("STOP")) {
+      errors.buttons = "Invitation templates need one Accept and one Decline quick-reply button, and may add one Stop button.";
     }
   } else {
+    if (qr.some((b) => b.type === "QUICK_REPLY" && b.action === "STOP")) errors.buttons = "Only invitation and reply-reminder templates can have a Stop button.";
     const b = url[0];
     if (qr.length || url.length !== 1 || !b || b.type !== "URL") errors.buttons = "This kind of template needs exactly one URL button.";
     else if (!/^https?:\/\/[^\s{}]+\{\{1\}\}$/.test(b.url)) {

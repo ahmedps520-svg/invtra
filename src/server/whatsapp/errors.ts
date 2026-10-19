@@ -30,7 +30,12 @@ export class WhatsAppApiError extends Error {
 }
 
 const RETRYABLE = new Set([1, 2, 4, 17, 341, 80007, 130429, 131000, 131016, 131048, 131056, 133004, 133005]);
-const SYSTEMIC = new Set([0, 3, 10, 190, 200, 131005, 131008, 131009, 132000, 132001, 132005, 132007, 132012, 132015, 132016, 132068, 133010, 368]);
+// Account-wide problems (bad token, account locked, display name not approved, payment issue,
+// number not registered…): every message would fail the same way, so a batch stops at the first.
+const SYSTEMIC = new Set([
+  0, 3, 10, 190, 200, 131005, 131008, 131009, 131031, 131037, 131042, 131045, 132000, 132001, 132005, 132007, 132012, 132015, 132016, 132068, 133000,
+  133010, 368,
+]);
 
 export function isRetryable(code: number | null, httpStatus: number | null): boolean {
   if (code !== null && RETRYABLE.has(code)) return true;
@@ -40,4 +45,20 @@ export function isRetryable(code: number | null, httpStatus: number | null): boo
 
 export function isSystemic(code: number | null): boolean {
   return code !== null && SYSTEMIC.has(code);
+}
+
+/** Meta says INVTRA's account can't send right now (see account.ts). Code 0: account-wide, never retried. */
+export class WhatsAppNotReadyError extends WhatsAppApiError {
+  constructor(public readonly problems: string[]) {
+    super(`INVTRA's WhatsApp account can't send: ${problems.join(", ")}`, 0, null);
+    this.name = "WhatsAppNotReadyError";
+  }
+}
+
+/** The recipient asked not to receive messages (same handling as Meta's opt-out code 131050). */
+export class WhatsAppOptedOutError extends WhatsAppApiError {
+  constructor() {
+    super("This number has asked not to receive WhatsApp messages from INVTRA.", 131050, null);
+    this.name = "WhatsAppOptedOutError";
+  }
 }

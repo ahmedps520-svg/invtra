@@ -105,6 +105,8 @@ export function describeActivity(a: ActivityItem, dict: Dictionary, locale: Loca
     }
     case "plan.custom_offered":
       return { text: d.customOffered, icon: <CreditCard />, tone: "bronze" };
+    case "guest.opted_out":
+      return { text: fmt(d.optedOut, { name }), icon: <XCircle />, tone: "neutral" };
     case "cohost.joined":
       return { text: fmt(d.coHostJoined, { label: String(data.label ?? "") }), icon: <Users />, tone: "slate" };
     default:

@@ -577,6 +577,7 @@ export const dashboard: typeof en = {
     checkedInWith: "سجّل {name} حضوره · {n} أشخاص",
     planPurchased: "تم تفعيل باقة {plan}",
     planPurchasedGeneric: "تم تفعيل باقتك",
+    optedOut: "طلب {name} عدم استقبال رسائل واتساب أخرى",
     coHostJoined: "انضمّ {label} لإدارة قائمة ضيوفهم",
     customOffered: "باقتك المخصّصة جاهزة للدفع",
     unknown: "تحديث على المناسبة",
@@ -1450,6 +1451,8 @@ export const dashboard: typeof en = {
     joinOwn: "هذه مناسبتك — أنت تدير كل قوائم الضيوف أصلًا.",
   },
   errors: {
+    test_own_number: "تُرسل الرسائل التجريبية إلى رقمك فقط ({phone}). يمكنك تغييره من الإعدادات.",
+    whatsapp_not_ready: "لا يمكن الإرسال من واتساب إنفترا حاليًا. حاول لاحقًا، أو أرسل من واتساب الخاص بك.",
     generic: "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
     no_plan: "اختر باقة قبل إرسال الدعوات.",
     not_ready: "هذه المناسبة ليست جاهزة للإرسال بعد — راجع خطوة المراجعة.",
