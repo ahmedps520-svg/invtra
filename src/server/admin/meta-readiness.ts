@@ -1,3 +1,4 @@
+import { resolveTxt } from "node:dns/promises";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { companyDetails } from "@/server/legal";
@@ -11,9 +12,22 @@ import { whatsappAccountStatus, type WhatsAppAccountStatus } from "@/server/what
 
 export type Check = { label: string; ok: boolean; value?: string | null; fix?: string };
 
+/** Meta's domain-verification TXT record on the site's domain, if there is one (DNS verification). */
+async function domainTxtRecord(host: string): Promise<string | null> {
+  try {
+    const records = await Promise.race([resolveTxt(host), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 3000))]);
+    return records.map((r) => r.join("")).find((r) => r.startsWith("facebook-domain-verification=")) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function metaReadiness(opts: { fresh?: boolean } = {}) {
   const e = env();
   const company = companyDetails();
+  const host = new URL(e.APP_URL).hostname.replace(/^www\./, "");
+  const metaTag = process.env.META_DOMAIN_VERIFICATION?.trim();
+  const dnsRecord = metaTag ? null : await domainTxtRecord(host);
   const site: Check[] = [
     {
       label: "Legal business name on the website",
@@ -34,10 +48,10 @@ export async function metaReadiness(opts: { fresh?: boolean } = {}) {
       fix: "Set LEGAL_ADDRESS on Render — the same address as on your registration documents.",
     },
     {
-      label: "Domain verified with Meta (meta tag on the home page)",
-      ok: Boolean(process.env.META_DOMAIN_VERIFICATION?.trim()),
-      value: process.env.META_DOMAIN_VERIFICATION?.trim() ? "facebook-domain-verification tag is on every page" : null,
-      fix: "Meta Business Suite → Settings → Brand safety → Domains → add invtra.store → Meta-tag verification. Paste the content value into META_DOMAIN_VERIFICATION on Render, redeploy, then press Verify.",
+      label: "Domain verified with Meta (DNS record or meta tag)",
+      ok: Boolean(metaTag || dnsRecord),
+      value: metaTag ? "facebook-domain-verification tag is on every page" : dnsRecord ? `DNS TXT record on ${host} (keep it at your domain provider)` : null,
+      fix: `Meta Business Suite → Settings → Brand safety → Domains → add ${host}. Either add Meta's TXT record at your domain provider, or choose Meta-tag verification and paste the content value into META_DOMAIN_VERIFICATION on Render. Then press Verify.`,
     },
     { label: "Contact details on the website", ok: true, value: `contact@invtra.store · +${e.SUPPORT_WHATSAPP}` },
     { label: "Privacy Policy and Terms published", ok: true, value: `${e.APP_URL.replace(/\/$/, "")}/privacy · /terms` },
