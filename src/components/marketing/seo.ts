@@ -116,3 +116,34 @@ export function faqLd(items: { q: string; a: string }[], locale: Locale) {
 export function jsonLdHtml(graph: object[]): string {
   return JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\\u003c");
 }
+
+/**
+ * The plans as a Product with one Offer per priced plan (Custom is quoted, so it has no offer).
+ * Prices are in major units of the site's currency.
+ */
+export function plansProductLd(opts: {
+  locale: Locale;
+  currency: string;
+  plans: { name: string; description: string; price: number }[];
+  path?: string;
+}) {
+  const url = siteUrl(localePath(opts.locale, opts.path ?? "/pricing"));
+  return {
+    "@type": "Product",
+    "@id": `${url}#plans`,
+    name: opts.locale === "ar" ? "إنفترا — دعوات إلكترونية عبر واتساب" : "INVTRA digital invitations",
+    description: opts.locale === "ar" ? "دعوات إلكترونية شخصية لكل ضيف مع رد بضغطة ورمز QR للدخول." : "Personal digital invitations for every guest, with one-tap replies and a QR code for the door.",
+    brand: { "@type": "Brand", name: SITE_NAME },
+    image: siteUrl("/brand/icon-512.png"),
+    offers: opts.plans.map((p) => ({
+      "@type": "Offer",
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      priceCurrency: opts.currency,
+      availability: "https://schema.org/InStock",
+      url,
+      seller: { "@id": `${siteUrl()}/#organization` },
+    })),
+  };
+}

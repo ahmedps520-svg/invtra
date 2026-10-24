@@ -3,10 +3,12 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
+import { headers } from "next/headers";
 import { INVITATIONS_HUB, OCCASION_PAGES } from "@/lib/seo/occasion-pages";
-import { sampleCardContent } from "@/lib/card/sample";
+import { hubCopy } from "@/lib/seo/occasion-sending";
+import { sendingMode } from "@/server/marketing";
+import { SAMPLE_HEIGHT, SAMPLE_WIDTH, sampleSrc } from "@/lib/marketing/samples";
 import { localePath } from "@/lib/i18n/routing";
-import { CardPreview } from "@/components/invitation/card-preview";
 import { buttonClasses } from "@/components/ui/button";
 import { CtaBand } from "@/components/marketing/cta-band";
 import { Reveal } from "@/components/marketing/reveal";
@@ -22,11 +24,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Every occasion INVTRA designs for — the hub for "event invitations" searches. */
 export default async function InvitationsHubPage() {
-  const [{ dict, locale }, user] = await Promise.all([getI18n(), getSessionUser()]);
-  const h = INVITATIONS_HUB[locale];
+  const [{ dict, locale }, user, nonce] = await Promise.all([getI18n(), getSessionUser(), headers().then((x) => x.get("x-nonce") ?? undefined)]);
+  const mode = sendingMode();
+  const h = hubCopy(locale, mode);
   const lp = (href: string) => localePath(locale, href);
   const ctaHref = user ? "/dashboard/events/new" : "/signup";
-  const language = locale === "ar" ? "AR" : "EN";
+  const lang = locale === "ar" ? "ar" : "en";
 
   const jsonLd = jsonLdHtml([
     breadcrumbLd(
@@ -48,9 +51,9 @@ export default async function InvitationsHubPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: jsonLd }} />
       <div className="relative">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(60%_100%_at_50%_0%,var(--color-bronze-100),transparent)] opacity-70" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(60%_100%_at_50%_0%,var(--color-gold-soft),transparent)] opacity-70" />
         <div className={`${CONTAINER} relative pb-20 pt-16 sm:pt-24`}>
           <SectionHeading as="h1" eyebrow={h.eyebrow} title={h.h1} body={h.intro}>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
@@ -70,8 +73,9 @@ export default async function InvitationsHubPage() {
               <li key={p.slug}>
                 <Reveal delay={(i % 4) * 60}>
                   <Link href={lp(`/invitations/${p.slug}`)} className="group block">
-                    <div className="overflow-hidden rounded-[6px] shadow-soft ring-1 ring-black/5 transition-all duration-700 ease-luxe group-hover:-translate-y-1.5 group-hover:shadow-lift">
-                      <CardPreview lazy themeKey={p.theme} language={language} content={sampleCardContent(p.type)} title={p[locale].h1} />
+                    <div className="overflow-hidden rounded-[5px] bg-cream-deep shadow-soft ring-1 ring-black/5 transition-[translate,box-shadow] duration-700 ease-luxe group-hover:-translate-y-1.5 group-hover:shadow-lift">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- pre-rendered sample */}
+                      <img src={sampleSrc(p.theme, lang, p.type)} width={SAMPLE_WIDTH} height={SAMPLE_HEIGHT} alt={p[locale].h1} loading="lazy" decoding="async" className="block h-auto w-full" />
                     </div>
                     <h3 className="mt-4 font-display text-xl leading-tight text-ink sm:text-2xl">{p[locale].nav}</h3>
                     <p className="mt-1 line-clamp-2 text-[13.5px] leading-relaxed text-ink-faint">{p[locale].description}</p>
@@ -83,7 +87,7 @@ export default async function InvitationsHubPage() {
         </div>
       </div>
 
-      <section aria-labelledby="why-title" className="border-t border-line/70 bg-paper py-24">
+      <section aria-labelledby="why-title" className="border-t border-hairline/70 bg-[#fffcf6] py-16 sm:py-24">
         <div className={CONTAINER}>
           <h2 id="why-title" className="text-center font-display text-3xl text-ink sm:text-4xl">{h.why}</h2>
           <ul className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -99,8 +103,8 @@ export default async function InvitationsHubPage() {
         </div>
       </section>
 
-      <div className="bg-paper pt-4">
-        <CtaBand dict={dict} ctaHref={ctaHref} secondary={{ href: lp("/pricing"), label: dict.marketing.cta.secondary }} />
+      <div className="bg-[#fffcf6] pt-4">
+        <CtaBand dict={dict} ctaHref={ctaHref} secondary={{ href: lp("/pricing"), label: dict.marketing.cta.secondary }} mode={mode} locale={locale} />
       </div>
     </>
   );

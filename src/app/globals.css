@@ -25,6 +25,14 @@
   --color-bronze-800: #56412f;
   --color-bronze-900: #3b2c20;
 
+  /* Stationery: cream paper, deeper cream cards, muted gold. Gold text uses gold-deep (AA on cream). */
+  --color-cream: #faf6ef;
+  --color-cream-deep: #f3ecdf;
+  --color-hairline: #e3d6c1;
+  --color-gold: #b0905a;
+  --color-gold-soft: #ede1c8;
+  --color-gold-deep: #7d5f2a;
+
   /* Muted status colours */
   --color-sage: #56724f;
   --color-sage-soft: #e7ede3;

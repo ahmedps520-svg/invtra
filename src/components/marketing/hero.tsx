@@ -1,95 +1,81 @@
 import Link from "next/link";
-import { localePath } from "@/lib/i18n/routing";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Sparkles } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/config";
 import { buttonClasses } from "@/components/ui/button";
-import { CardPreview } from "@/components/invitation/card-preview";
-import { PhoneDemo } from "./phone-demo";
+import type { SendingMode } from "@/lib/marketing/links";
+import { THEME_KEYS } from "@/lib/themes/types";
+import { HeroStudio } from "./hero-studio";
+import { QuizButton } from "./quiz-button";
+import { CONTAINER } from "./styles";
 
-export function Hero({ dict, locale, ctaHref }: { dict: Dictionary; locale: "en" | "ar"; ctaHref: string }) {
+/** Headline, the invitation arriving, and "Make it personal". */
+export function Hero({
+  dict,
+  locale,
+  ctaHref,
+  mode,
+  signedIn,
+}: {
+  dict: Dictionary;
+  locale: Locale;
+  ctaHref: string;
+  mode: SendingMode;
+  signedIn: boolean;
+}) {
   const t = dict.marketing.hero;
-  const ar = locale === "ar";
+  const h = dict.marketing.home;
+  const designNames = Object.fromEntries(THEME_KEYS.map((k) => [k, dict.themes[k].name]));
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Atmosphere: warm glow + paper grain */}
+    <section id="top" className="relative -mt-[68px] overflow-hidden pt-[68px] sm:-mt-[72px] sm:pt-[72px]">
+      {/* Atmosphere: warm glow and paper grain */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 end-[-10%] size-[46rem] rounded-full bg-[radial-gradient(closest-side,var(--color-bronze-100),transparent)] opacity-80" />
-        <div className="absolute -bottom-56 start-[-12%] size-[36rem] rounded-full bg-[radial-gradient(closest-side,var(--color-sand),transparent)]" />
-        <div className="paper-grain absolute inset-0 opacity-60" />
+        <div className="absolute -top-48 end-[-15%] size-[48rem] rounded-full bg-[radial-gradient(closest-side,var(--color-gold-soft),transparent)] opacity-70" />
+        <div className="absolute -bottom-64 start-[-14%] size-[40rem] rounded-full bg-[radial-gradient(closest-side,var(--color-cream-deep),transparent)]" />
+        <div className="paper-grain absolute inset-0 opacity-50" />
       </div>
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-5 pb-20 pt-12 sm:px-8 sm:pt-16 lg:grid-cols-12 lg:gap-8 lg:pb-28 lg:pt-20">
-        <div className="lg:col-span-6 xl:col-span-6">
-          <p className="eyebrow flex animate-fade-up items-center gap-3 max-sm:tracking-[0.2em] rtl:text-[13px]">
-            <span className="hidden h-px w-8 bg-bronze-400 sm:block" aria-hidden="true" />
+      <div className={`${CONTAINER} relative pb-20 pt-8 sm:pt-12 lg:pb-28 lg:pt-14`}>
+        <HeroStudio
+          copy={{ ...h.studio, example: h.hero.example, stageLabel: h.hero.stageLabel }}
+          designNames={designNames}
+          locale={locale}
+          mode={mode}
+          signedIn={signedIn}
+        >
+          <p className="eyebrow flex items-center gap-3 text-gold-deep! max-sm:tracking-[0.2em] rtl:text-[13px]">
+            <span className="hidden h-px w-8 bg-gold sm:block" aria-hidden="true" />
             {t.eyebrow}
           </p>
-          <h1 className="mt-7 font-display font-normal text-ink motion-safe:animate-rise">
-            <span className="block text-[clamp(2.9rem,13.5vw,4.5rem)] leading-[1.02] sm:text-7xl lg:text-[4.5rem] xl:text-[5.5rem]">
+          <h1 className="mt-5 font-display font-normal text-ink motion-safe:animate-rise sm:mt-7">
+            <span className="block text-[clamp(2.7rem,12vw,4.25rem)] leading-[1.02] sm:text-7xl lg:text-[4.4rem] xl:text-[5.2rem] rtl:leading-[1.25]">
               {t.titleLine1}
             </span>
-            <span className="block text-[clamp(2.9rem,13.5vw,4.5rem)] leading-[1.1] text-bronze-700 italic sm:text-7xl lg:text-[4.5rem] xl:text-[5.5rem] rtl:not-italic">
+            <span className="block text-[clamp(2.7rem,12vw,4.25rem)] leading-[1.1] text-gold-deep italic sm:text-7xl lg:text-[4.4rem] xl:text-[5.2rem] rtl:not-italic rtl:leading-[1.3]">
               {t.titleLine2}
             </span>
           </h1>
-          <p className="mt-8 max-w-xl text-lg leading-relaxed text-pretty text-ink-soft motion-safe:animate-rise sm:text-xl sm:leading-relaxed">
-            {t.subtitle}
-          </p>
-          <div
-            style={{ animationDelay: "240ms" }}
-            className="mt-10 flex flex-col gap-3 animate-fade-up sm:flex-row sm:items-center"
-          >
+          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-pretty text-ink-soft sm:mt-7 sm:text-xl sm:leading-relaxed">{t.subtitle}</p>
+          <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center">
             <Link href={ctaHref} className={buttonClasses("primary", "lg", "group")}>
               {t.primary}
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
             </Link>
-            <Link href={localePath(locale, "/designs")} className={buttonClasses("outline", "lg")}>
-              {t.secondary}
-            </Link>
+            <QuizButton className={buttonClasses("outline", "lg", "group border-hairline bg-cream/60")}>
+              <Sparkles className="size-4 text-gold-deep" strokeWidth={1.5} />
+              {h.hero.quiz}
+            </QuizButton>
           </div>
-          <ul style={{ animationDelay: "320ms" }} className="mt-10 flex flex-wrap gap-x-6 gap-y-2.5 animate-fade-up">
+          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2.5">
             {t.assurances.map((a) => (
               <li key={a} className="flex items-center gap-2 text-[13px] text-ink-faint">
-                <Check className="size-3.5 text-bronze-500" strokeWidth={2} />
+                <Check className="size-3.5 text-gold-deep" strokeWidth={2} />
                 {a}
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-[34rem] lg:col-span-6 lg:max-w-none">
-          {/* A thin arch echoes the invitation designs behind the phone */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 400 560"
-            className="pointer-events-none absolute start-1/2 top-1/2 h-[112%] w-auto -translate-x-1/2 -translate-y-1/2 text-bronze-300/70 [mask-image:linear-gradient(to_bottom,black_55%,transparent_92%)] rtl:translate-x-1/2"
-            fill="none"
-          >
-            <path d="M20 560V200C20 100.6 100.6 20 200 20s180 80.6 180 180v360" stroke="currentColor" strokeWidth="1" />
-            <path
-              d="M44 560V204c0-86.2 69.8-156 156-156s156 69.8 156 156v356"
-              stroke="currentColor"
-              strokeWidth="0.6"
-              opacity="0.6"
-            />
-          </svg>
-
-          {/* Floating printed invitation, tucked behind the phone */}
-          <div
-            aria-hidden="true"
-            style={{ animationDelay: "400ms" }}
-            className="absolute start-[2%] top-[12%] hidden w-[230px] -rotate-[7deg] animate-fade-up sm:block xl:start-[4%] xl:w-[250px] rtl:rotate-[7deg]"
-          >
-            <div className="overflow-hidden rounded-[6px] shadow-lift ring-1 ring-black/5">
-              <CardPreview themeKey={ar ? "bilingual" : "minimal"} language={ar ? "BILINGUAL" : "EN"} qrPlaceholder title="" />
-            </div>
-          </div>
-
-          <div style={{ animationDelay: "200ms" }} className="relative animate-fade-up sm:ms-[22%] xl:ms-[26%]">
-            <PhoneDemo />
-          </div>
-        </div>
+        </HeroStudio>
       </div>
     </section>
   );

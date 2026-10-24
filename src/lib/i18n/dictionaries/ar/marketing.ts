@@ -1,6 +1,9 @@
 import type { marketing as en, LegalSection } from "../en/marketing";
+import { home } from "./home";
 
 export const marketing: typeof en = {
+  home,
+
   meta: {
     homeTitle: "إنفترا INVTRA — دعوات إلكترونية للمناسبات عبر واتساب",
     homeDescription:

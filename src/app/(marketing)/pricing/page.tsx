@@ -4,6 +4,7 @@ import { ArrowRight, DoorOpen, Globe2, LayoutDashboard, MessageCircle, QrCode, S
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { env } from "@/server/env";
+import { sendingMode } from "@/server/marketing";
 import { buttonClasses } from "@/components/ui/button";
 import { Pricing } from "@/components/marketing/pricing";
 import { SectionHeading } from "@/components/marketing/section-heading";
@@ -36,7 +37,7 @@ export default async function PricingPage() {
         />
         <div className={`${CONTAINER} relative pb-24 pt-16 sm:pb-28 sm:pt-24`}>
           <SectionHeading as="h1" eyebrow={t.eyebrow} title={t.title} body={t.body} />
-          <Pricing dict={dict} locale={locale} currency={env().PAYMENT_CURRENCY} signedIn={signedIn} className="mt-16 sm:mt-20" />
+          <Pricing dict={dict} locale={locale} currency={env().PAYMENT_CURRENCY} signedIn={signedIn} mode={sendingMode()} className="mt-16 sm:mt-20" />
         </div>
       </div>
 
@@ -47,7 +48,7 @@ export default async function PricingPage() {
               {t.includedTitle}
             </h2>
           </Reveal>
-          <ul className="mt-14 grid gap-px overflow-hidden rounded-[1.75rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-14 grid gap-px overflow-clip rounded-[1.75rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
             {t.included.map((item, i) => {
               const Icon = INCLUDED_ICONS[i];
               return (

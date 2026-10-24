@@ -24,6 +24,11 @@ const OWN: Record<
     pricingDelivery: Point;
     pricingMeta: string;
     termsService: string;
+    tryFirst: string;
+    previewStep: string;
+    ctaBody: string;
+    testSends: string;
+    termsPreview: string;
   }
 > = {
   en: {
@@ -43,6 +48,11 @@ const OWN: Record<
     pricingMeta: "Simple, one-time pricing per event: a personal invitation link and QR code for every guest, ready to send from your WhatsApp, with replies tracked for you.",
     termsService:
       "INVTRA lets you design digital invitations for weddings, new babies, birthdays, Ramadan gatherings, corporate events and other occasions; send each guest their personal invitation link from your own WhatsApp; collect their replies; and welcome them at the door with personal QR codes.",
+    tryFirst: "Yes. Design your invitation and preview exactly what each guest will receive before you pay — you pay only when you're happy with it.",
+    previewStep: "See exactly what each guest receives — before you pay.",
+    ctaBody: "Create your invitation today and preview it free before you pay.",
+    testSends: "Preview every invitation free — see exactly what your guests will receive before you choose a plan.",
+    termsPreview: "Before you pay you can preview exactly what each guest will receive. Prices may change in the future, but a change never affects a plan you have already bought.",
   },
   ar: {
     trademark: "واتساب علامة تجارية مملوكة لشركة Meta Platforms. إنفترا خدمة مستقلة لا ترتبط بشركة Meta ولا تحظى برعايتها.",
@@ -56,6 +66,11 @@ const OWN: Record<
     pricingMeta: "سعر واحد لكل مناسبة يُدفع مرة واحدة: رابط دعوة شخصي ورمز QR لكل ضيف، جاهز للإرسال من واتساب الخاص بك، مع متابعة الردود.",
     termsService:
       "تتيح لك إنفترا تصميم دعوات رقمية للأعراس واستقبال المواليد وأعياد الميلاد وتجمعات رمضان وفعاليات الشركات وغيرها من المناسبات، وإرسال رابط الدعوة الشخصي لكل ضيف من واتساب الخاص بك، واستقبال ردودهم، والترحيب بهم عند الدخول برموز QR شخصية.",
+    tryFirst: "نعم. صمّم دعوتك وعاين ما سيصل إلى كل ضيف بالضبط قبل الدفع — ولا تدفع إلا حين ترضى عنها.",
+    previewStep: "شاهد ما سيصل إلى كل ضيف تمامًا — قبل الدفع.",
+    ctaBody: "أنشئ دعوتك اليوم، وعاينها مجانًا قبل أن تدفع.",
+    testSends: "عاين كل دعوة مجانًا — وشاهد ما سيصل إلى ضيوفك قبل اختيار الباقة.",
+    termsPreview: "يمكنك قبل الدفع معاينة ما سيصل إلى كل ضيف بالضبط. وقد تتغير الأسعار مستقبلًا، لكن التغيير لا يؤثر على باقة اشتريتها مسبقًا.",
   },
 };
 
@@ -64,6 +79,9 @@ export function ownWhatsAppCopy(dict: Dictionary, locale: Locale): Dictionary {
   const c = OWN[locale];
   const m = dict.marketing;
   const officialFaq = m.faq.items.findIndex((i) => /official WhatsApp|واتساب الرسمي/.test(i.q));
+  // Free test sends go through INVTRA's WhatsApp, so without it the free step is the preview.
+  const tryFaq = m.faq.items.findIndex((i) => /before I pay|قبل الدفع/.test(i.q));
+  const testParagraph = /test sends|رسائل تجريبية/;
   return {
     ...dict,
     marketing: {
@@ -77,15 +95,24 @@ export function ownWhatsAppCopy(dict: Dictionary, locale: Locale): Dictionary {
       },
       faq: {
         ...m.faq,
-        items: m.faq.items.map((item, i) => (i === officialFaq ? { ...item, q: c.faqQ, a: c.faqA } : item)),
+        items: m.faq.items.map((item, i) => (i === officialFaq ? { ...item, q: c.faqQ, a: c.faqA } : i === tryFaq ? { ...item, a: c.tryFirst } : item)),
       },
+      how: { ...m.how, steps: m.how.steps.map((step, i) => (i === 3 ? { ...step, body: c.previewStep } : step)) },
+      cta: { ...m.cta, body: c.ctaBody },
+      pricing: { ...m.pricing, testSends: c.testSends },
       pricingPage: { ...m.pricingPage, included: m.pricingPage.included.map((p, i) => (i === 0 ? c.pricingDelivery : p)) },
       meta: { ...m.meta, pricingDescription: c.pricingMeta },
       legal: {
         ...m.legal,
         terms: {
           ...m.legal.terms,
-          sections: m.legal.terms.sections.map((s) => (s.id === "service" ? { ...s, body: [c.termsService, ...s.body.slice(1)] } : s)),
+          sections: m.legal.terms.sections.map((s) =>
+            s.id === "service"
+              ? { ...s, body: [c.termsService, ...s.body.slice(1)] }
+              : s.id === "payments"
+                ? { ...s, body: s.body.map((para) => (testParagraph.test(para) ? c.termsPreview : para)) }
+                : s,
+          ),
         },
       },
     },

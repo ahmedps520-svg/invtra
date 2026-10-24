@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "./marketing.css";
 import { preload } from "react-dom";
 import { getI18n, liveDictionary } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
@@ -13,14 +14,13 @@ import { activeOffer, offerInfo } from "@/lib/offers";
 import { env } from "@/server/env";
 
 /**
- * The long-form legal copy is only rendered by server components, so it is left out of
- * the dictionary sent to the browser.
+ * Marketing pages render on the server and hand their client components the copy they need as
+ * props; only what client components read from context (header, chat button, FAQ) goes to the browser.
  */
 function clientDict(locale: "en" | "ar"): Pick<Dictionary, "marketing"> {
   const { marketing } = liveDictionary(locale);
-  const slim: Partial<Dictionary["marketing"]> = { ...marketing };
-  delete slim.legal;
-  return { marketing: slim as Dictionary["marketing"] };
+  const slim = { nav: marketing.nav, footer: marketing.footer, faq: marketing.faq, home: { header: marketing.home.header } };
+  return { marketing: slim as unknown as Dictionary["marketing"] };
 }
 
 export default async function MarketingLayout({ children }: { children: ReactNode }) {
@@ -32,7 +32,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
 
   return (
     <I18nProvider locale={locale} dict={clientDict(locale)}>
-      <div className="flex min-h-dvh flex-col">
+      <div className="flex min-h-dvh flex-col bg-cream">
         <a
           href="#main"
           className="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-sm text-ivory focus:not-sr-only focus:fixed focus:start-4 focus:top-4"

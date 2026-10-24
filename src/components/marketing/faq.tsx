@@ -6,11 +6,12 @@ import { useI18n } from "@/components/i18n/provider";
 import { cn } from "@/lib/utils";
 
 /** Accessible accordion (WAI-ARIA disclosure pattern) for the FAQ. */
-export function FaqList({ className, items: custom }: { className?: string; items?: { q: string; a: string }[] }) {
+/** The first answer starts open (`defaultOpen`), so the section never looks like a closed list. */
+export function FaqList({ className, items: custom, defaultOpen = 0 }: { className?: string; items?: { q: string; a: string }[]; defaultOpen?: number | null }) {
   const { dict } = useI18n();
   const items = custom ?? dict.marketing.faq.items;
   const base = useId();
-  const [open, setOpen] = useState<Set<number>>(() => new Set());
+  const [open, setOpen] = useState<Set<number>>(() => new Set(defaultOpen === null ? [] : [defaultOpen]));
 
   const toggle = (i: number) =>
     setOpen((prev) => {
@@ -21,13 +22,13 @@ export function FaqList({ className, items: custom }: { className?: string; item
     });
 
   return (
-    <ul className={cn("border-t border-line", className)}>
+    <ul className={cn("border-t border-hairline", className)}>
       {items.map((item, i) => {
         const isOpen = open.has(i);
         const buttonId = `${base}-q${i}`;
         const panelId = `${base}-a${i}`;
         return (
-          <li key={item.q} className="border-b border-line">
+          <li key={item.q} className="border-b border-hairline">
             <h3>
               <button
                 id={buttonId}
@@ -40,7 +41,7 @@ export function FaqList({ className, items: custom }: { className?: string; item
                 <span
                   className={cn(
                     "font-display text-[1.35rem] leading-snug transition-colors duration-300 sm:text-[1.5rem]",
-                    isOpen ? "text-ink" : "text-ink group-hover:text-bronze-800",
+                    isOpen ? "text-ink" : "text-ink group-hover:text-gold-deep",
                   )}
                 >
                   {item.q}
@@ -49,8 +50,8 @@ export function FaqList({ className, items: custom }: { className?: string; item
                   className={cn(
                     "mt-1 flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-500 ease-luxe",
                     isOpen
-                      ? "rotate-45 border-bronze-400 bg-bronze-50 text-bronze-700"
-                      : "border-line-strong text-ink-soft group-hover:border-bronze-400",
+                      ? "rotate-45 border-gold bg-gold-soft/60 text-gold-deep"
+                      : "border-hairline text-ink-soft group-hover:border-gold",
                   )}
                   aria-hidden="true"
                 >

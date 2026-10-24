@@ -1,7 +1,11 @@
+import { home } from "./home";
+
 /** Long-form legal section: a heading, paragraphs and an optional bullet list. */
 export type LegalSection = { id: string; heading: string; body: string[]; list?: string[]; after?: string[] };
 
 export const marketing = {
+  home,
+
   meta: {
     homeTitle: "INVTRA — Digital Event Invitations & E-Invites on WhatsApp",
     homeDescription:

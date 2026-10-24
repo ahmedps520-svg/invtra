@@ -1,0 +1,750 @@
+/*
+ * Marketing pages: stationery surfaces and the live demos.
+ *
+ * Every animated demo is a "mini-UI" whose resting state is its finished state. Motion runs only
+ * while the demo is on screen: the `ivx-playing` class (namespaced, never used for anything else) is
+ * added by usePlayOnScreen and removed when it scrolls away. Nothing here animates under
+ * prefers-reduced-motion, and only transform/opacity (and the individual translate/scale/rotate
+ * properties) are animated.
+ */
+
+/* ───────────── Surfaces ───────────── */
+
+.ivx-paper {
+  position: relative;
+  background-color: var(--color-cream-deep);
+  border: 1px solid var(--color-hairline);
+  border-radius: 1.375rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 1px 2px rgb(30 26 22 / 0.04),
+    0 18px 40px -28px rgb(60 44 24 / 0.35);
+}
+.ivx-paper-light {
+  position: relative;
+  background-color: #fffcf6;
+  border: 1px solid var(--color-hairline);
+  border-radius: 1.375rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 1px 2px rgb(30 26 22 / 0.04),
+    0 18px 40px -28px rgb(60 44 24 / 0.3);
+}
+/* Faint paper grain, laid over a surface (the surface needs position: relative). */
+.ivx-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: radial-gradient(rgb(125 95 42 / 0.06) 0.6px, transparent 0.7px);
+  background-size: 3px 3px;
+}
+/* A hint of gold foil catching the light on hero cards. */
+.ivx-foil::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgb(237 225 200 / 0.55) 45%, rgb(255 250 238 / 0.7) 50%, transparent 62%);
+  mix-blend-mode: soft-light;
+}
+.ivx-gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+}
+
+/* ───────────── Hero: the invitation arriving ─────────────
+ * Geometry is in container units of the stage (cqw), so every piece scales together and the
+ * flying card can land exactly on the WhatsApp bubble. Resting styles are the final frame
+ * (phone with the message); the keyframes start from the sealed envelope.
+ */
+
+.ivx-stage {
+  --ivx-dir: 1;
+  --ivx-d: 2.5s;
+  --ivx-delay: 0.15s;
+  position: relative;
+  container-type: inline-size;
+  aspect-ratio: 100 / 138;
+  width: 100%;
+}
+[dir="rtl"] .ivx-stage {
+  --ivx-dir: -1;
+}
+.ivx-anim {
+  animation-duration: var(--ivx-d);
+  animation-delay: var(--ivx-delay);
+  animation-timing-function: var(--ease-luxe);
+  animation-fill-mode: both;
+}
+
+/* Phone */
+.ivx-phone {
+  position: absolute;
+  top: 0;
+  left: 18cqw;
+  width: 64cqw;
+  height: 136cqw;
+  padding: 2cqw;
+  border-radius: 10cqw;
+  background: #1b1714;
+  box-shadow:
+    0 0.5cqw 1cqw rgb(30 26 22 / 0.08),
+    0 12cqw 24cqw -9cqw rgb(30 26 22 / 0.45),
+    inset 0 0 0 0.4cqw rgb(255 255 255 / 0.08);
+  animation-name: ivx-phone-in;
+}
+.ivx-screen {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 8cqw;
+  background: #efe9df;
+  color: #111b21;
+  font-size: 2.75cqw;
+}
+.ivx-statusbar {
+  display: flex;
+  height: 6cqw;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5cqw;
+  background: #f7f5f2;
+  font-size: 2.5cqw;
+  font-weight: 600;
+}
+.ivx-island {
+  position: absolute;
+  top: 1.4cqw;
+  left: 50%;
+  width: 17cqw;
+  height: 4cqw;
+  translate: -50% 0;
+  border-radius: 9999px;
+  background: #1b1714;
+}
+.ivx-chathead {
+  display: flex;
+  height: 9cqw;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2cqw;
+  padding: 0 2.4cqw;
+  border-bottom: 1px solid rgb(0 0 0 / 0.05);
+  background: #f7f5f2;
+}
+.ivx-avatar {
+  display: flex;
+  width: 6.5cqw;
+  height: 6.5cqw;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--color-cream);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-gold-deep);
+  font-size: 3cqw;
+}
+.ivx-chat {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2cqw;
+  background-image: radial-gradient(rgb(132 102 74 / 0.07) 1px, transparent 1px);
+  background-size: 3.4cqw 3.4cqw;
+}
+.ivx-pill {
+  align-self: center;
+  height: 4.5cqw;
+  margin-bottom: 2cqw;
+  padding: 0 2.2cqw;
+  border-radius: 1.2cqw;
+  background: rgb(255 255 255 / 0.85);
+  color: #54656f;
+  font-size: 2.2cqw;
+  line-height: 4.5cqw;
+  font-weight: 500;
+}
+.ivx-bubble {
+  width: 48cqw;
+  padding: 0.7cqw;
+  border-radius: 2.2cqw;
+  border-start-start-radius: 0.7cqw;
+  background: #fff;
+  box-shadow: 0 0.25cqw 0.15cqw rgb(0 0 0 / 0.08);
+}
+.ivx-bubble-card {
+  position: relative;
+  width: 46.6cqw;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 1.6cqw;
+}
+.ivx-bubble-card > img,
+.ivx-bubble-card > div {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ivx-bubble-rest {
+  animation-name: ivx-bubble-rest-in;
+}
+.ivx-bubble.ivx-anim {
+  animation-name: ivx-bubble-in;
+}
+.ivx-msg {
+  padding: 1.2cqw 1.4cqw 0.3cqw;
+  font-size: 2.5cqw;
+  line-height: 1.38;
+  white-space: pre-line;
+}
+.ivx-meta {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2cqw;
+  padding: 0 1.4cqw 0.4cqw;
+  color: #54656f;
+  font-size: 2cqw;
+  line-height: 1.3;
+}
+.ivx-replies {
+  display: grid;
+  width: 48cqw;
+  gap: 0.6cqw;
+  margin-top: 0.6cqw;
+}
+.ivx-reply {
+  display: flex;
+  height: 6.2cqw;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2cqw;
+  border-radius: 2.2cqw;
+  background: #fff;
+  box-shadow: 0 0.25cqw 0.15cqw rgb(0 0 0 / 0.08);
+  color: #00866e;
+  font-size: 2.6cqw;
+  font-weight: 500;
+}
+.ivx-linkpreview {
+  margin-top: 0.6cqw;
+  padding: 1.2cqw 1.4cqw;
+  border-radius: 1.4cqw;
+  background: #f0f2f2;
+  font-size: 2.4cqw;
+}
+.ivx-composer {
+  display: flex;
+  height: 10cqw;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2cqw;
+  padding: 0 2.4cqw 1.4cqw;
+  background: #f7f5f2;
+  color: #00866e;
+}
+.ivx-composer-field {
+  display: flex;
+  height: 6cqw;
+  flex: 1;
+  align-items: center;
+  padding: 0 2.4cqw;
+  border-radius: 9999px;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  background: #fff;
+  color: #54656f;
+  font-size: 2.4cqw;
+}
+
+/* The flying card: lives at the bubble's spot, keyframes start it inside the envelope. */
+.ivx-fly {
+  position: absolute;
+  z-index: 3;
+  top: 26.2cqw;
+  inset-inline-start: 22.7cqw;
+  width: 46.6cqw;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 1.6cqw;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 3cqw 8cqw -3cqw rgb(30 26 22 / 0.45);
+  animation-name: ivx-fly;
+}
+.ivx-fly > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Covers the names, then draws back so they appear to write themselves. */
+.ivx-ink {
+  position: absolute;
+  top: var(--ivx-names-top, 18%);
+  height: var(--ivx-names-h, 16%);
+  left: 24%;
+  right: 24%;
+  background: var(--ivx-card-bg, #0f2e26);
+  transform-origin: right center;
+  animation-name: ivx-ink;
+}
+[dir="rtl"] .ivx-ink {
+  transform-origin: left center;
+}
+.ivx-ink::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 18%;
+  background: linear-gradient(90deg, transparent, var(--ivx-card-bg, #0f2e26));
+}
+[dir="rtl"] .ivx-ink::before {
+  right: auto;
+  left: 100%;
+  background: linear-gradient(270deg, transparent, var(--ivx-card-bg, #0f2e26));
+}
+/* One sweep of gold foil across the lettering. */
+.ivx-sheen {
+  position: absolute;
+  top: calc(var(--ivx-names-top, 18%) - 4%);
+  height: calc(var(--ivx-names-h, 16%) + 8%);
+  left: 0;
+  width: 46%;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 240 200 / 0.75) 48%, rgb(201 166 107 / 0.5) 54%, transparent 80%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation-name: ivx-sheen;
+}
+
+/* Envelope */
+.ivx-env {
+  position: absolute;
+  left: 10cqw;
+  top: 52cqw;
+  width: 80cqw;
+  height: 56cqw;
+  pointer-events: none;
+  opacity: 0;
+  animation-name: ivx-env-exit;
+}
+.ivx-env-back {
+  z-index: 2;
+  border-radius: 1.4cqw;
+  background: linear-gradient(180deg, #e9dcc4, #efe4cf);
+  box-shadow: 0 4cqw 10cqw -5cqw rgb(60 44 24 / 0.5);
+}
+.ivx-env-front {
+  z-index: 4;
+  border-radius: 1.4cqw;
+  background:
+    radial-gradient(rgb(125 95 42 / 0.07) 0.25cqw, transparent 0.3cqw) 0 0 / 1.2cqw 1.2cqw,
+    linear-gradient(180deg, #f7efe1, #f1e6d2);
+  clip-path: polygon(0 0, 50% 61%, 100% 0, 100% 100%, 0 100%);
+}
+.ivx-env-front::after {
+  /* gold edge along the pocket's V */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(176 144 90 / 0.5), transparent);
+  clip-path: polygon(0 0, 50% 61%, 100% 0, 100% 1.2%, 50% 62.4%, 0 1.2%);
+}
+.ivx-flap {
+  position: absolute;
+  left: 10cqw;
+  width: 80cqw;
+  height: 34cqw;
+  pointer-events: none;
+  opacity: 0;
+}
+/* Closed: folded down over the opening; it folds up out of view as the seal releases. */
+.ivx-flap-closed {
+  z-index: 5;
+  top: 52cqw;
+  transform-origin: 50% 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: linear-gradient(180deg, #f3e9d7, #e4d3b5);
+  animation-name: ivx-flap-close, ivx-env-exit;
+}
+/* Open: standing up behind the card, showing the envelope's liner. */
+.ivx-flap-open {
+  z-index: 1;
+  top: 18cqw;
+  transform-origin: 50% 100%;
+  clip-path: polygon(0 100%, 100% 100%, 50% 0);
+  background:
+    repeating-linear-gradient(45deg, rgb(201 166 107 / 0.38) 0 0.25cqw, transparent 0.25cqw 3cqw),
+    repeating-linear-gradient(-45deg, rgb(201 166 107 / 0.38) 0 0.25cqw, transparent 0.25cqw 3cqw),
+    linear-gradient(0deg, #0f2e26, #164237);
+  animation-name: ivx-flap-open, ivx-env-exit;
+}
+.ivx-seal {
+  position: absolute;
+  z-index: 6;
+  left: 50cqw;
+  top: 86cqw;
+  width: 14cqw;
+  height: 14cqw;
+  margin: -7cqw 0 0 -7cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #f5e2b0, #c9a45f 45%, #9b773b 80%, #7d5f2a);
+  box-shadow:
+    inset 0 0 0 0.6cqw rgb(255 240 205 / 0.35),
+    inset 0 -0.8cqw 1.2cqw rgb(80 55 20 / 0.45),
+    0 1cqw 2cqw rgb(60 44 24 / 0.45);
+  color: #6e5222;
+  pointer-events: none;
+  opacity: 0;
+  animation-name: ivx-seal;
+}
+
+@keyframes ivx-phone-in {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translateY(4cqw) scale(0.97);
+  }
+  88%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ivx-bubble-rest-in {
+  0%,
+  89.3% {
+    opacity: 0;
+    transform: translateY(1cqw);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ivx-fly {
+  0%,
+  30.4% {
+    opacity: 1;
+    transform: translate(calc(4cqw * var(--ivx-dir)), 26.7cqw) scale(0.86);
+  }
+  48.2%,
+  69.6% {
+    opacity: 1;
+    transform: translate(calc(4cqw * var(--ivx-dir)), 2cqw) scale(0.94);
+  }
+  87.5%,
+  97% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes ivx-ink {
+  0%,
+  46.4% {
+    transform: scaleX(1);
+  }
+  66%,
+  100% {
+    transform: scaleX(0);
+  }
+}
+@keyframes ivx-sheen {
+  0%,
+  64.3% {
+    opacity: 0;
+    transform: translateX(-110%);
+  }
+  66% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  76.8%,
+  100% {
+    opacity: 0;
+    transform: translateX(230%);
+  }
+}
+@keyframes ivx-env-exit {
+  0%,
+  69.6% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  87.5%,
+  100% {
+    opacity: 0;
+    translate: 0 22cqw;
+  }
+}
+@keyframes ivx-flap-close {
+  0%,
+  16% {
+    transform: scaleY(1);
+  }
+  25%,
+  100% {
+    transform: scaleY(0);
+  }
+}
+@keyframes ivx-flap-open {
+  0%,
+  25% {
+    transform: scaleY(0);
+  }
+  34%,
+  100% {
+    transform: scaleY(1);
+  }
+}
+@keyframes ivx-bubble-in {
+  0%,
+  87.5% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes ivx-seal {
+  0%,
+  5.4% {
+    opacity: 1;
+    transform: none;
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  12.5% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  23.2%,
+  100% {
+    opacity: 0;
+    transform: translateY(5cqw) rotate(28deg) scale(0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ivx-anim {
+    animation: none !important;
+  }
+}
+
+/* A row of chips that scrolls sideways: fade the far edge so a cut chip reads as "more". */
+.ivx-fade-end {
+  mask-image: linear-gradient(90deg, #000 82%, transparent);
+}
+[dir="rtl"] .ivx-fade-end {
+  mask-image: linear-gradient(270deg, #000 82%, transparent);
+}
+
+/* ───────────── Mini-UIs: shared motion ───────────── */
+
+/* A message or row arriving (applied only while the demo plays, so the resting state is static). */
+.ivx-pop {
+  animation: ivx-pop 0.55s var(--ease-luxe) both;
+}
+@keyframes ivx-pop {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* A tap. */
+.ivx-ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin: -1.2rem 0 0 -1.2rem;
+  border-radius: 9999px;
+  background: rgb(30 26 22 / 0.22);
+  pointer-events: none;
+  animation: ivx-ripple 0.75s ease-out both;
+}
+@keyframes ivx-ripple {
+  from {
+    opacity: 0.8;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+.ivx-dot {
+  opacity: 0.35;
+}
+.ivx-playing .ivx-dot {
+  animation: ivx-dot 1s ease-in-out infinite;
+}
+.ivx-playing .ivx-dot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.ivx-playing .ivx-dot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+@keyframes ivx-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* The guest's invitation page sliding up over the chat. */
+.ivx-sheet {
+  transition:
+    transform 0.6s var(--ease-luxe),
+    opacity 0.4s var(--ease-luxe);
+}
+.ivx-sheet[data-open="false"] {
+  transform: translateY(105%);
+  opacity: 0;
+}
+
+/* Door check-in: the scan line sweeps the code while the demo plays. */
+.ivx-scanline {
+  top: 12%;
+  opacity: 0;
+}
+.ivx-playing .ivx-scanline[data-scanning="true"] {
+  opacity: 1;
+  animation: ivx-scan 1.6s ease-in-out infinite alternate;
+}
+@keyframes ivx-scan {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--ivx-scan-travel, 14rem));
+  }
+}
+
+/* Guest-count slider */
+.ivx-range {
+  height: 2.75rem;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.ivx-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-gold) var(--ivx-range, 50%), var(--color-hairline) var(--ivx-range, 50%));
+}
+[dir="rtl"] .ivx-range::-webkit-slider-runnable-track {
+  background: linear-gradient(270deg, var(--color-gold) var(--ivx-range, 50%), var(--color-hairline) var(--ivx-range, 50%));
+}
+.ivx-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-hairline);
+}
+.ivx-range::-moz-range-progress {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-gold);
+}
+.ivx-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -10px;
+  border-radius: 9999px;
+  border: 2px solid #fffcf6;
+  background: var(--color-gold-deep);
+  box-shadow: 0 4px 12px -4px rgb(60 44 24 / 0.6);
+}
+.ivx-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  border: 2px solid #fffcf6;
+  background: var(--color-gold-deep);
+}
+.ivx-range:focus-visible {
+  outline: none;
+}
+.ivx-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgb(176 144 90 / 0.35);
+}
+
+/* ───────────── Scroll reveal ─────────────
+ * Content rises 20px and fades in as it enters the viewport, driven by the scroll position
+ * itself (no JavaScript). Anything without support, or under reduced motion, is simply shown.
+ * An ancestor with overflow: hidden would capture the timeline, so sections use overflow: clip.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .ivx-reveal {
+      animation: ivx-reveal var(--ease-luxe) both;
+      animation-timeline: view();
+      animation-range: entry var(--ivx-stagger, 0px) entry calc(var(--ivx-stagger, 0px) + 220px);
+    }
+  }
+}
+@keyframes ivx-reveal {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Arabic labels on English pages ("ع", "١٢", "العربية") use the device's Arabic font: a handful
+   of glyphs isn't worth downloading the Arabic webfont for English visitors. */
+html[lang="en"] :is(button[lang="ar"], button [lang="ar"], .ivx-ar-ui) {
+  font-family: ui-sans-serif, system-ui, "Segoe UI", "Geeza Pro", "Noto Sans Arabic", Tahoma, sans-serif;
+}
+
+/* Numbers that count up (RSVP demo): an animatable integer shown through a CSS counter. */
+@property --ivx-n {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+.ivx-count {
+  --ivx-n: var(--ivx-to);
+  counter-reset: ivx-n var(--ivx-n);
+  transition: --ivx-n 1.4s var(--ease-luxe);
+}
+.ivx-count::after {
+  content: counter(ivx-n);
+}
+.ivx-count[data-zero="true"] {
+  --ivx-n: 0;
+  transition: none;
+}

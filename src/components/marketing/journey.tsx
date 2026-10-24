@@ -1,63 +1,68 @@
 import { PenLine, QrCode, ScanLine, Send, Sparkles, SquareCheckBig } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
-import { Reveal } from "./reveal";
-import { CONTAINER, EYEBROW } from "./styles";
 import { cn } from "@/lib/utils";
+import { GoldThread } from "./gold-thread";
+import { SectionHeading } from "./section-heading";
+import { CONTAINER } from "./styles";
 
 const ICONS = [PenLine, Send, SquareCheckBig, QrCode, ScanLine, Sparkles];
 
-/** Create → Invite → Accept → Receive → Scan → Celebrate. */
+/** Create → Invite → Accept → Receive → Scan → Celebrate, tied together by the gold thread (#how-it-works). */
 export function Journey({ dict }: { dict: Dictionary }) {
   const t = dict.marketing.journey;
+  const how = dict.marketing.how;
   return (
-    <section aria-labelledby="journey-title" className="relative border-y border-line/80 bg-paper">
-      <div className={cn(CONTAINER, "py-16 sm:py-20")}>
-        <Reveal className="mb-12 flex items-center justify-center gap-4 sm:mb-14">
-          <span className="hairline w-12 sm:w-24" aria-hidden="true" />
-          <h2 id="journey-title" className={EYEBROW}>
-            {t.title}
-          </h2>
-          <span className="hairline w-12 sm:w-24" aria-hidden="true" />
-        </Reveal>
-        <ol className="grid gap-0 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-10 lg:grid-cols-6 lg:gap-x-0">
-          {t.steps.map((step, i) => {
-            const Icon = ICONS[i];
-            const last = i === t.steps.length - 1;
-            return (
-              <li key={step.title} className="relative">
-                <Reveal
-                  delay={i * 70}
-                  className="flex gap-5 pb-9 sm:pb-0 lg:flex-col lg:items-center lg:gap-0 lg:px-3 lg:text-center"
+    <section id="how-it-works" aria-labelledby="journey-title" className="relative scroll-mt-20 border-y border-hairline/70 bg-[#fffcf6] py-16 sm:py-28">
+      <div aria-hidden="true" className="paper-grain pointer-events-none absolute inset-0 opacity-40" />
+      <div className={cn(CONTAINER, "relative")}>
+        <SectionHeading eyebrow={t.eyebrow} title={<span id="journey-title">{t.title}</span>} body={how.body} />
+
+        <GoldThread className="relative mx-auto mt-14 max-w-4xl sm:mt-16">
+          {/* the thread: a hairline track and the gold that draws down it */}
+          <span aria-hidden="true" className="absolute bottom-6 top-6 start-[1.4rem] w-px bg-hairline md:start-1/2 md:-translate-x-1/2 rtl:md:translate-x-1/2" />
+          <span
+            aria-hidden="true"
+            className="absolute bottom-6 top-6 start-[1.4rem] w-[1.5px] origin-top bg-[linear-gradient(180deg,var(--color-gold),var(--color-gold-deep))] [transform:scaleY(var(--ivx-thread))] md:start-1/2 md:-translate-x-1/2 rtl:md:translate-x-1/2"
+          />
+          <ol className="relative space-y-10 md:space-y-4">
+            {t.steps.map((step, i) => {
+              const Icon = ICONS[i];
+              const end = i % 2 === 1;
+              return (
+                <li
+                  key={step.title}
+                  data-thread-step=""
+                  className="group/step relative grid grid-cols-[2.8rem_minmax(0,1fr)] gap-x-5 md:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] md:gap-x-8"
                 >
-                  {/* connector: vertical on phones, horizontal on large screens */}
-                  {!last ? (
-                    <>
-                      <span aria-hidden="true" className="absolute bottom-0 start-6 top-14 w-px bg-line-strong/70 sm:hidden" />
-                      <span
-                        aria-hidden="true"
-                        className="absolute top-6 hidden h-px bg-[linear-gradient(90deg,var(--color-line-strong),var(--color-bronze-300))] lg:block lg:start-[calc(50%+2.25rem)] lg:end-[calc(-50%+2.25rem)] rtl:bg-[linear-gradient(270deg,var(--color-line-strong),var(--color-bronze-300))]"
-                      />
-                    </>
-                  ) : null}
-                  <span className="relative flex size-12 shrink-0 items-center justify-center rounded-full border border-line-strong bg-ivory text-bronze-600 shadow-[inset_0_0_0_4px_var(--color-paper)]">
-                    <Icon className="size-[19px]" strokeWidth={1.25} />
+                  <span
+                    className={cn(
+                      "relative z-10 flex size-11 items-center justify-center rounded-full border border-hairline bg-cream text-ink-faint shadow-[inset_0_0_0_4px_#fffcf6] transition-[color,border-color,background-color] duration-700 ease-luxe",
+                      "group-data-[lit=true]/step:border-gold group-data-[lit=true]/step:bg-gold-soft group-data-[lit=true]/step:text-gold-deep",
+                      "md:col-start-2 md:row-start-1 md:mx-auto md:size-14",
+                    )}
+                  >
+                    <Icon className="size-[18px] md:size-5" strokeWidth={1.35} />
                   </span>
-                  <div className="min-w-0 pt-1 lg:pt-5">
-                    <p className="flex items-baseline gap-2 lg:justify-center">
-                      <span className="text-[11px] font-medium tabular-nums text-bronze-500">
+                  <div
+                    className={cn(
+                      "pt-1 transition-[opacity,translate] duration-700 ease-luxe md:row-start-1 md:pt-2.5",
+                      "opacity-100 group-data-[lit=false]/step:translate-y-2 group-data-[lit=false]/step:opacity-55",
+                      end ? "md:col-start-3" : "md:col-start-1 md:text-end",
+                    )}
+                  >
+                    <p className={cn("flex items-baseline gap-2.5", !end && "md:justify-end")}>
+                      <span className="font-display text-sm tabular-nums text-gold-deep" dir="ltr">
                         {String(i + 1).padStart(2, "0")}
                       </span>
-                      <span className="font-display text-[1.6rem] leading-none text-ink">{step.title}</span>
+                      <span className="font-display text-[1.75rem] leading-none text-ink">{step.title}</span>
                     </p>
-                    <p className="mt-2 max-w-[17rem] text-[14px] leading-relaxed text-ink-faint lg:mx-auto lg:max-w-[11rem] lg:text-[13px]">
-                      {step.body}
-                    </p>
+                    <p className={cn("mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft", !end && "md:ms-auto")}>{step.body}</p>
                   </div>
-                </Reveal>
-              </li>
-            );
-          })}
-        </ol>
+                </li>
+              );
+            })}
+          </ol>
+        </GoldThread>
       </div>
     </section>
   );

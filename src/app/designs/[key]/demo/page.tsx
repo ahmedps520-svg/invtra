@@ -24,7 +24,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .map((o) => dict.common.eventTypes[o])
     .join(locale === "ar" ? "، " : ", ");
   const title = locale === "ar" ? `تصميم دعوة «${dict.themes[key].name}» — ${occasions}` : `${dict.themes[key].name} Invitation Design — ${occasions}`;
-  return pageMetadata({ locale, path: `/designs/${key}`, title, description: dict.themes[key].description, image: key });
+  // The design's page (/designs/<key>) is the one to index; this is its interactive guest demo.
+  return { ...pageMetadata({ locale, path: `/designs/${key}`, title, description: dict.themes[key].description, image: key }), robots: { index: false, follow: true } };
+}
+
+/** "Make it personal" puts the visitor's guest on the sample pass (the QR in the demos opens this). */
+function demoGuest(sp: Record<string, string | string[] | undefined>, ar: boolean) {
+  const raw = typeof sp.guest === "string" ? sp.guest.replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 28) : "";
+  const seats = Number(typeof sp.seats === "string" ? sp.seats : "");
+  return {
+    name: raw || (ar ? "خالد الهاشمي" : "Khalid Al Hashimi"),
+    allowedCount: Number.isInteger(seats) && seats >= 1 && seats <= 9 ? seats : 2,
+  };
 }
 
 /** Public, interactive demo of a theme's guest website with sample content. */
@@ -49,8 +60,7 @@ export default async function DesignDemoPage({ params, searchParams }: Props) {
   const vm = await buildInvitationVM({
     event: sampleEvent(key, language),
     guest: {
-      name: ar ? "خالد الهاشمي" : "Khalid Al Hashimi",
-      allowedCount: 2,
+      ...demoGuest(sp, ar),
       attendingCount: null,
       rsvpStatus: "PENDING",
       checkedInAt: null,
@@ -61,7 +71,7 @@ export default async function DesignDemoPage({ params, searchParams }: Props) {
     token: null,
     mode: "demo",
     // Scanning the sample pass opens this demo on the phone.
-    qrText: appUrl(localePath(locale, `/designs/${key}`)),
+    qrText: appUrl(`/designs/${key}/demo`),
   });
-  return <InvitationExperience vm={{ ...vm, demoBackHref: localePath(locale, "/designs") }} />;
+  return <InvitationExperience vm={{ ...vm, demoBackHref: localePath(locale, `/designs/${key}`) }} />;
 }
