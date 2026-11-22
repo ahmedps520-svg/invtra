@@ -1,7 +1,7 @@
 import type { EventType } from "@prisma/client";
 import type { InvitationDesign } from "@/lib/design/schema";
 
-export const THEME_KEYS = [
+const CODED_THEME_KEYS = [
   "minimal",
   "luxury",
   "romantic",
@@ -19,7 +19,39 @@ export const THEME_KEYS = [
   "confetti",
   "lantern",
 ] as const;
+/** Designs printed on real artwork: painted botanicals and flower photographs (see stationery.ts). */
+export const STATIONERY_THEME_KEYS = [
+  "peony",
+  "redoute",
+  "whiterose",
+  "crimson",
+  "camellia",
+  "cherry",
+  "magnolia",
+  "taif",
+  "jasmine",
+  "olive",
+  "laurel",
+  "wildflower",
+  "tulip",
+  "hydrangea",
+  "sweetpea",
+  "forgetmenot",
+  "lilyvalley",
+  "orchid",
+  "lily",
+  "iris",
+  "wisteria",
+  "poppy",
+  "lavender",
+  "pomegranate",
+  "anemone",
+  "daisy",
+  "fern",
+] as const;
+export const THEME_KEYS = [...CODED_THEME_KEYS, ...STATIONERY_THEME_KEYS] as const;
 export type ThemeKey = (typeof THEME_KEYS)[number];
+export type StationeryKey = (typeof STATIONERY_THEME_KEYS)[number];
 
 export type CardOrnament =
   | "hairline"
@@ -37,10 +69,24 @@ export type CardOrnament =
   | "clouds"
   | "lullaby"
   | "confetti"
-  | "lantern";
-export type HeroStyle = "centered" | "framed" | "arch" | "split" | "monogram";
+  | "lantern"
+  | "art";
+export type HeroStyle = "centered" | "framed" | "arch" | "split" | "monogram" | "art";
 export type SectionStyle = "lines" | "cards" | "panels";
 export type HeroMotif = "royal" | "garden" | "henna" | "moonlight" | "teddy" | "clouds" | "lullaby" | "confetti" | "lantern";
+
+/** Painted or photographed artwork (real flowers on paper) that a design is built on. */
+export interface ThemeArt {
+  /** Full-bleed 1080 × 1350 artwork under the text: a public path, versioned for caching. */
+  src: string;
+  /** Box the text may use, in card pixels. Its bottom follows the QR footer. */
+  content: { x: number; w: number; top: number };
+  /** Inset the footer (QR, guest line, branding) keeps from the bottom and the sides. */
+  bottomPad: number;
+  sidePad: number;
+  /** Small motif between the greeting and the date. */
+  divider: "floral" | "diamond" | "hairline" | "dots" | "star" | "heart";
+}
 
 export interface ThemeDefinition {
   key: ThemeKey;
@@ -60,6 +106,8 @@ export interface ThemeDefinition {
     nameScale: number;
     /** Draw content on an inner panel (surface colour) rather than directly on the background. */
     panel: boolean;
+    /** Artwork the card is printed on (ornament "art"). */
+    art?: ThemeArt;
   };
   page: {
     hero: HeroStyle;

@@ -150,6 +150,9 @@ export const editor: typeof en = {
   },
 
   palettes: {
+    artwork: "ألوان التصميم",
+    inkOnPaper: "حبر داكن",
+    sepiaOnPaper: "بنّي دافئ",
     emeraldCrown: "زمردي وذهبي",
     sapphireGold: "ياقوتي وذهبي",
     burgundyCrown: "عنابي وذهبي",

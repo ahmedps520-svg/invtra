@@ -3,9 +3,8 @@ import { ArrowRight } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/routing";
-import { THEME_LIST } from "@/lib/themes/registry";
 import { OCCASION_GROUP_KEYS, occasionGroup } from "@/lib/events/types";
-import { THEME_STYLE } from "@/lib/marketing/design-styles";
+import { SHOWCASE_LIST, THEME_STYLE } from "@/lib/marketing/design-styles";
 import { buttonClasses } from "@/components/ui/button";
 import { DesignsBrowser, type BrowserItem } from "./designs-browser";
 import { SectionHeading } from "./section-heading";
@@ -15,7 +14,7 @@ import { CONTAINER } from "./styles";
 export function DesignsSection({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const t = dict.marketing.designs;
   const h = dict.marketing.home.designs;
-  const items: BrowserItem[] = THEME_LIST.map((theme) => ({
+  const items: BrowserItem[] = SHOWCASE_LIST.map((theme) => ({
     key: theme.key,
     name: dict.themes[theme.key].name,
     premium: theme.premium,

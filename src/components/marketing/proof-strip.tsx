@@ -1,12 +1,14 @@
 import type { Dictionary } from "@/lib/i18n";
 import type { SendingMode } from "@/lib/marketing/links";
+import { THEME_LIST } from "@/lib/themes/registry";
 import { cn } from "@/lib/utils";
 import { CONTAINER } from "./styles";
 
 /** Only facts that are true of the product today — no invented numbers, reviews or logos. */
 export function ProofStrip({ dict, mode }: { dict: Dictionary; mode: SendingMode }) {
   const p = dict.marketing.home.proof;
-  const facts = [p.designs, p.occasions, p.test[mode], p.noApp, p.purge];
+  // The design count comes from the catalogue itself, so it never goes stale.
+  const facts = [{ ...p.designs, value: String(THEME_LIST.length) }, p.occasions, p.test[mode], p.noApp, p.purge];
   return (
     <section aria-label={p.label} className="relative border-y border-hairline/70 bg-[#fffcf6]">
       <div className={CONTAINER}>

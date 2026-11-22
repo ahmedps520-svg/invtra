@@ -1,5 +1,5 @@
 import type { InvitationDesign } from "@/lib/design/schema";
-import type { CardOrnament } from "@/lib/themes/types";
+import type { CardOrnament, ThemeArt } from "@/lib/themes/types";
 import { balloon, blossom, branch, cloud, confetti, crescent, cribMobile, crown, heart, lantern, mandala, mix, paisley, sparkle, star5, starField, teddy } from "./motifs";
 
 /**
@@ -157,6 +157,21 @@ function moonDivider(color: string) {
 function heartDivider(color: string) {
   return (cx: number, cy: number, s: number) =>
     `<g transform="translate(${cx} ${cy}) scale(${s})"><path d="M-80 0H-22M22 0H80" stroke="${color}" stroke-width="1.4" stroke-dasharray="2 6" stroke-linecap="round"/>${heart(0, 0, 12, color)}</g>`;
+}
+
+const DIVIDERS = { floral: floralDivider, diamond: diamondDivider, hairline: hairlineDivider, dots: dotsDivider, star: starDivider, heart: heartDivider } as const;
+
+/** Designs printed on artwork: the flowers are in the image, so only the geometry and the divider come from here. */
+export function artOrnament(art: ThemeArt, ctx: OrnamentContext): OrnamentResult {
+  const { content, bottomPad, sidePad, divider } = art;
+  return {
+    background: "",
+    foreground: "",
+    content: { ...content, bottom: ctx.footerTop - 30 },
+    divider: DIVIDERS[divider](ctx.palette.accent),
+    bottomPad,
+    sidePad,
+  };
 }
 
 export function buildOrnament(kind: CardOrnament, ctx: OrnamentContext): OrnamentResult {

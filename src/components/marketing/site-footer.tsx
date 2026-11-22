@@ -14,7 +14,7 @@ import { LanguagePill } from "./language-pill";
 
 const CONTACT_EMAIL = "contact@invtra.store";
 /** Designs listed by name in the footer (the full collection is one link away). */
-const FOOTER_DESIGNS = ["royal", "luxury", "arabic", "teddy", "lantern", "garden"];
+const FOOTER_DESIGNS = ["peony", "taif", "redoute", "royal", "jasmine", "teddy"];
 
 /** Marketing footer: brand, link columns, contact, language and the legal line. */
 export function SiteFooter({

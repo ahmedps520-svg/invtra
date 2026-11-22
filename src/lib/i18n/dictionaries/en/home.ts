@@ -31,7 +31,7 @@ export const home = {
 
   proof: {
     label: "INVTRA in numbers",
-    designs: { value: "16", label: "invitation designs" },
+    designs: { value: "43", label: "invitation designs" },
     occasions: { value: "11", label: "occasions" },
     test: {
       cloud: { value: "3", label: "free test sends to your phone" },

@@ -147,8 +147,25 @@ function ScrollCue({ light }: { light?: boolean }) {
 
 export function Hero() {
   const { vm } = useInvitation();
-  const { hero: style, motif } = getTheme(vm.themeKey).page;
+  const theme = getTheme(vm.themeKey);
+  const { hero: style, motif } = theme.page;
   const cover = vm.event.coverUrl;
+  const art = theme.card.art;
+
+  if (style === "art" && art && vm.design.background.mode === "theme" && !cover) {
+    // The design's painted artwork, as on the card: full-bleed on phones, a sheet of paper on larger screens.
+    return (
+      <header className="relative flex min-h-[100svh] items-stretch justify-center md:items-center md:py-8">
+        <div
+          className="relative flex w-full flex-col items-center bg-cover bg-top pb-28 pt-[26svh] md:min-h-[var(--art-h)] md:w-[calc(var(--art-h)*0.8)] md:pb-[calc(var(--art-h)*0.12)] md:pt-[calc(var(--art-h)*0.26)] md:shadow-[0_30px_80px_-40px_rgb(40_30_20/0.45)]"
+          style={{ backgroundImage: `url(${art.src})`, ["--art-h" as string]: "min(calc(100svh - 4rem), 1080px, calc((100vw - 3rem) * 1.25))" }}
+        >
+          <HeroText />
+        </div>
+        <ScrollCue />
+      </header>
+    );
+  }
 
   if (style === "split") {
     return (

@@ -5,7 +5,7 @@ import type { ThemeDefinition } from "@/lib/themes/types";
 import { CARD_PHRASES, copyFor } from "@/lib/invitation-copy";
 import { fmt } from "@/lib/i18n/config";
 import { qrSvgGroup } from "@/lib/qr";
-import { buildOrnament } from "./ornaments";
+import { artOrnament, buildOrnament, type OrnamentContext } from "./ornaments";
 import { ascent, escapeXml, fit, isArabic, measure, type TextStyle } from "./text";
 
 /**
@@ -149,7 +149,9 @@ export function buildCardSvg(input: CardInput): string {
   const footerLang: "en" | "ar" = isAr ? "ar" : "en";
 
   // ── Footer geometry ────────────────────────────────────────────────────────
-  const preliminary = buildOrnament(theme.card.ornament, { W, H, palette: p, footerTop: H, texture: false });
+  const art = theme.card.art;
+  const ornament = (ctx: OrnamentContext) => (art ? artOrnament(art, ctx) : buildOrnament(theme.card.ornament, ctx));
+  const preliminary = ornament({ W, H, palette: p, footerTop: H, texture: false });
   const bottomPad = preliminary.bottomPad;
   const centered = design.card.qr.position === "bottom-center";
   const brandingH = design.card.showBranding ? 34 : 0;
@@ -159,7 +161,7 @@ export function buildCardSvg(input: CardInput): string {
   else footerTop = H - bottomPad - brandingH - qrSize - 10;
 
   const textureOn = design.background.mode === "theme";
-  const orn = buildOrnament(theme.card.ornament, { W, H, palette: p, footerTop, texture: textureOn });
+  const orn = ornament({ W, H, palette: p, footerTop, texture: textureOn });
   const { x: cx0, w: cw, top: ctop, bottom: cbottom } = orn.content;
   const cx = cx0 + cw / 2;
 
@@ -411,7 +413,9 @@ export function buildCardSvg(input: CardInput): string {
 
   // ── Background ─────────────────────────────────────────────────────────────
   let bg = `<rect width="${W}" height="${H}" fill="${p.background}"/>`;
-  if (design.background.mode === "image" && input.backgroundImage) {
+  if (art && textureOn) {
+    bg += `<image href="${escapeXml(art.src)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;
+  } else if (design.background.mode === "image" && input.backgroundImage) {
     bg +=
       `<image href="${escapeXml(input.backgroundImage.href)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>` +
       `<rect width="${W}" height="${H}" fill="${p.background}" fill-opacity="${design.background.overlay}"/>`;

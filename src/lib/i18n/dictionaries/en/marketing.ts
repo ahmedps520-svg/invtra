@@ -12,7 +12,7 @@ export const marketing = {
       "Digital event invitations sent on WhatsApp — weddings, newborns, baby showers, birthdays, Ramadan & corporate events. One-tap RSVP and a QR code for every guest.",
     designsTitle: "Invitation Designs for Weddings, Babies, Birthdays & Ramadan",
     designsDescription:
-      "16 digital invitation designs for weddings, newborns, baby showers, aqiqah, birthdays, Ramadan & corporate events — in Arabic, English or both, sent on WhatsApp.",
+      "More than 40 digital invitation designs, many hand-painted with real flowers, for weddings, newborns, baby showers, aqiqah, birthdays, Ramadan & corporate events — in Arabic, English or both, sent on WhatsApp.",
     pricingTitle: "Pricing — Digital Invitations on WhatsApp",
     pricingDescription:
       "Simple, one-time pricing per event. WhatsApp messaging included, a personal QR code for every guest, and three free test sends to your own number.",
@@ -115,7 +115,7 @@ export const marketing = {
   designs: {
     eyebrow: "Invitation designs",
     title: "Designed like fine stationery.",
-    body: "Sixteen signature designs — from royal weddings to teddy bears and moonlit lullabies for a new baby — each shown exactly as your guests will receive it, in Arabic, English or both.",
+    body: "More than forty designs — hand-painted roses, peonies and wildflowers, royal crowns, teddy bears and moonlit lullabies — each shown exactly as your guests will receive it, in Arabic, English or both.",
     cta: "Explore all designs",
     previous: "Previous designs",
     next: "More designs",

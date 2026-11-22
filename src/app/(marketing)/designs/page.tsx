@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
-import { THEME_LIST } from "@/lib/themes/registry";
 import { OCCASION_GROUP_KEYS, isOccasionGroup, occasionGroup } from "@/lib/events/types";
 import { DesignsBrowser, type BrowserItem } from "@/components/marketing/designs-browser";
-import { THEME_STYLE } from "@/lib/marketing/design-styles";
+import { SHOWCASE_LIST, THEME_STYLE } from "@/lib/marketing/design-styles";
 import { startHref as wizardHref } from "@/lib/marketing/links";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { OwnDesignTile } from "@/components/marketing/own-design-tile";
@@ -25,7 +24,7 @@ export default async function DesignsPage({ searchParams }: { searchParams: Prom
   const signedIn = Boolean(user);
   const t = dict.marketing.designsPage;
 
-  const items: BrowserItem[] = THEME_LIST.map((theme) => ({
+  const items: BrowserItem[] = SHOWCASE_LIST.map((theme) => ({
     key: theme.key,
     name: dict.themes[theme.key].name,
     premium: theme.premium,

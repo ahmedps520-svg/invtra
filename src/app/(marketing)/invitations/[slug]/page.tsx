@@ -9,7 +9,7 @@ import { sendingMode } from "@/server/marketing";
 import { OCCASION_PAGES, getOccasionPage } from "@/lib/seo/occasion-pages";
 import { occasionCopy } from "@/lib/seo/occasion-sending";
 import { OCCASION_WORDING } from "@/lib/seo/occasion-wording";
-import { THEME_LIST } from "@/lib/themes/registry";
+import { SHOWCASE_LIST } from "@/lib/marketing/design-styles";
 import { localePath } from "@/lib/i18n/routing";
 import { SAMPLE_HEIGHT, SAMPLE_WIDTH, sampleSrc } from "@/lib/marketing/samples";
 import { startHref } from "@/lib/marketing/links";
@@ -54,7 +54,7 @@ export default async function OccasionPage({ params }: Props) {
   const lang = locale === "ar" ? "ar" : "en";
 
   // Designs made for this occasion, the most fitting first (the page's own design leads).
-  const designs = THEME_LIST.filter((th) => th.occasions.includes(page.type))
+  const designs = SHOWCASE_LIST.filter((th) => th.occasions.includes(page.type))
     .sort((a, b) => (a.key === page.theme ? -1 : b.key === page.theme ? 1 : a.occasions.indexOf(page.type) - b.occasions.indexOf(page.type)))
     .slice(0, 8);
   const related = page.related.map((s) => getOccasionPage(s)!).filter(Boolean);

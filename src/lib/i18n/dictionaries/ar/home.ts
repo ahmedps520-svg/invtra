@@ -28,7 +28,7 @@ export const home: typeof en = {
 
   proof: {
     label: "إنفترا بالأرقام",
-    designs: { value: "16", label: "تصميم دعوة" },
+    designs: { value: "43", label: "تصميم دعوة" },
     occasions: { value: "11", label: "مناسبة" },
     test: {
       cloud: { value: "3", label: "رسائل تجريبية مجانية إلى جوالك" },

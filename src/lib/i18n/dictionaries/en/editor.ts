@@ -148,6 +148,9 @@ export const editor = {
   },
 
   palettes: {
+    artwork: "The artwork's colours",
+    inkOnPaper: "Deep ink",
+    sepiaOnPaper: "Warm sepia",
     emeraldCrown: "Emerald & gold",
     sapphireGold: "Sapphire & gold",
     burgundyCrown: "Burgundy & gold",
