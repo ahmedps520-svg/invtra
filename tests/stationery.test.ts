@@ -1,6 +1,7 @@
 /**
- * Designs printed on real artwork (painted botanicals): every design has its artwork, the server's
- * renderer really draws it into the card image, and the ink stays readable on the paper.
+ * Designs printed on real artwork (painted botanicals, gold-foil ornament): every design has its
+ * artwork and thumbnail, the server's renderer really draws it into the card image, and the ink stays
+ * readable on the paper (light or dark).
  */
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -9,7 +10,8 @@ import { describe, expect, it } from "vitest";
 import { buildCardSvg } from "@/lib/card/build";
 import { SAMPLE_GUEST, themeSampleContent } from "@/lib/card/sample";
 import { getDictionary } from "@/lib/i18n";
-import { STATIONERY_THEME_KEYS, getTheme } from "@/lib/themes/registry";
+import { COLLECTION_KEYS, STATIONERY_THEME_KEYS, THEME_LIST, getTheme } from "@/lib/themes/registry";
+import { parseSampleFile, sampleFileName } from "@/lib/marketing/samples";
 import { renderSvgToPng } from "@/server/render/card";
 
 const luminance = (hex: string) => {
@@ -21,20 +23,46 @@ const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
+const ARTWORK = [...STATIONERY_THEME_KEYS, ...COLLECTION_KEYS];
+
 describe("artwork designs", () => {
-  it("each has its artwork on disk, named after the design", () => {
-    for (const key of STATIONERY_THEME_KEYS) {
+  it("each has its artwork and thumbnail on disk, named after the design", () => {
+    for (const key of ARTWORK) {
       const art = getTheme(key).card.art;
       expect(art, key).toBeTruthy();
       expect(art!.src).toMatch(new RegExp(`^/stationery/${key}\\.jpg\\?v=\\d+$`));
       expect(existsSync(path.join(process.cwd(), "public", "stationery", `${key}.jpg`)), key).toBe(true);
+      expect(existsSync(path.join(process.cwd(), "public", "stationery", "thumb", `${key}.jpg`)), `${key} thumb`).toBe(true);
     }
+  });
+
+  it("brings at least 100 new designs each for weddings, newborns and Ramadan", () => {
+    for (const occasion of ["WEDDING", "NEWBORN", "RAMADAN"] as const) {
+      const n = COLLECTION_KEYS.filter((k) => getTheme(k).occasions.includes(occasion)).length;
+      expect(n, occasion).toBeGreaterThanOrEqual(100);
+    }
+  });
+
+  it("gives every design a distinct name in both languages", () => {
+    for (const locale of ["en", "ar"] as const) {
+      const themes = getDictionary(locale).themes;
+      const names = THEME_LIST.map((t) => themes[t.key].name);
+      expect(new Set(names).size, locale).toBe(names.length);
+    }
+  });
+
+  it("addresses every design's sample image, hyphenated keys included", () => {
+    for (const t of THEME_LIST)
+      for (const lang of ["en", "ar", "bi"] as const) expect(parseSampleFile(sampleFileName(t.key, lang, "RAMADAN"))).toEqual({ theme: t.key, lang, occasion: "RAMADAN" });
+    expect(parseSampleFile("forget-me-not-bouquet-en-wedding.webp")).toEqual({ theme: "forget-me-not-bouquet", lang: "en", occasion: "WEDDING" });
+    expect(parseSampleFile("forget-me-not-nothing-en.webp")).toBeNull();
+    expect(parseSampleFile("forget-me-not-bouquet-en-party.webp")).toBeNull();
   });
 
   it("has a name and a description in English and Arabic", () => {
     for (const locale of ["en", "ar"] as const) {
       const themes = getDictionary(locale).themes;
-      for (const key of STATIONERY_THEME_KEYS) {
+      for (const key of ARTWORK) {
         expect(themes[key].name, `${locale}/${key}`).toBeTruthy();
         expect(themes[key].description.length, `${locale}/${key}`).toBeGreaterThan(20);
       }
@@ -42,7 +70,7 @@ describe("artwork designs", () => {
   });
 
   it("keeps the ink readable on the paper", () => {
-    for (const key of STATIONERY_THEME_KEYS) {
+    for (const key of ARTWORK) {
       const p = getTheme(key).defaults.palette;
       expect(contrast(p.text, p.background), `${key} text`).toBeGreaterThanOrEqual(7);
       expect(contrast(p.accent, p.background), `${key} accent`).toBeGreaterThanOrEqual(4);

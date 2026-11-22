@@ -157,8 +157,13 @@ export function Hero() {
     return (
       <header className="relative flex min-h-[100svh] items-stretch justify-center md:items-center md:py-8">
         <div
-          className="relative flex w-full flex-col items-center bg-cover bg-top pb-28 pt-[26svh] md:min-h-[var(--art-h)] md:w-[calc(var(--art-h)*0.8)] md:pb-[calc(var(--art-h)*0.12)] md:pt-[calc(var(--art-h)*0.26)] md:shadow-[0_30px_80px_-40px_rgb(40_30_20/0.45)]"
-          style={{ backgroundImage: `url(${art.src})`, ["--art-h" as string]: "min(calc(100svh - 4rem), 1080px, calc((100vw - 3rem) * 1.25))" }}
+          className="relative flex w-full flex-col items-center bg-cover bg-top pb-28 pt-[calc(100svh*var(--art-top))] md:min-h-[var(--art-h)] md:w-[calc(var(--art-h)*0.8)] md:pb-[calc(var(--art-h)*0.12)] md:pt-[calc(var(--art-h)*var(--art-top))] md:shadow-[0_30px_80px_-40px_rgb(40_30_20/0.45)]"
+          style={{
+            backgroundImage: `url(${art.src})`,
+            ["--art-h" as string]: "min(calc(100svh - 4rem), 1080px, calc((100vw - 3rem) * 1.25))",
+            // Where the design's open space starts (as on the card), so the text clears the artwork.
+            ["--art-top" as string]: String(Math.round((art.content.top / 1350) * 1000) / 1000),
+          }}
         >
           <HeroText />
         </div>

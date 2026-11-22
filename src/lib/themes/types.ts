@@ -1,5 +1,6 @@
 import type { EventType } from "@prisma/client";
 import type { InvitationDesign } from "@/lib/design/schema";
+import { COLLECTION_KEYS } from "./collection-keys";
 
 const CODED_THEME_KEYS = [
   "minimal",
@@ -49,9 +50,13 @@ export const STATIONERY_THEME_KEYS = [
   "daisy",
   "fern",
 ] as const;
-export const THEME_KEYS = [...CODED_THEME_KEYS, ...STATIONERY_THEME_KEYS] as const;
+export { COLLECTION_KEYS };
+export const THEME_KEYS = [...CODED_THEME_KEYS, ...STATIONERY_THEME_KEYS, ...COLLECTION_KEYS] as const;
 export type ThemeKey = (typeof THEME_KEYS)[number];
 export type StationeryKey = (typeof STATIONERY_THEME_KEYS)[number];
+export type CollectionKey = (typeof COLLECTION_KEYS)[number];
+/** Every design printed on artwork (the hand-arranged ones and the generated collection). */
+export type ArtworkKey = StationeryKey | CollectionKey;
 
 export type CardOrnament =
   | "hairline"
@@ -79,6 +84,8 @@ export type HeroMotif = "royal" | "garden" | "henna" | "moonlight" | "teddy" | "
 export interface ThemeArt {
   /** Full-bleed 1080 × 1350 artwork under the text: a public path, versioned for caching. */
   src: string;
+  /** The same artwork at thumbnail size, for small previews drawn in the browser (design pickers). */
+  thumb: string;
   /** Box the text may use, in card pixels. Its bottom follows the QR footer. */
   content: { x: number; w: number; top: number };
   /** Inset the footer (QR, guest line, branding) keeps from the bottom and the sides. */

@@ -84,11 +84,13 @@ export function Carousel({
           <p className="min-w-14 font-display text-lg tabular-nums text-ink" dir="ltr" aria-live="polite">
             {pad(index + 1)} <span className="text-ink-faint">/ {pad(items.length)}</span>
           </p>
-          <div aria-hidden="true" className="flex max-w-[45%] flex-wrap items-center justify-center gap-1.5">
-            {items.map((_, i) => (
-              <span key={i} className={cn("block h-1.5 rounded-full transition-all duration-500 ease-luxe", i === index ? "w-4 bg-gold-deep" : "w-1.5 bg-hairline")} />
-            ))}
-          </div>
+          {items.length <= 16 ? (
+            <div aria-hidden="true" className="flex max-w-[45%] flex-wrap items-center justify-center gap-1.5">
+              {items.map((_, i) => (
+                <span key={i} className={cn("block h-1.5 rounded-full transition-all duration-500 ease-luxe", i === index ? "w-4 bg-gold-deep" : "w-1.5 bg-hairline")} />
+              ))}
+            </div>
+          ) : null}
           <div className="flex gap-2">
             <button
               type="button"

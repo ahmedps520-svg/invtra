@@ -1,4 +1,5 @@
 import type { themes as en } from "../en/themes";
+import { COLLECTION_NAMES } from "@/lib/themes/collection-names";
 
 export const themes: typeof en = {
   minimal: { name: "بسيط", description: "ورق كريمي وخطوط أنيقة وتفاصيل هادئة. تصميم خالد وراقٍ." },
@@ -44,6 +45,7 @@ export const themes: typeof en = {
   anemone: { name: "شقائق النعمان", description: "شقائق النعمان كما رسمها ريدوتيه بالبرقوقي والقرمزي والبنفسجي." },
   daisy: { name: "أقحوان", description: "زهور أقحوان وبابونج مبهجة على ورق بلون الزبدة." },
   fern: { name: "سرخس وخضرة", description: "أوراق سرخس مرسومة تحيط بتصميم عصري نظيف. أخضر ومنعش." },
+  ...COLLECTION_NAMES.ar,
   premium: "مميز",
   recommendedFor: { EN: "الإنجليزية", AR: "العربية", BILINGUAL: "العربية + الإنجليزية" },
 };

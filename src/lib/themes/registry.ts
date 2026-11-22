@@ -1,6 +1,7 @@
 import { THEME_KEYS, type ThemeDefinition, type ThemeKey } from "./types";
 import { baseCard, design } from "./base";
 import { STATIONERY } from "./stationery";
+import { COLLECTION } from "./collection";
 
 export * from "./types";
 
@@ -221,6 +222,7 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
     page: { hero: "arch", sectionStyle: "panels", namesUppercase: false, divider: "star", motif: "lantern" },
   },
   ...STATIONERY,
+  ...COLLECTION,
 };
 
 export const DEFAULT_THEME: ThemeKey = "minimal";

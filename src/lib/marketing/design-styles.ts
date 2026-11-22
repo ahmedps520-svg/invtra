@@ -1,10 +1,11 @@
 import { THEME_LIST } from "@/lib/themes/registry";
+import { COLLECTION_STYLE } from "@/lib/themes/collection";
 import type { ThemeDefinition, ThemeKey } from "@/lib/themes/types";
+import type { DesignStyle } from "./design-style-list";
+
+export { DESIGN_STYLES, type DesignStyle } from "./design-style-list";
 
 /** The look of each design, for the style filter and the quiz. */
-export type DesignStyle = "classic" | "luxe" | "floral" | "playful" | "heritage";
-export const DESIGN_STYLES: DesignStyle[] = ["classic", "luxe", "floral", "playful", "heritage"];
-
 export const THEME_STYLE: Record<ThemeKey, DesignStyle> = {
   minimal: "classic",
   modern: "classic",
@@ -22,6 +23,7 @@ export const THEME_STYLE: Record<ThemeKey, DesignStyle> = {
   arabic: "heritage",
   henna: "heritage",
   lantern: "heritage",
+  ...COLLECTION_STYLE,
   peony: "floral",
   redoute: "luxe",
   whiterose: "luxe",

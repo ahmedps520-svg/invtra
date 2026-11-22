@@ -51,6 +51,8 @@ export interface CardInput {
   /** Draw a sample QR (editor preview) when no qrText is given. */
   qrPlaceholder?: boolean;
   backgroundImage?: CardImage | null;
+  /** Draw artwork designs from their thumbnail (small previews in the browser). */
+  artThumb?: boolean;
 }
 
 type Block = { height: number; render: (top: number) => string };
@@ -414,7 +416,7 @@ export function buildCardSvg(input: CardInput): string {
   // ── Background ─────────────────────────────────────────────────────────────
   let bg = `<rect width="${W}" height="${H}" fill="${p.background}"/>`;
   if (art && textureOn) {
-    bg += `<image href="${escapeXml(art.src)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;
+    bg += `<image href="${escapeXml(input.artThumb ? art.thumb : art.src)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;
   } else if (design.background.mode === "image" && input.backgroundImage) {
     bg +=
       `<image href="${escapeXml(input.backgroundImage.href)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>` +

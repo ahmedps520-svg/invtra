@@ -21,6 +21,7 @@ export function DesignsSection({ dict, locale }: { dict: Dictionary; locale: Loc
     style: THEME_STYLE[theme.key],
     language: theme.recommendedLanguage,
     groups: OCCASION_GROUP_KEYS.filter((g) => theme.occasions.some((o) => o !== "OTHER" && occasionGroup(o) === g)),
+    primary: theme.occasions[0] && theme.occasions[0] !== "OTHER" ? occasionGroup(theme.occasions[0]) : null,
   }));
 
   return (

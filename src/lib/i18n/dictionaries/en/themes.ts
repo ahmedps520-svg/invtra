@@ -1,3 +1,5 @@
+import { COLLECTION_NAMES } from "@/lib/themes/collection-names";
+
 export const themes = {
   minimal: { name: "Minimal", description: "Cream paper, refined serif names and quiet hairlines. Timeless and understated." },
   luxury: { name: "Luxury", description: "Black, ivory and champagne gold with an art-deco frame. Made for black-tie evenings." },
@@ -42,6 +44,7 @@ export const themes = {
   anemone: { name: "Anemone", description: "Redouté's anemones in plum, scarlet and violet with Japanese anemones." },
   daisy: { name: "Daisy", description: "Cheerful daisies and chamomile on buttery paper." },
   fern: { name: "Fern & Greenery", description: "Painted fern fronds framing a clean, modern layout. Green and fresh." },
+  ...COLLECTION_NAMES.en,
   premium: "Premium",
   recommendedFor: { EN: "English", AR: "Arabic", BILINGUAL: "Arabic + English" },
 };

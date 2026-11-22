@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/routing";
 import { SAMPLE_HEIGHT, SAMPLE_WIDTH, sampleSrc, type SampleLang } from "@/lib/marketing/samples";
-import { DESIGN_STYLES, type DesignStyle } from "@/lib/marketing/design-styles";
+import { DESIGN_STYLES, type DesignStyle } from "@/lib/marketing/design-style-list";
 import type { OccasionGroup } from "@/lib/events/types";
 import { cn } from "@/lib/utils";
 import { Carousel } from "./carousel";
@@ -17,12 +17,15 @@ export type BrowserItem = {
   style: DesignStyle;
   language: "EN" | "AR" | "BILINGUAL";
   groups: OccasionGroup[];
+  /** The group of the occasion the design is mainly made for. */
+  primary: OccasionGroup | null;
 };
 
 type Lang = BrowserItem["language"];
 
-/** On large screens the homepage shows the first eight; the rest are one click away. */
+/** The homepage starts with eight designs, the designs page with a page of them; "Show more" adds a page. */
 const PREVIEW_COUNT = 8;
+const PAGE = 24;
 
 /** The catalogue with filters: a swipe carousel on phones, a grid on larger screens. */
 export function DesignsBrowser({
@@ -35,7 +38,7 @@ export function DesignsBrowser({
   items: BrowserItem[];
   locale: Locale;
   initialGroup?: OccasionGroup | null;
-  /** On large screens show the first eight until "Show all" (homepage). */
+  /** Start with eight designs instead of a full page (homepage). */
   capped?: boolean;
   copy: {
     occasion: string;
@@ -54,30 +57,42 @@ export function DesignsBrowser({
     next: string;
     goTo: string;
     filters: string;
-    showAll: string;
-    showFewer: string;
+    showMore: string;
   };
 }) {
-  const [group, setGroup] = useState<OccasionGroup | null>(initialGroup);
-  const [style, setStyle] = useState<DesignStyle | null>(null);
-  const [language, setLanguage] = useState<Lang | null>(null);
-  const [premium, setPremium] = useState(false);
-  const [expanded, setExpanded] = useState(!capped);
+  const first = capped ? PREVIEW_COUNT : PAGE;
+  const [group, setGroupState] = useState<OccasionGroup | null>(initialGroup);
+  const [style, setStyleState] = useState<DesignStyle | null>(null);
+  const [language, setLanguageState] = useState<Lang | null>(null);
+  const [premium, setPremiumState] = useState(false);
+  const [limit, setLimit] = useState(first);
+  // A new filter starts again from the first page.
+  const reset = <T,>(set: (v: T) => void) => (v: T) => {
+    set(v);
+    setLimit(first);
+  };
+  const setGroup = reset(setGroupState);
+  const setStyle = reset(setStyleState);
+  const setLanguage = reset(setLanguageState);
+  const setPremium = reset(setPremiumState);
 
-  const shown = useMemo(
-    () =>
-      items.filter(
-        (it) => (!group || it.groups.includes(group)) && (!style || it.style === style) && (!language || it.language === language) && (!premium || it.premium),
-      ),
-    [items, group, style, language, premium],
-  );
+  const shown = useMemo(() => {
+    const out = items.filter(
+      (it) => (!group || it.groups.includes(group)) && (!style || it.style === style) && (!language || it.language === language) && (!premium || it.premium),
+    );
+    // With an occasion picked, designs made mainly for it come first (sort is stable, so the showcase order holds within).
+    return group ? out.sort((a, b) => Number(b.primary === group) - Number(a.primary === group)) : out;
+  }, [items, group, style, language, premium]);
   const filtered = Boolean(group || style || language || premium);
   const clear = () => {
-    setGroup(null);
-    setStyle(null);
-    setLanguage(null);
-    setPremium(false);
+    setGroupState(null);
+    setStyleState(null);
+    setLanguageState(null);
+    setPremiumState(false);
+    setLimit(first);
   };
+  const visible = shown.slice(0, limit);
+  const more = Math.min(PAGE, shown.length - visible.length);
   const preview = (l: Lang): SampleLang => (l === "BILINGUAL" ? "bi" : l === "AR" || locale === "ar" ? "ar" : "en");
 
   return (
@@ -100,7 +115,7 @@ export function DesignsBrowser({
             onChange={setLanguage}
           />
           <span aria-hidden="true" className="mx-1 h-6 w-px shrink-0 bg-hairline" />
-          <button type="button" aria-pressed={premium} onClick={() => setPremium((p) => !p)} className={chip(premium)}>
+          <button type="button" aria-pressed={premium} onClick={() => setPremium(!premium)} className={chip(premium)}>
             {copy.premium}
           </button>
         </div>
@@ -116,14 +131,13 @@ export function DesignsBrowser({
 
       {shown.length ? (
         <Carousel
-          key={shown.map((s) => s.key).join(",")}
+          key={[group, style, language, premium].join(",")}
           className="mt-5"
           labels={{ previous: copy.previous, next: copy.next, goTo: copy.goTo }}
           itemClassName="w-[70%] sm:w-[42%] md:w-[32%]"
           gridClassName="lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10"
-          itemClassFor={(i) => (!expanded && !filtered && i >= PREVIEW_COUNT ? "lg:hidden" : undefined)}
         >
-          {shown.map((it) => (
+          {visible.map((it) => (
             <Link key={it.key} href={localePath(locale, `/designs/${it.key}`)} className="group block rounded-lg outline-offset-4">
               <div className="relative overflow-hidden rounded-[5px] bg-cream-deep shadow-soft ring-1 ring-black/5 transition-[translate,box-shadow] duration-700 ease-luxe group-hover:-translate-y-1.5 group-hover:shadow-lift">
                 {/* eslint-disable-next-line @next/next/no-img-element -- pre-rendered sample */}
@@ -142,15 +156,14 @@ export function DesignsBrowser({
           ))}
         </Carousel>
       ) : null}
-      {capped && shown.length && !filtered && shown.length > PREVIEW_COUNT ? (
-        <div className="mt-10 hidden justify-center lg:flex">
+      {more > 0 ? (
+        <div className="mt-8 flex justify-center lg:mt-10">
           <button
             type="button"
-            aria-expanded={expanded}
-            onClick={() => setExpanded((e) => !e)}
+            onClick={() => setLimit((l) => l + PAGE)}
             className="h-11 rounded-full border border-hairline bg-[#fffcf6] px-6 text-[14px] font-medium text-ink transition hover:border-gold"
           >
-            {expanded ? copy.showFewer : copy.showAll.replace("{n}", String(shown.length))}
+            {copy.showMore.replace("{n}", String(more))}
           </button>
         </div>
       ) : null}

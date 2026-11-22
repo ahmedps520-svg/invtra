@@ -58,6 +58,7 @@ export const editor: typeof en = {
   },
 
   theme: {
+    showMore: "اعرض {n} تصاميم أخرى",
     current: "تصميمك الحالي",
     premium: "مميز",
     includedWithPremium: "متاح مع الباقة المميزة",
@@ -150,6 +151,8 @@ export const editor: typeof en = {
   },
 
   palettes: {
+    ivoryOnDark: "عاجي وذهبي",
+    pearlOnDark: "لؤلؤي وفضي",
     artwork: "ألوان التصميم",
     inkOnPaper: "حبر داكن",
     sepiaOnPaper: "بنّي دافئ",

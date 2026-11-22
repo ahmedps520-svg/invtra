@@ -17,12 +17,20 @@ import { SitePreview } from "./site-preview";
 import { useMounted } from "./use-card-props";
 import { EditorCard } from "./editor-card";
 
+/** Designs shown at a time; "Show more" adds another set (there are hundreds). */
+const PICKER_PAGE = 18;
+
 export function ThemePicker() {
   const { dict } = useI18n();
   const t = dict.editor.theme;
-  const { themes, draft, event, content, premiumIncluded } = useEditor();
+  const { themes: all, draft, event, content, premiumIncluded } = useEditor();
   const [previewKey, setPreviewKey] = useState<ThemeKey | null>(null);
+  const [limit, setLimit] = useState(PICKER_PAGE);
   const mounted = useMounted();
+  // The current design first, then the server's order (designs made for this occasion lead).
+  const ordered = useMemo(() => [...all.filter((th) => th.key === draft.themeKey), ...all.filter((th) => th.key !== draft.themeKey)], [all, draft.themeKey]);
+  const themes = useMemo(() => ordered.slice(0, limit), [ordered, limit]);
+  const more = Math.min(PICKER_PAGE, ordered.length - themes.length);
 
   // Thumbnails show this event in each theme's own style, with the customer's wording.
   const texts = useDeferredValue(draft.design.texts);
@@ -57,6 +65,8 @@ export function ThemePicker() {
                   <span className="block aspect-[4/5]">
                     {mounted ? (
                       <CardPreview
+                        lazy
+                        thumb
                         themeKey={th.key}
                         design={designs[th.key]}
                         language={event.language}
@@ -106,6 +116,13 @@ export function ThemePicker() {
           );
         })}
       </ul>
+      {more > 0 ? (
+        <div className="mt-8 flex justify-center">
+          <Button variant="outline" onClick={() => setLimit((l) => l + PICKER_PAGE)}>
+            {fmt(t.showMore, { n: more })}
+          </Button>
+        </div>
+      ) : null}
       <ThemePreviewDialog themeKey={previewKey} onClose={() => setPreviewKey(null)} />
     </>
   );

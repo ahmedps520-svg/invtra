@@ -1,14 +1,15 @@
-import { THEME_KEYS } from "@/lib/themes/types";
+import { COLLECTION_KEYS, THEME_KEYS } from "@/lib/themes/types";
 import { SAMPLE_LANGS, SAMPLE_QR_TOKENS, parseSampleFile, sampleFileName } from "@/lib/marketing/samples";
 import { qrSvg } from "@/lib/qr";
 import { sampleCardWebp } from "@/server/seo/sample-card";
 
 const CACHE = "public, max-age=604800, s-maxage=2592000, stale-while-revalidate=2592000";
 
-/** Every design in every language (and the sample QR codes) is rendered at build time; occasion variants on first request. */
+/** The core designs in every language (and the sample QR codes) are rendered at build time; the collection and occasion variants on first request. */
 export function generateStaticParams() {
   return [
-    ...THEME_KEYS.flatMap((theme) => SAMPLE_LANGS.map((lang) => ({ file: sampleFileName(theme, lang) }))),
+    // The generated collection (hundreds of designs) renders on first request instead, to keep builds quick.
+    ...THEME_KEYS.filter((k) => !(COLLECTION_KEYS as readonly string[]).includes(k)).flatMap((theme) => SAMPLE_LANGS.map((lang) => ({ file: sampleFileName(theme, lang) }))),
     ...SAMPLE_QR_TOKENS.map((t) => ({ file: `qr-${t}.svg` })),
   ];
 }

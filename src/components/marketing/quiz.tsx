@@ -9,7 +9,7 @@ export type { QuizDesign };
 import type { Dictionary } from "@/lib/i18n";
 import { buttonClasses } from "@/components/ui/button";
 import { SAMPLE_HEIGHT, SAMPLE_WIDTH, sampleLang, sampleSrc } from "@/lib/marketing/samples";
-import { DESIGN_STYLES } from "@/lib/marketing/design-styles";
+import { DESIGN_STYLES } from "@/lib/marketing/design-style-list";
 import { matchDesigns, planFor, type QuizAnswers, type QuizDesign } from "@/lib/marketing/quiz";
 import { startHref, type SendingMode } from "@/lib/marketing/links";
 import { cn } from "@/lib/utils";

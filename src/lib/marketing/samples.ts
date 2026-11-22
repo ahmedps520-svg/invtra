@@ -28,11 +28,19 @@ export function sampleSrc(theme: ThemeKey | string, lang: SampleLang, occasion?:
 }
 
 export function parseSampleFile(file: string): { theme: ThemeKey; lang: SampleLang; occasion: EventType | null } | null {
-  const m = /^([a-z]+)-(en|ar|bi)(?:-([a-z-]+))?\.webp$/.exec(file);
-  if (!m || !(THEME_KEYS as readonly string[]).includes(m[1])) return null;
-  const occasion = m[3] ? ((Object.keys(OCCASION_SLUGS) as EventType[]).find((t) => OCCASION_SLUGS[t] === m[3]) ?? null) : null;
-  if (m[3] && !occasion) return null;
-  return { theme: m[1] as ThemeKey, lang: m[2] as SampleLang, occasion };
+  const m = /^([a-z][a-z0-9-]*)\.webp$/.exec(file);
+  if (!m) return null;
+  // Theme keys may contain hyphens, so try each "-en" / "-ar" / "-bi" split until the prefix is a design.
+  for (const split of m[1].matchAll(/-(en|ar|bi)(?=-|$)/g)) {
+    const theme = m[1].slice(0, split.index);
+    if (!(THEME_KEYS as readonly string[]).includes(theme)) continue;
+    const rest = m[1].slice(split.index + split[0].length);
+    const slug = rest ? rest.slice(1) : null;
+    const occasion = slug ? ((Object.keys(OCCASION_SLUGS) as EventType[]).find((t) => OCCASION_SLUGS[t] === slug) ?? null) : null;
+    if (slug && !occasion) return null;
+    return { theme: theme as ThemeKey, lang: split[1] as SampleLang, occasion };
+  }
+  return null;
 }
 
 /** A sample guest QR code (ink on paper, INVTRA mark in the middle): /samples/qr-<TOKEN>.svg. */

@@ -56,6 +56,7 @@ export const editor = {
   },
 
   theme: {
+    showMore: "Show {n} more designs",
     current: "Your design",
     premium: "Premium",
     includedWithPremium: "Included with Premium",
@@ -148,6 +149,8 @@ export const editor = {
   },
 
   palettes: {
+    ivoryOnDark: "Ivory & gold",
+    pearlOnDark: "Pearl & silver",
     artwork: "The artwork's colours",
     inkOnPaper: "Deep ink",
     sepiaOnPaper: "Warm sepia",

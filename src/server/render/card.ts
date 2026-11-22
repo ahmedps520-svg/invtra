@@ -20,17 +20,22 @@ function fonts(): string[] {
 
 /** Design artwork referenced by public path (e.g. "/stationery/peony.jpg?v=1"): the browser loads it by URL, resvg gets it inlined. */
 const ARTWORK_HREF = /href="\/stationery\/([a-z0-9-]+)\.(jpg|png)(?:\?v=\d+)?"/g;
+/** Recently used artwork as data URIs (~300 KB each); bounded, since there are hundreds of designs. */
 const artwork = new Map<string, string>();
+const ARTWORK_CACHE = 24;
 
 function inlineArtwork(svg: string): string {
   return svg.replace(ARTWORK_HREF, (_m, name: string, ext: string) => {
     const file = `${name}.${ext}`;
     let uri = artwork.get(file);
-    if (!uri) {
+    if (uri) {
+      artwork.delete(file);
+    } else {
       const data = readFileSync(path.join(process.cwd(), "public", "stationery", file)).toString("base64");
       uri = `data:image/${ext === "jpg" ? "jpeg" : "png"};base64,${data}`;
-      artwork.set(file, uri);
+      if (artwork.size >= ARTWORK_CACHE) artwork.delete(artwork.keys().next().value!);
     }
+    artwork.set(file, uri);
     return `href="${uri}"`;
   });
 }

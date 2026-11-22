@@ -79,8 +79,7 @@ export const home = {
   },
 
   designs: {
-    showAll: "Show all {n} designs",
-    showFewer: "Show fewer",
+    showMore: "Show {n} more designs",
     filters: "Filter designs",
     occasion: "Occasion",
     style: "Style",

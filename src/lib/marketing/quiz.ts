@@ -1,5 +1,5 @@
 import type { EventType, PlanTier } from "@prisma/client";
-import type { DesignStyle } from "./design-styles";
+import type { DesignStyle } from "./design-style-list";
 
 export type QuizDesign = {
   key: string;

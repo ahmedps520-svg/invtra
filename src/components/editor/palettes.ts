@@ -1,5 +1,5 @@
 import type { InvitationDesign } from "@/lib/design/schema";
-import { STATIONERY_THEME_KEYS, THEMES, type ThemeKey } from "@/lib/themes/registry";
+import { COLLECTION_KEYS, STATIONERY_THEME_KEYS, THEMES, type ArtworkKey, type ThemeKey } from "@/lib/themes/registry";
 
 export type Palette = InvitationDesign["palette"];
 
@@ -75,7 +75,9 @@ export type PaletteName =
   | "ivoryLantern"
   | "artwork"
   | "inkOnPaper"
-  | "sepiaOnPaper";
+  | "sepiaOnPaper"
+  | "ivoryOnDark"
+  | "pearlOnDark";
 
 export interface PalettePreset {
   name: PaletteName;
@@ -89,16 +91,30 @@ export interface PalettePreset {
  */
 /**
  * Artwork designs keep their painted paper, so their colourways change the ink: the artwork's own
- * colours, a deep ink and a warm sepia (all dark on the light paper).
+ * colours, then two inks that read on that paper (deep ink and warm sepia on light paper, ivory and
+ * pearl on dark paper).
  */
-const artworkPresets = (own: Palette): PalettePreset[] => [
-  { name: "artwork", palette: own },
-  { name: "inkOnPaper", palette: { ...own, text: "#1F2633", muted: "#6B7180", accent: "#2F3B57" } },
-  { name: "sepiaOnPaper", palette: { ...own, text: "#3D2E22", muted: "#8C7A66", accent: "#8B6A45" } },
-];
+const isDark = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b < 110;
+};
+const artworkPresets = (own: Palette): PalettePreset[] =>
+  isDark(own.background)
+    ? [
+        { name: "artwork", palette: own },
+        { name: "ivoryOnDark", palette: { ...own, text: "#FBF5E8", muted: "#CFC6B3", accent: "#E2C27F" } },
+        { name: "pearlOnDark", palette: { ...own, text: "#F2F4F7", muted: "#BFC5CF", accent: "#D5DAE2" } },
+      ]
+    : [
+        { name: "artwork", palette: own },
+        { name: "inkOnPaper", palette: { ...own, text: "#1F2633", muted: "#6B7180", accent: "#2F3B57" } },
+        { name: "sepiaOnPaper", palette: { ...own, text: "#3D2E22", muted: "#8C7A66", accent: "#8B6A45" } },
+      ];
+
+const ARTWORK_KEYS: ArtworkKey[] = [...STATIONERY_THEME_KEYS, ...COLLECTION_KEYS];
 
 export const PALETTE_PRESETS: Record<ThemeKey, PalettePreset[]> = {
-  ...(Object.fromEntries(STATIONERY_THEME_KEYS.map((k) => [k, artworkPresets(THEMES[k].defaults.palette)])) as Record<(typeof STATIONERY_THEME_KEYS)[number], PalettePreset[]>),
+  ...(Object.fromEntries(ARTWORK_KEYS.map((k) => [k, artworkPresets(THEMES[k].defaults.palette)])) as Record<ArtworkKey, PalettePreset[]>),
   minimal: [
     { name: "ivoryBronze", palette: { background: "#FBF9F5", surface: "#FFFFFF", text: "#24201C", muted: "#8A8178", accent: "#A08060" } },
     { name: "sageLinen", palette: { background: "#F3F4EE", surface: "#FBFCF8", text: "#27302A", muted: "#7A847B", accent: "#6F8466" } },

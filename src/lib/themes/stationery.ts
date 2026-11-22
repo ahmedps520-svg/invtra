@@ -2,7 +2,7 @@ import type { EventType } from "@prisma/client";
 import type { FontKey } from "@/lib/design/fonts";
 import type { InvitationDesign } from "@/lib/design/schema";
 import { baseCard, design } from "./base";
-import type { StationeryKey, ThemeArt, ThemeDefinition } from "./types";
+import type { ArtworkKey, StationeryKey, ThemeArt, ThemeDefinition } from "./types";
 
 /**
  * Designs printed on real artwork: public-domain botanical paintings and flower photographs, laid
@@ -13,7 +13,7 @@ import type { StationeryKey, ThemeArt, ThemeDefinition } from "./types";
 /** Bump when artwork files change, so browsers and caches fetch the new images. */
 const ART_VERSION = 1;
 
-interface Spec {
+export interface ArtworkSpec {
   premium: boolean;
   language?: ThemeDefinition["recommendedLanguage"];
   occasions: EventType[];
@@ -24,12 +24,12 @@ interface Spec {
   names?: { font: FontKey | null; fontAr: FontKey | null };
   nameScale?: number;
   uppercase?: boolean;
-  art: Omit<ThemeArt, "src">;
+  art: Omit<ThemeArt, "src" | "thumb">;
   sections?: ThemeDefinition["page"]["sectionStyle"];
   divider?: ThemeDefinition["page"]["divider"];
 }
 
-function stationery(key: StationeryKey, s: Spec): ThemeDefinition {
+export function stationery(key: ArtworkKey, s: ArtworkSpec, version = ART_VERSION): ThemeDefinition {
   const [display, body, arabicDisplay, arabicBody] = s.fonts;
   return {
     key,
@@ -50,7 +50,7 @@ function stationery(key: StationeryKey, s: Spec): ThemeDefinition {
       eyebrowUppercase: true,
       nameScale: s.nameScale ?? 1,
       panel: false,
-      art: { src: `/stationery/${key}.jpg?v=${ART_VERSION}`, ...s.art },
+      art: { src: `/stationery/${key}.jpg?v=${version}`, thumb: `/stationery/thumb/${key}.jpg?v=${version}`, ...s.art },
     },
     page: { hero: "art", sectionStyle: s.sections ?? "cards", namesUppercase: s.uppercase ?? false, divider: s.divider ?? "floral" },
   };

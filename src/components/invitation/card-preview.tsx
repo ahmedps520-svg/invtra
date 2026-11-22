@@ -24,6 +24,7 @@ export function CardPreview({
   className,
   title = "Invitation preview",
   lazy = false,
+  thumb = false,
 }: {
   themeKey: ThemeKey | string;
   design?: InvitationDesign;
@@ -42,6 +43,8 @@ export function CardPreview({
    * long pages light (each card is a full SVG with its own QR code) and fast to first paint.
    */
   lazy?: boolean;
+  /** Small preview: artwork designs load their thumbnail instead of the full artwork. */
+  thumb?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(!lazy);
@@ -65,8 +68,8 @@ export function CardPreview({
       return buildCustomCardSvg({ image: customImage, design: d, qrText, qrPlaceholder, caption: language === "AR" ? "امسح الرمز لعرض دعوتك" : "Scan for your invitation" }).svg;
     }
     const g = guest === undefined ? (language === "AR" ? SAMPLE_GUEST.ar : SAMPLE_GUEST.en) : guest;
-    return buildCardSvg({ theme, design: d, language, content: content ?? themeSampleContent(theme.key), guest: g, qrText, qrPlaceholder, backgroundImage });
-  }, [near, themeKey, design, language, content, guest, qrText, qrPlaceholder, backgroundImage, customImage]);
+    return buildCardSvg({ theme, design: d, language, content: content ?? themeSampleContent(theme.key), guest: g, qrText, qrPlaceholder, backgroundImage, artThumb: thumb });
+  }, [near, themeKey, design, language, content, guest, qrText, qrPlaceholder, backgroundImage, customImage, thumb]);
 
   if (svg === null) {
     return (
