@@ -4,7 +4,7 @@ import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { buttonClasses } from "@/components/ui/button";
 import type { SendingMode } from "@/lib/marketing/links";
-import { THEME_KEYS } from "@/lib/themes/types";
+import { STUDIO_DESIGN } from "@/lib/marketing/demo-copy";
 import { HeroStudio } from "./hero-studio";
 import { QuizButton } from "./quiz-button";
 import { CONTAINER } from "./styles";
@@ -25,7 +25,8 @@ export function Hero({
 }) {
   const t = dict.marketing.hero;
   const h = dict.marketing.home;
-  const designNames = Object.fromEntries(THEME_KEYS.map((k) => [k, dict.themes[k].name]));
+  // Only the designs the studio can show (one per occasion), not the whole catalogue.
+  const designNames = Object.fromEntries(Object.values(STUDIO_DESIGN).map((k) => [k, dict.themes[k].name]));
 
   return (
     <section id="top" className="relative -mt-[68px] overflow-hidden pt-[68px] sm:-mt-[72px] sm:pt-[72px]">

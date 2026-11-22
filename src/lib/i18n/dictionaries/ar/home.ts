@@ -77,6 +77,7 @@ export const home: typeof en = {
 
   designs: {
     showMore: "اعرض {n} تصاميم أخرى",
+    exploreAll: "اكتشف جميع التصاميم ({n})",
     filters: "تصفية التصاميم",
     occasion: "المناسبة",
     style: "الطابع",

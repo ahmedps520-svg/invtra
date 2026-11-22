@@ -5,10 +5,9 @@ import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { env } from "@/server/env";
 import { sendingMode } from "@/server/marketing";
-import { THEME_LIST } from "@/lib/themes/registry";
 import { EVENT_TYPES } from "@/lib/events/types";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
-import { THEME_STYLE } from "@/lib/marketing/design-styles";
+import { THEME_STYLE, quizDesigns } from "@/lib/marketing/design-styles";
 import { startHref } from "@/lib/marketing/links";
 import { Hero } from "@/components/marketing/hero";
 import { ProofStrip } from "@/components/marketing/proof-strip";
@@ -71,7 +70,8 @@ export default async function HomePage() {
     faqLd(t.faq.items, locale),
   ]);
 
-  const quizDesigns: QuizDesign[] = THEME_LIST.map((th) => ({
+  // The designs the quiz can recommend (the best few for every answer, so the page stays light).
+  const quizChoices: QuizDesign[] = quizDesigns().map((th) => ({
     key: th.key,
     name: dict.themes[th.key].name,
     premium: th.premium,
@@ -135,7 +135,7 @@ export default async function HomePage() {
       </div>
 
       <Quiz
-        designs={quizDesigns}
+        designs={quizChoices}
         occasions={quizOccasions}
         copy={t.home.quiz}
         planNames={dict.common.plans}

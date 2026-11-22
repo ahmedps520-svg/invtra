@@ -80,6 +80,7 @@ export const home = {
 
   designs: {
     showMore: "Show {n} more designs",
+    exploreAll: "Explore all {n} designs",
     filters: "Filter designs",
     occasion: "Occasion",
     style: "Style",
