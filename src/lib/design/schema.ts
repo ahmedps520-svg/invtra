@@ -67,7 +67,7 @@ export const designSchema = z.object({
     .default({ font: null, fontAr: null, color: null, size: null }),
   /**
    * Two names printed side by side with a decorative "و" / "&" between them (the groom and the bride,
-   * when the hosts above are their parents). Shown in place of the ornament once both are filled in.
+   * when the hosts above are their parents), with the ornament below them. Shown once both are filled in.
    */
   couple: z
     .object({

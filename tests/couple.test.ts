@@ -47,14 +47,19 @@ describe("the couple's names", () => {
     expect(coupleFor(withCouple({ first: "Abdullah", second: "Noura" }), "ar")).toEqual(["Abdullah", "Noura"]);
   });
 
-  it("are printed around a decorative و in place of the ornament, and the hosts' names step down", () => {
+  it("are printed around a decorative و with the ornament below, and the hosts' names step down", () => {
     const plain = card(withCouple({}));
     const svg = card(withCouple({ firstAr: "عبدالله", secondAr: "نورة" }));
     expect(svg).toContain(">عبدالله<");
     expect(svg).toContain(">نورة<");
     expect(svg).toMatch(/font-family="'Alkalami'"[^>]*>و</);
+    // The ornament is still drawn, after (below) the couple's names.
+    const ar = svg.indexOf(">نورة<");
+    const divider = svg.indexOf("<g transform=\"translate(", ar);
+    expect(ar).toBeGreaterThan(0);
+    expect(divider).toBeGreaterThan(ar);
     // The hosts' line is set smaller than on the same card without the couple.
-    const host = "خديجه خماش و فاطمه";
+    const host = "احلام باكثير";
     expect(sizeOf(svg, `[^<]*${host}`)).toBeLessThan(sizeOf(plain, `[^<]*${host}`) * 0.75);
   });
 
@@ -64,6 +69,22 @@ describe("the couple's names", () => {
     expect(xOf(ar, "عبدالله")).toBeGreaterThan(xOf(ar, "نورة"));
     const en = card(withCouple({ first: "Abdullah", second: "Noura" }), "EN");
     expect(xOf(en, "Abdullah")).toBeLessThan(xOf(en, "Noura"));
+  });
+
+  it("keep the و's tail clear of the ornament below", () => {
+    const svg = card(withCouple({ firstAr: "عبدالله", secondAr: "نورة" }));
+    const join = /<text x="[\d.]+" y="([\d.]+)" font-family="'Alkalami'" font-size="([\d.]+)"[^>]*>و</.exec(svg);
+    expect(join).toBeTruthy();
+    const [baseline, size] = [Number(join![1]), Number(join![2])];
+    const divider = Number(/<g transform="translate\([\d.]+ ([\d.]+)\)/.exec(svg.slice(join!.index))?.[1]);
+    // Alkalami's و drops about 0.43 of its size below the baseline; the divider is about 24 high.
+    expect(divider - 12).toBeGreaterThan(baseline + size * 0.43 + 10);
+  });
+
+  it("keep each host's name whole when the hosts' names wrap", () => {
+    const svg = card(withCouple({ firstAr: "احمد", secondAr: "ابرار" }));
+    expect(svg).toContain(">خديجه خماش و فاطمه مصنف<");
+    expect(svg).toContain(">و احلام باكثير<");
   });
 
   it("use the chosen typeface for the و", () => {
@@ -78,7 +99,7 @@ describe("the couple's names", () => {
 
 describe("names size", () => {
   it("scales the names and is kept within bounds", () => {
-    const host = "خديجه خماش و فاطمه";
+    const host = "احلام باكثير";
     const full = sizeOf(card(withCouple({})), `[^<]*${host}`);
     const half = sizeOf(card(withCouple({}, { size: 0.5 })), `[^<]*${host}`);
     expect(half).toBeLessThan(full * 0.6);

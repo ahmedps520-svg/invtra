@@ -1,6 +1,6 @@
 import type { EventType } from "@prisma/client";
 import { cardQrText, coupleFor, type InvitationDesign } from "@/lib/design/schema";
-import { ARABIC_JOIN_FONTS, FONTS, LATIN_JOIN_FONTS, displayWeight } from "@/lib/design/fonts";
+import { ARABIC_JOIN_FONTS, FONTS, JOIN_GLYPHS, LATIN_JOIN_FONTS, displayWeight } from "@/lib/design/fonts";
 import type { ThemeDefinition } from "@/lib/themes/types";
 import { CARD_PHRASES, copyFor } from "@/lib/invitation-copy";
 import { fmt } from "@/lib/i18n/config";
@@ -57,7 +57,7 @@ export interface CardInput {
 
 type Block = { height: number; render: (top: number) => string };
 
-const BASE_GAPS = { afterMonogram: 26, afterEyebrow: 26, afterNames: 28, afterIntro: 30, afterDivider: 30, afterCouple: 34, afterDate: 8, afterTime: 26, afterVenue: 6 };
+const BASE_GAPS = { afterMonogram: 26, afterEyebrow: 26, afterNames: 28, afterIntro: 30, afterDivider: 30, afterCouple: 18, afterDate: 8, afterTime: 26, afterVenue: 6 };
 
 /** With the couple's names printed, the hosts' names (usually their parents) step down to this size. */
 const HOSTS_WITH_COUPLE = 0.6;
@@ -103,8 +103,9 @@ function textBlock(
   fill: string,
   leading = 1.25,
   opacity = 1,
+  keepNames = false,
 ): Block {
-  const r = fit(text, style, maxWidth, { maxLines });
+  const r = fit(text, style, maxWidth, { maxLines, keepNames });
   const s = r.style;
   const lh = s.size * leading;
   const asc = Math.min(Math.max(ascent(s), s.size * 0.72), s.size * 1.0);
@@ -253,7 +254,7 @@ export function buildCardSvg(input: CardInput): string {
             letterSpacing: namesUpper ? 0.08 : 0,
           };
       const pair = theme.card.stackNames ? splitNames(names) : null;
-      if (!pair) return textBlock(names, st, cw, 2, cx, namesColor, 1.05);
+      if (!pair) return textBlock(names, st, cw, 2, cx, namesColor, 1.05, 1, true);
       const a1 = fit(pair[0], st, cw, { maxLines: 1 });
       const a2 = fit(pair[1], st, cw, { maxLines: 1 });
       const s = { ...st, size: Math.min(a1.style.size, a2.style.size) };
@@ -298,7 +299,7 @@ export function buildCardSvg(input: CardInput): string {
     const extraAr = splitExtra(design.texts.extraAr);
     const hasVenue = lines.venue && Boolean(isAr ? venueArText : venueEnText || (bi && venueArText));
     const below = lines.date || (lines.time && Boolean(content.time.en || content.time.ar)) || hasVenue || Boolean(addrText) || extraEn.length > 0 || extraAr.length > 0;
-    // The couple's names side by side around a decorative "و" / "&", in place of the ornament.
+    // The couple's names side by side around a decorative "و" / "&", with the ornament below them.
     const coupleRow = (pair: [string, string], arabic: boolean, scale: number): Block => {
       const joinKey = (arabic ? design.couple.joinFontAr : design.couple.joinFont) ?? (arabic ? ARABIC_JOIN_FONTS[0] : LATIN_JOIN_FONTS[0]);
       const base = 80 * theme.card.nameScale * k * scale;
@@ -306,7 +307,9 @@ export function buildCardSvg(input: CardInput): string {
         ? { family: namesArabic, weight: 400, size: base }
         : { family: namesLatin, weight: namesWeight, size: base, uppercase: namesUpper, letterSpacing: namesUpper ? 0.08 : 0 };
       const joinSt: TextStyle = { family: family(joinKey), weight: 400, size: base * (arabic ? 1.55 : 1.35) };
-      const joinW = joinSt.size * (arabic ? 0.62 : 0.72);
+      const glyph = JOIN_GLYPHS[joinKey] ?? { drop: 0.25, width: arabic ? 0.62 : 0.72, offset: 0 };
+      const joinW = joinSt.size * Math.max(glyph.width, 0.35);
+      const joinDy = joinSt.size * (arabic ? 0.02 : 0.04);
       const gap = 26 * k * scale;
       const half = (cw - joinW) / 2 - gap;
       const a = fit(pair[0], nameSt, half, { maxLines: 1, minSize: base * 0.45 });
@@ -316,21 +319,25 @@ export function buildCardSvg(input: CardInput): string {
       // Reading order: the first name comes first (on the right in Arabic, on the left in English).
       const [left, right] = arabic ? [pair[1], pair[0]] : [pair[0], pair[1]];
       return {
-        height: asc + st.size * 0.42,
+        // Room below for the names' descenders and for the join's tail (Alkalami's و drops deep).
+        height: asc + Math.max(st.size * 0.42, joinDy + joinSt.size * glyph.drop + st.size * 0.12),
         render: (top) => {
           const y = top + asc;
           return (
             textEl(left, cx - joinW / 2 - gap, y, st, namesColor, "end") +
-            textEl(arabic ? "و" : "&", cx, y + joinSt.size * (arabic ? 0.02 : 0.04), joinSt, p.accent, "middle") +
+            textEl(arabic ? "و" : "&", cx - joinSt.size * glyph.offset, y + joinDy, joinSt, p.accent, "middle") +
             textEl(right, cx + joinW / 2 + gap, y, st, namesColor, "start")
           );
         },
       };
     };
+    const divider: Block = { height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) };
     if (hasCouple) {
+      // The couple's names, then the design's ornament beneath them.
       if (coupleAr) push(coupleRow(coupleAr, true, coupleEn ? 0.82 : 1), coupleEn ? 14 : BASE_GAPS.afterCouple);
       if (coupleEn) push(coupleRow(coupleEn, false, coupleAr ? 0.7 : 1), BASE_GAPS.afterCouple);
-    } else if (blocks.length && below) push({ height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) }, BASE_GAPS.afterDivider);
+      if (below) push(divider, BASE_GAPS.afterDivider);
+    } else if (blocks.length && below) push(divider, BASE_GAPS.afterDivider);
 
     // Date & time
     const dateEn: TextStyle = { family: latinBody, weight: 500, size: 31 * k, uppercase: true, letterSpacing: 0.14 };

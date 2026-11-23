@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { getTheme } from "@/lib/themes/registry";
-import { ARABIC_JOIN_FONTS, FONTS, LATIN_JOIN_FONTS, fontStack } from "@/lib/design/fonts";
+import { ARABIC_JOIN_FONTS, FONTS, JOIN_GLYPHS, LATIN_JOIN_FONTS, fontStack } from "@/lib/design/fonts";
 import { coupleFor } from "@/lib/design/schema";
 import { monogramOf, cn } from "@/lib/utils";
 import { star } from "@/lib/card/ornaments";
@@ -104,29 +104,34 @@ function hasCouple(design: Parameters<typeof coupleFor>[0]) {
   return Boolean(coupleFor(design, "ar") || coupleFor(design, "en"));
 }
 
-/** The couple's names side by side around a decorative "و" / "&", in place of the ornament (as on the card). */
+/** The couple's names side by side around a decorative "و" / "&", above the ornament (as on the card). */
 function Couple({ light }: { light?: boolean }) {
   const { vm, lang } = useInvitation();
   const c = vm.design.couple;
   const ar = lang !== "en" ? coupleFor(vm.design, "ar") : null;
   const en = lang === "en" || (lang === "bilingual" && c.first && c.second) || !ar ? coupleFor(vm.design, "en") : null;
-  const row = (pair: [string, string], arabic: boolean, size: string) => (
-    <p
-      lang={arabic ? "ar" : "en"}
-      dir={arabic ? "rtl" : "ltr"}
-      className={cn("flex items-baseline justify-center gap-4 sm:gap-6", size)}
-    >
-      <span className={cn(s.names, light && s.namesLight, "text-end [font-size:inherit]")}>{pair[0]}</span>
-      <span
-        aria-label={arabic ? "و" : "and"}
-        className={cn("text-[1.6em] leading-none", light ? "text-white/85" : s.accent)}
-        style={{ fontFamily: fontStack((arabic ? c.joinFontAr : c.joinFont) ?? (arabic ? ARABIC_JOIN_FONTS[0] : LATIN_JOIN_FONTS[0])) }}
+  const row = (pair: [string, string], arabic: boolean, size: string) => {
+    const joinKey = (arabic ? c.joinFontAr : c.joinFont) ?? (arabic ? ARABIC_JOIN_FONTS[0] : LATIN_JOIN_FONTS[0]);
+    // Some join glyphs sit off-centre in their own width: nudge the ink back to the middle.
+    const offset = JOIN_GLYPHS[joinKey]?.offset ?? 0;
+    return (
+      <p
+        lang={arabic ? "ar" : "en"}
+        dir={arabic ? "rtl" : "ltr"}
+        className={cn("flex items-baseline justify-center gap-4 sm:gap-6", size)}
       >
-        {arabic ? "و" : "&"}
-      </span>
-      <span className={cn(s.names, light && s.namesLight, "text-start [font-size:inherit]")}>{pair[1]}</span>
-    </p>
-  );
+        <span className={cn(s.names, light && s.namesLight, "text-end [font-size:inherit]")}>{pair[0]}</span>
+        <span
+          aria-label={arabic ? "و" : "and"}
+          className={cn("text-[1.6em] leading-none", light ? "text-white/85" : s.accent)}
+          style={{ fontFamily: fontStack(joinKey), transform: offset ? `translateX(${-offset}em)` : undefined }}
+        >
+          {arabic ? "و" : "&"}
+        </span>
+        <span className={cn(s.names, light && s.namesLight, "text-start [font-size:inherit]")}>{pair[1]}</span>
+      </p>
+    );
+  };
   return (
     <div className="mt-7 space-y-2">
       {ar ? row(ar, true, en ? "text-3xl sm:text-4xl" : "text-[2.6rem] sm:text-5xl") : null}
@@ -154,7 +159,8 @@ function HeroText({ light }: { light?: boolean }) {
         as="p"
         className={cn("mt-6 max-w-md text-lg leading-relaxed", light ? "text-white/85" : s.muted)}
       />
-      {hasCouple(vm.design) ? <Couple light={light} /> : <Divider className={cn("mt-8", light && "text-white/80")} />}
+      {hasCouple(vm.design) ? <Couple light={light} /> : null}
+      <Divider className={cn(hasCouple(vm.design) ? "mt-5" : "mt-8", light && "text-white/80")} />
       <Txt en={vm.event.date.en} ar={vm.event.date.ar} as="p" className="mt-6 text-sm font-medium uppercase tracking-[0.2em]" inline={false} />
       {vm.event.venueName || vm.event.venueNameAr ? (
         <Txt

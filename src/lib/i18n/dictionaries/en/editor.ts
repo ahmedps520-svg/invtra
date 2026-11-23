@@ -125,7 +125,7 @@ export const editor = {
     extraPlaceholderAr: "مثال: الأطفال مرحَّب بهم",
     couple: "The couple's names",
     coupleHint:
-      "When the names above are the hosts (the parents, say), add the bride and groom here. They're printed side by side with a decorative “و” between them, in place of the ornament, and the hosts' names step down in size. Leave empty to keep the ornament.",
+      "When the names above are the hosts (the parents, say), add the bride and groom here. They're printed side by side with a decorative “و” between them and the ornament below, and the hosts' names step down in size.",
     groom: "Groom",
     bride: "Bride",
     firstName: "First name",

@@ -92,6 +92,30 @@ export const ARABIC_NAME_FONTS: FontKey[] = [
 export const ARABIC_JOIN_FONTS: FontKey[] = ["alkalami", "ruwudu", "aref-ruqaa", "gulzar", "rakkas", "amiri", "katibeh", "vibes"];
 export const LATIN_JOIN_FONTS: FontKey[] = ["great-vibes", "parisienne", "monsieur-la-doulaise", "imperial-script", "alex-brush", "pinyon", "italianno", "windsong"];
 
+/**
+ * The ink of each join font's "و" / "&", per unit of font size, as the renderer draws it: how far it
+ * drops below the baseline, how wide it is, and how far its middle sits from the anchor (negative
+ * is to the left). Used to space the couple's names around it, centre it and keep its tail off the ornament.
+ */
+export const JOIN_GLYPHS: Partial<Record<FontKey, { drop: number; width: number; offset: number }>> = {
+  alkalami: { drop: 0.43, width: 0.57, offset: -0.11 },
+  ruwudu: { drop: 0.42, width: 0.57, offset: -0.13 },
+  "aref-ruqaa": { drop: 0, width: 0.48, offset: -0.01 },
+  gulzar: { drop: 0, width: 0.25, offset: -0.01 },
+  rakkas: { drop: 0.01, width: 0.4, offset: -0.03 },
+  amiri: { drop: 0.21, width: 0.41, offset: -0.08 },
+  katibeh: { drop: 0.24, width: 0.25, offset: -0.04 },
+  vibes: { drop: 0.11, width: 0.48, offset: 0 },
+  "great-vibes": { drop: 0.04, width: 0.72, offset: 0.07 },
+  parisienne: { drop: 0.09, width: 0.76, offset: -0.02 },
+  "monsieur-la-doulaise": { drop: 0.19, width: 0.77, offset: 0.15 },
+  "imperial-script": { drop: 0.04, width: 0.83, offset: 0.13 },
+  "alex-brush": { drop: 0.12, width: 0.72, offset: 0 },
+  pinyon: { drop: 0, width: 0.44, offset: 0.04 },
+  italianno: { drop: 0.1, width: 0.68, offset: 0.15 },
+  windsong: { drop: 0.03, width: 0.76, offset: 0.18 },
+};
+
 /** The weight a display face is set in (light Jost, bolder Quicksand / Fredoka). */
 export function displayWeight(key: FontKey): number {
   return key === "jost" ? 300 : key === "quicksand" || key === "fredoka" ? 600 : FONTS[key].kind === "script" ? 400 : 500;

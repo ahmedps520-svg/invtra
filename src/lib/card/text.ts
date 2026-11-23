@@ -86,12 +86,12 @@ export function fit(
   text: string,
   style: TextStyle,
   maxWidth: number,
-  opts: { maxLines: number; minSize?: number },
+  opts: { maxLines: number; minSize?: number; keepNames?: boolean },
 ): { lines: string[]; style: TextStyle } {
   const min = opts.minSize ?? style.size * 0.55;
   let s = { ...style };
   for (let i = 0; i < 40; i++) {
-    const lines = balance(wrap(text, s, maxWidth), s, maxWidth);
+    const lines = balance(wrap(text, s, maxWidth), s, maxWidth, opts.keepNames);
     if (lines.length <= opts.maxLines && lines.every((l) => measure(l, s) <= maxWidth)) return { lines, style: s };
     if (s.size <= min) return { lines: lines.slice(0, opts.maxLines), style: s };
     s = { ...s, size: Math.max(min, s.size * 0.94) };
@@ -99,10 +99,34 @@ export function fit(
   return { lines: wrap(text, s, maxWidth).slice(0, opts.maxLines), style: s };
 }
 
-/** For 2-line results, move words so both lines are similar in width. */
-function balance(lines: string[], style: TextStyle, maxWidth: number): string[] {
+/** A word that joins two people's names: "و", "&" or "and". */
+const JOINER = /^(?:و|&|and)$/i;
+
+/**
+ * For 2-line results, move words so both lines are similar in width. With `keepNames` (a list of
+ * names such as "Khadija Saleh & Fatima Ali"), the break goes before a "و" / "&" / "and" when one
+ * fits, so no one's name is split across the lines.
+ */
+function balance(lines: string[], style: TextStyle, maxWidth: number, keepNames = false): string[] {
   if (lines.length !== 2) return lines;
   const words = lines.join(" ").split(" ");
+  if (keepNames) {
+    let named: string[] | null = null;
+    let namedDiff = Infinity;
+    for (let i = 1; i < words.length; i++) {
+      if (!JOINER.test(words[i])) continue;
+      const a = words.slice(0, i).join(" ");
+      const b = words.slice(i).join(" ");
+      const wa = measure(a, style);
+      const wb = measure(b, style);
+      if (wa > maxWidth || wb > maxWidth) continue;
+      if (Math.abs(wa - wb) < namedDiff) {
+        named = [a, b];
+        namedDiff = Math.abs(wa - wb);
+      }
+    }
+    if (named) return named;
+  }
   let best = lines;
   let bestDiff = Math.abs(measure(lines[0], style) - measure(lines[1], style));
   for (let i = 1; i < words.length; i++) {
