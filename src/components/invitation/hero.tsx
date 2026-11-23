@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { getTheme } from "@/lib/themes/registry";
-import { FONTS } from "@/lib/design/fonts";
+import { ARABIC_JOIN_FONTS, FONTS, LATIN_JOIN_FONTS, fontStack } from "@/lib/design/fonts";
+import { coupleFor } from "@/lib/design/schema";
 import { monogramOf, cn } from "@/lib/utils";
 import { star } from "@/lib/card/ornaments";
 import { heroMotif } from "@/lib/card/hero-motifs";
@@ -25,6 +26,9 @@ function Names({ className, light }: { className?: string; light?: boolean }) {
   const en = vm.event.hostNames;
   const ar = vm.event.hostNamesAr || "";
   if (!en.trim() && !ar.trim()) return null;
+  // As on the card: smaller when the couple's names are shown below, unless the host set a size.
+  const hasCouple = Boolean(coupleFor(vm.design, "ar") || coupleFor(vm.design, "en"));
+  const scale = vm.design.names?.size ?? (hasCouple ? 0.6 : 1);
   const render = (names: string, arabic: boolean, size: string) => {
     const pair = splitNames(names);
     const cls = cn(s.names, light && s.namesLight, size, upper && !arabic && "uppercase tracking-[0.08em]");
@@ -58,16 +62,18 @@ function Names({ className, light }: { className?: string; light?: boolean }) {
       </h1>
     );
   };
-  if (lang === "ar") return <div className={className}>{render(ar || en, true, "text-[3.4rem] sm:text-7xl")}</div>;
+  const vars = { ["--ns" as string]: scale };
+  const big = "text-[calc(3.4rem*var(--ns,1))] sm:text-[calc(4.5rem*var(--ns,1))]";
+  if (lang === "ar") return <div className={className} style={vars}>{render(ar || en, true, big)}</div>;
   if (lang === "bilingual" && ar) {
     return (
-      <div className={cn(className, "space-y-3")}>
-        {render(ar, true, "text-5xl sm:text-6xl")}
-        <p className={cn(s.names, light && s.namesLight, "text-2xl sm:text-3xl opacity-80", upper && "uppercase tracking-[0.1em]")}>{en}</p>
+      <div className={cn(className, "space-y-3")} style={vars}>
+        {render(ar, true, "text-[calc(3rem*var(--ns,1))] sm:text-[calc(3.75rem*var(--ns,1))]")}
+        <p className={cn(s.names, light && s.namesLight, "text-[calc(1.5rem*var(--ns,1))] opacity-80 sm:text-[calc(1.875rem*var(--ns,1))]", upper && "uppercase tracking-[0.1em]")}>{en}</p>
       </div>
     );
   }
-  return <div className={className}>{render(en, false, "text-[3.4rem] sm:text-7xl")}</div>;
+  return <div className={className} style={vars}>{render(en, false, big)}</div>;
 }
 
 /** The theme's illustration (teddy, moon, lanterns…) drawn in the event's palette. */
@@ -94,6 +100,41 @@ function Motif() {
   );
 }
 
+function hasCouple(design: Parameters<typeof coupleFor>[0]) {
+  return Boolean(coupleFor(design, "ar") || coupleFor(design, "en"));
+}
+
+/** The couple's names side by side around a decorative "و" / "&", in place of the ornament (as on the card). */
+function Couple({ light }: { light?: boolean }) {
+  const { vm, lang } = useInvitation();
+  const c = vm.design.couple;
+  const ar = lang !== "en" ? coupleFor(vm.design, "ar") : null;
+  const en = lang === "en" || (lang === "bilingual" && c.first && c.second) || !ar ? coupleFor(vm.design, "en") : null;
+  const row = (pair: [string, string], arabic: boolean, size: string) => (
+    <p
+      lang={arabic ? "ar" : "en"}
+      dir={arabic ? "rtl" : "ltr"}
+      className={cn("flex items-baseline justify-center gap-4 sm:gap-6", size)}
+    >
+      <span className={cn(s.names, light && s.namesLight, "text-end [font-size:inherit]")}>{pair[0]}</span>
+      <span
+        aria-label={arabic ? "و" : "and"}
+        className={cn("text-[1.6em] leading-none", light ? "text-white/85" : s.accent)}
+        style={{ fontFamily: fontStack((arabic ? c.joinFontAr : c.joinFont) ?? (arabic ? ARABIC_JOIN_FONTS[0] : LATIN_JOIN_FONTS[0])) }}
+      >
+        {arabic ? "و" : "&"}
+      </span>
+      <span className={cn(s.names, light && s.namesLight, "text-start [font-size:inherit]")}>{pair[1]}</span>
+    </p>
+  );
+  return (
+    <div className="mt-7 space-y-2">
+      {ar ? row(ar, true, en ? "text-3xl sm:text-4xl" : "text-[2.6rem] sm:text-5xl") : null}
+      {en ? row(en, false, ar ? "text-2xl sm:text-3xl" : "text-[2.6rem] sm:text-5xl") : null}
+    </div>
+  );
+}
+
 function HeroText({ light }: { light?: boolean }) {
   const { vm } = useInvitation();
   const { extra, extraAr } = vm.design.texts;
@@ -113,7 +154,7 @@ function HeroText({ light }: { light?: boolean }) {
         as="p"
         className={cn("mt-6 max-w-md text-lg leading-relaxed", light ? "text-white/85" : s.muted)}
       />
-      <Divider className={cn("mt-8", light && "text-white/80")} />
+      {hasCouple(vm.design) ? <Couple light={light} /> : <Divider className={cn("mt-8", light && "text-white/80")} />}
       <Txt en={vm.event.date.en} ar={vm.event.date.ar} as="p" className="mt-6 text-sm font-medium uppercase tracking-[0.2em]" inline={false} />
       {vm.event.venueName || vm.event.venueNameAr ? (
         <Txt

@@ -69,7 +69,8 @@ export function withTheme(d: Draft, key: ThemeKey): Draft {
       ...d.design,
       palette: t.palette,
       fonts: t.fonts,
-      names: t.names,
+      // The design's own name typefaces; the size the host chose stays.
+      names: { ...t.names, size: d.design.names.size },
       animation: t.animation,
       card: { ...d.design.card, qr: { ...d.design.card.qr, style: t.card.qr.style } },
     },

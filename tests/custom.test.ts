@@ -424,7 +424,7 @@ describe("card options for custom events", () => {
     // Only the names change: the rest keeps the text colour.
     expect(styled).not.toMatch(/fill="#7FA7C9"[^>]*>Grand Hall/);
     const { normalizeDesign } = await import("@/lib/design/schema");
-    expect(normalizeDesign(eventDesign(event), { names: { font: "not-a-font" } }).names).toEqual({ font: null, fontAr: null, color: null });
+    expect(normalizeDesign(eventDesign(event), { names: { font: "not-a-font" } }).names).toEqual({ font: null, fontAr: null, color: null, size: null });
   });
 
   it("rejects a QR link that isn't a web address", async () => {

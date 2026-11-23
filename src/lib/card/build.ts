@@ -1,6 +1,6 @@
 import type { EventType } from "@prisma/client";
-import { cardQrText, type InvitationDesign } from "@/lib/design/schema";
-import { FONTS, displayWeight } from "@/lib/design/fonts";
+import { cardQrText, coupleFor, type InvitationDesign } from "@/lib/design/schema";
+import { ARABIC_JOIN_FONTS, FONTS, LATIN_JOIN_FONTS, displayWeight } from "@/lib/design/fonts";
 import type { ThemeDefinition } from "@/lib/themes/types";
 import { CARD_PHRASES, copyFor } from "@/lib/invitation-copy";
 import { fmt } from "@/lib/i18n/config";
@@ -57,7 +57,10 @@ export interface CardInput {
 
 type Block = { height: number; render: (top: number) => string };
 
-const BASE_GAPS = { afterMonogram: 26, afterEyebrow: 26, afterNames: 28, afterIntro: 30, afterDivider: 30, afterDate: 8, afterTime: 26, afterVenue: 6 };
+const BASE_GAPS = { afterMonogram: 26, afterEyebrow: 26, afterNames: 28, afterIntro: 30, afterDivider: 30, afterCouple: 34, afterDate: 8, afterTime: 26, afterVenue: 6 };
+
+/** With the couple's names printed, the hosts' names (usually their parents) step down to this size. */
+const HOSTS_WITH_COUPLE = 0.6;
 
 function family(key: keyof typeof FONTS) {
   return FONTS[key].family;
@@ -74,8 +77,14 @@ function textEl(
 ): string {
   const ar = isArabic(line);
   const t = style.uppercase && !ar ? line.toUpperCase() : line;
-  // For RTL text, SVG "start"/"end" are mirrored — convert from absolute alignment.
-  const a = ar && anchor !== "middle" ? (anchor === "start" ? "end" : "start") : anchor;
+  // `anchor` is absolute ("start" = left edge at x). Browsers mirror start/end for right-to-left
+  // text but resvg doesn't, so Arabic is centred on its measured width instead, which both agree on.
+  let a = anchor;
+  if (ar && anchor !== "middle") {
+    const w = measure(t, style);
+    x = anchor === "start" ? x + w / 2 : x - w / 2;
+    a = "middle";
+  }
   const ls = !ar && style.letterSpacing ? ` letter-spacing="${(style.letterSpacing * style.size).toFixed(2)}"` : "";
   return (
     `<text x="${x.toFixed(1)}" y="${baseline.toFixed(1)}" font-family="'${style.family}'" font-size="${style.size.toFixed(1)}"` +
@@ -224,8 +233,15 @@ export function buildCardSvg(input: CardInput): string {
       if (!isAr) push(textBlock(enCopy.eyebrow, eyebrowStyleEn, cw, 2, cx, p.accent), BASE_GAPS.afterEyebrow);
     }
 
-    // Names
-    const nameSize = 116 * theme.card.nameScale * k * nk;
+    // Names (smaller when the couple's names are printed below them, unless the host chose a size)
+    // Bilingual cards print each language's names only when they were given; single-language cards
+    // fall back to the other language's names.
+    const c = design.couple;
+    const coupleAr = isAr || (bi && c.firstAr && c.secondAr) ? coupleFor(design, "ar") : null;
+    const coupleEn = !isAr && (!bi || (c.first && c.second) || !coupleAr) ? coupleFor(design, "en") : null;
+    const hasCouple = Boolean(coupleAr || coupleEn);
+    const namesSize = design.names?.size ?? (hasCouple ? HOSTS_WITH_COUPLE : 1);
+    const nameSize = 116 * theme.card.nameScale * k * nk * namesSize;
     const namesFor = (names: string, arabic: boolean, scale = 1): Block => {
       const st: TextStyle = arabic
         ? { family: namesArabic, weight: 400, size: nameSize * 0.95 * scale }
@@ -282,7 +298,39 @@ export function buildCardSvg(input: CardInput): string {
     const extraAr = splitExtra(design.texts.extraAr);
     const hasVenue = lines.venue && Boolean(isAr ? venueArText : venueEnText || (bi && venueArText));
     const below = lines.date || (lines.time && Boolean(content.time.en || content.time.ar)) || hasVenue || Boolean(addrText) || extraEn.length > 0 || extraAr.length > 0;
-    if (blocks.length && below) push({ height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) }, BASE_GAPS.afterDivider);
+    // The couple's names side by side around a decorative "و" / "&", in place of the ornament.
+    const coupleRow = (pair: [string, string], arabic: boolean, scale: number): Block => {
+      const joinKey = (arabic ? design.couple.joinFontAr : design.couple.joinFont) ?? (arabic ? ARABIC_JOIN_FONTS[0] : LATIN_JOIN_FONTS[0]);
+      const base = 80 * theme.card.nameScale * k * scale;
+      const nameSt: TextStyle = arabic
+        ? { family: namesArabic, weight: 400, size: base }
+        : { family: namesLatin, weight: namesWeight, size: base, uppercase: namesUpper, letterSpacing: namesUpper ? 0.08 : 0 };
+      const joinSt: TextStyle = { family: family(joinKey), weight: 400, size: base * (arabic ? 1.55 : 1.35) };
+      const joinW = joinSt.size * (arabic ? 0.62 : 0.72);
+      const gap = 26 * k * scale;
+      const half = (cw - joinW) / 2 - gap;
+      const a = fit(pair[0], nameSt, half, { maxLines: 1, minSize: base * 0.45 });
+      const b = fit(pair[1], nameSt, half, { maxLines: 1, minSize: base * 0.45 });
+      const st = { ...nameSt, size: Math.min(a.style.size, b.style.size) };
+      const asc = st.size * 0.82;
+      // Reading order: the first name comes first (on the right in Arabic, on the left in English).
+      const [left, right] = arabic ? [pair[1], pair[0]] : [pair[0], pair[1]];
+      return {
+        height: asc + st.size * 0.42,
+        render: (top) => {
+          const y = top + asc;
+          return (
+            textEl(left, cx - joinW / 2 - gap, y, st, namesColor, "end") +
+            textEl(arabic ? "و" : "&", cx, y + joinSt.size * (arabic ? 0.02 : 0.04), joinSt, p.accent, "middle") +
+            textEl(right, cx + joinW / 2 + gap, y, st, namesColor, "start")
+          );
+        },
+      };
+    };
+    if (hasCouple) {
+      if (coupleAr) push(coupleRow(coupleAr, true, coupleEn ? 0.82 : 1), coupleEn ? 14 : BASE_GAPS.afterCouple);
+      if (coupleEn) push(coupleRow(coupleEn, false, coupleAr ? 0.7 : 1), BASE_GAPS.afterCouple);
+    } else if (blocks.length && below) push({ height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) }, BASE_GAPS.afterDivider);
 
     // Date & time
     const dateEn: TextStyle = { family: latinBody, weight: 500, size: 31 * k, uppercase: true, letterSpacing: 0.14 };

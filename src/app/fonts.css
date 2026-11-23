@@ -377,3 +377,136 @@
   font-display: swap;
   src: url("/fonts/katibeh-400.woff2") format("woff2");
 }
+@font-face {
+  font-family: "Gulzar";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/gulzar-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Mirza";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/mirza-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Scheherazade New";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/scheherazade-new-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Alkalami";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/alkalami-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Ruwudu";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ruwudu-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Reem Kufi Fun";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/reem-kufi-fun-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Kufam";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/kufam-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Jomhuria";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/jomhuria-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vibes";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/vibes-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Blaka";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/blaka-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Markazi Text";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/markazi-text-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Parisienne";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/parisienne-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Alex Brush";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/alex-brush-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Allura";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/allura-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Italianno";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/italianno-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Monsieur La Doulaise";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/monsieur-la-doulaise-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "WindSong";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/windsong-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Imperial Script";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/imperial-script-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rouge Script";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/rouge-script-400.woff2") format("woff2");
+}

@@ -39,7 +39,7 @@ export function stationery(key: ArtworkKey, s: ArtworkSpec, version = ART_VERSIO
     defaults: design({
       palette: s.palette,
       fonts: { display, body, arabicDisplay, arabicBody },
-      names: { font: s.names?.font ?? null, fontAr: s.names?.fontAr ?? null, color: null },
+      names: { font: s.names?.font ?? null, fontAr: s.names?.fontAr ?? null, color: null, size: null },
       animation: "elegant",
       card: baseCard,
     }),

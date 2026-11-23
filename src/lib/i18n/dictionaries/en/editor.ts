@@ -123,6 +123,13 @@ export const editor = {
     extraHint: "Anything else to print — one line each, up to four. Also shown on the guest page.",
     extraPlaceholder: "e.g. Children are welcome",
     extraPlaceholderAr: "مثال: الأطفال مرحَّب بهم",
+    couple: "The couple's names",
+    coupleHint:
+      "When the names above are the hosts (the parents, say), add the bride and groom here. They're printed side by side with a decorative “و” between them, in place of the ornament, and the hosts' names step down in size. Leave empty to keep the ornament.",
+    groom: "Groom",
+    bride: "Bride",
+    firstName: "First name",
+    secondName: "Second name",
   },
 
   colours: {
@@ -243,6 +250,12 @@ export const editor = {
     namesLatin: "English names",
     namesArabic: "Arabic names",
     namesSame: "Same as headings",
+    namesSize: "Size of the names",
+    namesSizeAuto: "Automatic",
+    namesSizeAutoHint: "Full size — or smaller when the couple's names are printed below them.",
+    namesSizeValue: "{n}%",
+    join: "The “و” between the couple's names",
+    joinLatin: "The “&” between the couple's names",
   },
 
   background: {

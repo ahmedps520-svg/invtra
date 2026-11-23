@@ -125,6 +125,13 @@ export const editor: typeof en = {
     extraHint: "أي شيء آخر تريد طباعته — سطر لكل معلومة، حتى أربعة أسطر. يظهر أيضًا في صفحة الضيف.",
     extraPlaceholder: "e.g. Children are welcome",
     extraPlaceholderAr: "مثال: الأطفال مرحَّب بهم",
+    couple: "اسما العروسين",
+    coupleHint:
+      "إذا كانت الأسماء أعلاه للداعين (الوالدين مثلًا)، أضف اسمي العريس والعروس هنا. يُطبعان متجاورين بينهما حرف «و» مزخرف بدل الزخرفة، ويصغر حجم أسماء الداعين. اتركهما فارغين لإبقاء الزخرفة.",
+    groom: "العريس",
+    bride: "العروس",
+    firstName: "الاسم الأول",
+    secondName: "الاسم الثاني",
   },
 
   colours: {
@@ -245,6 +252,12 @@ export const editor: typeof en = {
     namesLatin: "الأسماء بالإنجليزية",
     namesArabic: "الأسماء بالعربية",
     namesSame: "مثل العناوين",
+    namesSize: "حجم الأسماء",
+    namesSizeAuto: "تلقائي",
+    namesSizeAutoHint: "بالحجم الكامل — أو أصغر عند طباعة اسمي العروسين تحتها.",
+    namesSizeValue: "{n}٪",
+    join: "حرف «و» بين اسمي العروسين",
+    joinLatin: "علامة «&» بين اسمي العروسين بالإنجليزية",
   },
 
   background: {

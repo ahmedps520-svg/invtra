@@ -99,6 +99,8 @@ export function WordingPanel() {
     <div className="space-y-8">
       <DetailsSummary />
 
+      {draft.imageMode === "CUSTOM" ? null : <CoupleFields />}
+
       {FIELDS.map(({ base, multiline }) => (
         <div key={base}>
           <GroupLabel htmlFor={`${uid}-${base}-${langs[0]}`} className="mb-1 text-[13px] font-medium normal-case tracking-normal text-ink-soft">
@@ -181,6 +183,57 @@ export function WordingPanel() {
 
       {advanced ? <CardLinesControls /> : null}
     </div>
+  );
+}
+
+/**
+ * The couple's names, printed side by side around a decorative "و" when the names above are the
+ * hosts (the parents, say). Empty keeps the design's ornament.
+ */
+function CoupleFields() {
+  const { dict } = useI18n();
+  const t = dict.editor.wording;
+  const { event, draft, setDesign } = useEditor();
+  const langs = eventLangs(event.language);
+  const uid = useId();
+  const wedding = event.type === "WEDDING" || event.type === "ENGAGEMENT" || event.type === "HENNA";
+  const [firstLabel, secondLabel] = wedding ? [t.groom, t.bride] : [t.firstName, t.secondName];
+  const couple = draft.design.couple;
+  return (
+    <section aria-labelledby={`${uid}-couple`} className="rounded-2xl border border-line bg-ivory/70 p-5">
+      <h4 id={`${uid}-couple`} className="font-display text-lg text-ink">
+        {t.couple}
+      </h4>
+      <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">{t.coupleHint}</p>
+      <div className="mt-4 space-y-3">
+        {langs.map((lang) => {
+          const keys = lang === "ar" ? (["firstAr", "secondAr"] as const) : (["first", "second"] as const);
+          return (
+            <div key={lang} className="grid gap-3 sm:grid-cols-2">
+              {keys.map((key, i) => {
+                const id = `${uid}-${key}`;
+                const label = i === 0 ? firstLabel : secondLabel;
+                return (
+                  <div key={key}>
+                    <GroupLabel htmlFor={id} className="mb-1.5 text-[12px] font-medium normal-case tracking-normal text-ink-soft">
+                      {langs.length > 1 ? `${label} — ${lang === "ar" ? t.arabic : t.english}` : label}
+                    </GroupLabel>
+                    <Input
+                      id={id}
+                      value={couple[key]}
+                      maxLength={60}
+                      dir={lang === "ar" ? "rtl" : "ltr"}
+                      lang={lang}
+                      onChange={(e) => setDesign({ couple: { [key]: e.target.value } })}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

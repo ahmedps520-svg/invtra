@@ -24,6 +24,26 @@ export const FONTS = {
   marhey: { family: "Marhey", script: "arabic", kind: "sans" },
   lemonada: { family: "Lemonada", script: "arabic", kind: "sans" },
   katibeh: { family: "Katibeh", script: "arabic", kind: "script" },
+  // More for the names: Arabic calligraphy and display faces, and Latin scripts.
+  gulzar: { family: "Gulzar", script: "arabic", kind: "script" },
+  alkalami: { family: "Alkalami", script: "arabic", kind: "script" },
+  ruwudu: { family: "Ruwudu", script: "arabic", kind: "script" },
+  vibes: { family: "Vibes", script: "arabic", kind: "script" },
+  mirza: { family: "Mirza", script: "arabic", kind: "serif" },
+  scheherazade: { family: "Scheherazade New", script: "arabic", kind: "serif" },
+  markazi: { family: "Markazi Text", script: "arabic", kind: "serif" },
+  kufam: { family: "Kufam", script: "arabic", kind: "sans" },
+  "reem-kufi-fun": { family: "Reem Kufi Fun", script: "arabic", kind: "sans" },
+  jomhuria: { family: "Jomhuria", script: "arabic", kind: "sans" },
+  blaka: { family: "Blaka", script: "arabic", kind: "sans" },
+  parisienne: { family: "Parisienne", script: "latin", kind: "script" },
+  "alex-brush": { family: "Alex Brush", script: "latin", kind: "script" },
+  allura: { family: "Allura", script: "latin", kind: "script" },
+  italianno: { family: "Italianno", script: "latin", kind: "script" },
+  "monsieur-la-doulaise": { family: "Monsieur La Doulaise", script: "latin", kind: "script" },
+  windsong: { family: "WindSong", script: "latin", kind: "script" },
+  "imperial-script": { family: "Imperial Script", script: "latin", kind: "script" },
+  "rouge-script": { family: "Rouge Script", script: "latin", kind: "script" },
 } as const;
 
 export type FontKey = keyof typeof FONTS;
@@ -33,8 +53,44 @@ export const LATIN_BODY_FONTS: FontKey[] = ["cormorant", "jost", "playfair", "qu
 export const ARABIC_DISPLAY_FONTS: FontKey[] = ["amiri", "aref-ruqaa", "reem-kufi", "el-messiri", "baloo"];
 export const ARABIC_BODY_FONTS: FontKey[] = ["amiri", "plex-arabic", "el-messiri", "reem-kufi", "baloo"];
 /** Typefaces for the names: the display faces plus playful and calligraphic ones. */
-export const LATIN_NAME_FONTS: FontKey[] = [...LATIN_DISPLAY_FONTS, "great-vibes", "dancing-script", "pacifico", "fredoka", "marcellus"];
-export const ARABIC_NAME_FONTS: FontKey[] = [...ARABIC_DISPLAY_FONTS, "lalezar", "rakkas", "marhey", "lemonada", "katibeh"];
+export const LATIN_NAME_FONTS: FontKey[] = [
+  ...LATIN_DISPLAY_FONTS,
+  "great-vibes",
+  "parisienne",
+  "alex-brush",
+  "allura",
+  "italianno",
+  "monsieur-la-doulaise",
+  "windsong",
+  "imperial-script",
+  "rouge-script",
+  "dancing-script",
+  "pacifico",
+  "fredoka",
+  "marcellus",
+];
+export const ARABIC_NAME_FONTS: FontKey[] = [
+  ...ARABIC_DISPLAY_FONTS,
+  "gulzar",
+  "alkalami",
+  "ruwudu",
+  "mirza",
+  "scheherazade",
+  "markazi",
+  "vibes",
+  "kufam",
+  "reem-kufi-fun",
+  "jomhuria",
+  "blaka",
+  "lalezar",
+  "rakkas",
+  "marhey",
+  "lemonada",
+  "katibeh",
+];
+/** Typefaces for the decorative "و" / "&" between the couple's names (the first is the default). */
+export const ARABIC_JOIN_FONTS: FontKey[] = ["alkalami", "ruwudu", "aref-ruqaa", "gulzar", "rakkas", "amiri", "katibeh", "vibes"];
+export const LATIN_JOIN_FONTS: FontKey[] = ["great-vibes", "parisienne", "monsieur-la-doulaise", "imperial-script", "alex-brush", "pinyon", "italianno", "windsong"];
 
 /** The weight a display face is set in (light Jost, bolder Quicksand / Fredoka). */
 export function displayWeight(key: FontKey): number {
@@ -66,6 +122,25 @@ export const FONT_WEIGHTS: Record<string, number[]> = {
   Marhey: [400, 600],
   Lemonada: [400, 600],
   Katibeh: [400],
+  Gulzar: [400],
+  Alkalami: [400],
+  Ruwudu: [400],
+  Vibes: [400],
+  Mirza: [400],
+  "Scheherazade New": [400],
+  "Markazi Text": [400],
+  Kufam: [400],
+  "Reem Kufi Fun": [400],
+  Jomhuria: [400],
+  Blaka: [400],
+  Parisienne: [400],
+  "Alex Brush": [400],
+  Allura: [400],
+  Italianno: [400],
+  "Monsieur La Doulaise": [400],
+  WindSong: [400],
+  "Imperial Script": [400],
+  "Rouge Script": [400],
 };
 
 export function nearestWeight(family: string, weight: number): number {

@@ -9,6 +9,7 @@ import { FONTS, type FontKey } from "./fonts";
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #84664A");
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]]);
 const shortText = z.string().trim().max(160);
+const coupleName = z.string().trim().max(60).default("");
 /** Extra lines printed on the card (custom events): up to a few short lines. */
 const extraText = z.string().trim().max(300).default("");
 /** Where a QR can point instead of the guest's own invitation: any web link. */
@@ -56,8 +57,29 @@ export const designSchema = z.object({
    * null follows the display typefaces and the text colour.
    */
   names: z
-    .object({ font: fontKey.nullable(), fontAr: fontKey.nullable(), color: hex.nullable() })
-    .default({ font: null, fontAr: null, color: null }),
+    .object({
+      font: fontKey.nullable(),
+      fontAr: fontKey.nullable(),
+      color: hex.nullable(),
+      /** Size of the names relative to the design's own (null = automatic: smaller when the couple's names are printed). */
+      size: z.number().min(0.4).max(1.4).nullable().default(null),
+    })
+    .default({ font: null, fontAr: null, color: null, size: null }),
+  /**
+   * Two names printed side by side with a decorative "و" / "&" between them (the groom and the bride,
+   * when the hosts above are their parents). Shown in place of the ornament once both are filled in.
+   */
+  couple: z
+    .object({
+      first: coupleName,
+      second: coupleName,
+      firstAr: coupleName,
+      secondAr: coupleName,
+      /** Typeface of the "&" / "و" (null = the first of the join fonts). */
+      joinFont: fontKey.nullable().default(null),
+      joinFontAr: fontKey.nullable().default(null),
+    })
+    .default({ first: "", second: "", firstAr: "", secondAr: "", joinFont: null, joinFontAr: null }),
   sections: z.object({
     countdown: z.boolean(),
     schedule: z.boolean(),
@@ -105,6 +127,18 @@ export const designSchema = z.object({
 });
 
 export type InvitationDesign = z.infer<typeof designSchema>;
+export type CoupleNames = InvitationDesign["couple"];
+
+/**
+ * The couple's names for a card language, or null when they aren't both filled in. Arabic falls back
+ * to the English names and English to the Arabic ones, so either set is enough.
+ */
+export function coupleFor(design: Pick<InvitationDesign, "couple">, lang: "en" | "ar"): [string, string] | null {
+  const c = design.couple;
+  if (!c) return null;
+  const [a, b] = lang === "ar" ? [c.firstAr || c.first, c.secondAr || c.second] : [c.first || c.firstAr, c.second || c.secondAr];
+  return a.trim() && b.trim() ? [a.trim(), b.trim()] : null;
+}
 export type CardLines = InvitationDesign["card"]["lines"];
 
 /** Card lines that can be left off, in the order they are printed. */
