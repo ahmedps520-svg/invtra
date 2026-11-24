@@ -1,6 +1,6 @@
 # Artwork credits
 
-The painted flowers, birds, fruit and palms in these designs come from public-domain illustrations (CC0 or
+The painted flowers, birds, fruit, palms, animals, toys and objects in these designs come from public-domain illustrations (CC0 or
 Public Domain Mark), found through Openverse: mostly 18th–19th century botanical plates (Pierre-Joseph Redouté and
 others) and watercolours by Mary Vaux Walcott (Smithsonian, CC0). Each was cleaned of its old paper, captions and
 stamps, cut out, and arranged on new paper for INVTRA. The gold-foil lanterns, crescents, stars, arches, geometric
@@ -299,3 +299,100 @@ Source illustrations used across the collection:
 - Lemon Columbine North American Wildflowers — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16758013/lemon-columbine-from-north-american-wildflowers-1925-mary-vaux-walcott
 - Wisteria sinensis [as Glycine sinensis]. — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/14486298767
 - 33 Wisteria — thecmn (flickr, PDM 1.0) https://www.flickr.com/photos/97947597@N00/40334559424
+
+## The second collection (380 designs for birthdays, baby showers, newborns, aqiqah, graduation, henna, corporate events, engagements, anniversaries and gatherings)
+
+Antique toys, glass, silver and brass from the Index of American Design watercolours (National Gallery of Art, CC0), birds by John James Audubon and others, hot-air balloons, storks, lambs, owls, peacocks, shells and fruit from 18th–19th century plates, with flowers from the first collection. The balloons, bunting, confetti, laurels, graduation caps, bows, crowns, hearts, henna rosettes and paisleys, and the watercolour rainbows are drawn by INVTRA's generator (scripts/stationery/gold.py).
+
+Source illustrations added for this collection:
+
+- Baby Shoe (c. 1937) Margaret — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10072908/baby-shoe-c-1937-margaret-concha
+- Baby's Shoe (ca.1937) William Frank — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3361912/free-illustration-image-antique-apparel-art
+- Elevazione Aereobatica Eseguita da Francescon — libraryofcongress (rawpixel, CC0 1.0) https://www.rawpixel.com/image/429698/free-illustration-image-balloon-hot-air
+- watercolor drawing, proposed Design Balloon — libraryofcongress (rawpixel, CC0 1.0) https://www.rawpixel.com/image/429695/free-illustration-image-paris-hot-air-balloon
+- Vauxhall balloon system aeronautics (1850) — newyorkpubliclibrary (rawpixel, CC0 1.0) https://www.rawpixel.com/image/329277/free-illustration-image-balloon-vintage
+- Tricolor French flag themed balloon — libraryofcongress (rawpixel, CC0 1.0) https://www.rawpixel.com/image/429692/vintage-air-balloon-poster
+- 18th century illustration basket blooming — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/2663769/free-illustration-image-flower-vintage-roses
+- Rustic basket (1856), vintage flower — libraryofcongress (rawpixel, CC0 1.0) https://www.rawpixel.com/image/11064401/image-flower-plant-art
+- Vintage bird illustration — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/9648258/vintage-bird-illustration
+- New varieties of Potentilla (1865). — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/15406848547
+- Pine Swamp Warbler Birds America — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/277171/free-illustration-image-audubon-birds-pine
+- Frontispiece from Wild Flowers Drawn and Colored from Nature (1859). — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/28402161792
+- details brown butterfly vintage illustration — nap (rawpixel, CC0 1.0) https://www.rawpixel.com/image/2266719/free-illustration-image-butterfly-insect-brown
+- Camel Descrizioni Degli Animali (1771-1775) — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16788555/image-animal-art-vintage
+- Candlestick (1935–1942) Ronau William Woiceske — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3364240/free-illustration-image-antique-art-artwork
+- Candlestick (c. 1938) Leslie Macklem — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10079054/candlestick-c-1938-leslie-macklem
+- Candlestick (c. 1937) Janet Riza — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10073374/candlestick-c-1937-janet-riza
+- Cardinal Grosbeak Birds America (1827) — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/277447/free-illustration-image-cardinal-bird-audubon-birds
+- Cherry (Cerasus Duracina) Pomona Italiana — newyorkpubliclibrary (rawpixel, CC0 1.0) https://www.rawpixel.com/image/321674/free-illustration-image-italian-fruits-vintage-trees
+- Black Tartarian cherry lithograph. Digitally — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/6118349/image-leaves-vintage-public-domain
+- Hard-fleshed Cherry (Cerasus Duracina) Pomona — newyorkpubliclibrary (rawpixel, CC0 1.0) https://www.rawpixel.com/image/321779/free-illustration-image-italian-antique-art-fruit
+- Ostheim cherry lithograph. Digitally enhanced — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/6106256/image-leaves-vintage-public-domain
+- Two-handled cup cover. Original Minneapolis — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/7654996/photo-image-vintage-art-public-domain
+- Fan (c. 1937) Ann Gene — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3363986/free-illustration-image-art-accessory-antique
+- Painting Lesser Flamingo (Phoenicopterus minor) — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10543085/image-art-vintage-pink
+- Birds America Drawings Made United — themet (rawpixel, CC0 1.0) https://www.rawpixel.com/image/9081309/image-art-vintage-books
+- Gaillardia Grandiflora Floral Magazine (1861-1881) — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16642021/image-flower-plant-art
+- Camelopardis Giraffe - Giraffe (1837) — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/431460/free-illustration-image-giraffe-anatomy-skull
+- Sugar Bowl Cover (c. 1936) — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10071959/sugar-bowl-with-cover-c-1936-frank-fumagalli
+- Blown Decanter (c. 1936) Robert — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10064364/blown-decanter-c-1936-robert-stewart
+- Vinegar Cruet (c. 1936) Ralph — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10072310/vinegar-cruet-c-1936-ralph-atkinson
+- Globe (ca. 1937) Edward L — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3358748/free-illustration-image-antique-art-artwork
+- Rabbit Descrizioni Degli Animali (1771-1775) — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16788587/image-animal-art-forest
+- Lying shaved sheep Jean Bernard — rijksmuseum (rawpixel, CC0 1.0) https://www.rawpixel.com/image/481436/free-illustration-image-lamb-sheep
+- Yard Lantern (1937) Dorothea Farrington — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10078375/yard-lantern-1937-dorothea-farrington
+- Perforated Tin Lantern (c. 1940) — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10089507/perforated-tin-lantern-c-1940-oscar-bluhme
+- Noah's Ark Animals (1935–1942) Ben — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3362903/free-illustration-image-public-domain-vintage-animals
+- Sunflower, Helianthus annuus (1596–1610) Anselmus — rijksmuseum (rawpixel, CC0 1.0) https://www.rawpixel.com/image/562143/sunflower-vintage-style
+- Plat Birds America (1827) John — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/277316/free-illustration-image-audubon-audubon-america-birds-public-domain-century
+- Eurasian eagle-owl (BUBO BUBO) illustrated — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/326105/free-illustration-image-owl-bird-vintage-animal
+- Great horned owl. Bubo virginianus — libraryofcongress (rawpixel, CC0 1.0) https://www.rawpixel.com/image/7687734/great-horned-owl-bubo-virginianus-bon-prang-co-publisher
+- Naturalist’s Library Sir William Jardine — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/431469/beautiful-peafowl
+- Spike-crested peacock illustration Naturalist's Miscellany — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/386355/free-illustration-image-peacock-bird-vintage
+- Convolvulus, Lilies, Two Flies Peacock — rijksmuseum (rawpixel, CC0 1.0) https://www.rawpixel.com/image/515185/free-illustration-image-peacock-lily-flower
+- indian-peacock-1600 — livingxfile (flickr, PDM 1.0) https://www.flickr.com/photos/186907581@N03/49554731716
+- Coffee Pot (1935–1942) Nicholas Acampora — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3365932/free-illustration-image-20th-century-antique-art
+- Pewter Coffee Pot (ca. 1936) — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3368281/free-illustration-image-20th-century-antique-art
+- Silver Coffee Pot (ca.1937) Ernest — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3362805/free-illustration-image-antique-art-artwork
+- Coffee Pot (ca. 1940) Wayne — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3365862/free-illustration-image-20th-century-antique-art
+- Pram, baby stroller drawing, vintage — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/6305361/image-vintage-public-domain-illustrations
+- Rabbit Descrizioni Degli Animali (1771-1775) — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16788791/image-animal-plant-art
+- Rocking Horse (c 1941) Selma — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/25310166/rocking-horse-1941-selma-sandler-digitally-enhanced-rawpixel
+- Hobby Horse Toy (1935/1942) Raoul — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10060890/hobby-horse-toy-19351942-raoul-bois
+- Toy Rocking Horse Rider (c — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/25310216/image-horse-animal-person
+- Standing sheep (1812) Jean Bernard — rijksmuseum (rawpixel, CC0 1.0) https://www.rawpixel.com/image/481382/free-illustration-image-sheep-lamb-vintage
+- n134_w1150 — BioDivLibrary (bio_diversity, PDM 1.0) https://www.flickr.com/photos/61021753@N02/6792040380
+- n56_w1150 — BioDivLibrary (bio_diversity, PDM 1.0) https://www.flickr.com/photos/61021753@N02/8043336544
+- n390_w1150 — BioDivLibrary (bio_diversity, PDM 1.0) https://www.flickr.com/photos/61021753@N02/8122659456
+- n254_w1150 — BioDivLibrary (bio_diversity, PDM 1.0) https://www.flickr.com/photos/61021753@N02/8550783359
+- White stork ♀ (Ciconia ciconia) — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/325799/free-illustration-image-bird-stork-abstract
+- Stork (1560–1585) anonymous. Original Rijksmuseum — rijksmuseum (rawpixel, CC0 1.0) https://www.rawpixel.com/image/843256/vintage-stork-drawing
+- Strawberry 'Oscar' (1870-1879) — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/17311254066
+- Hand drawn sunflower. Original Biodiversity — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/2880154/free-illustration-image-flower-sunflower-botanical
+- Frieze (1900–1920), vintage red flower — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/12230608/image-flower-roses-red-art
+- Segment Floral Wreath (1802), vintage — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/9407661/image-flower-art-vintage
+- Swan (1560–1585) anonymous. Original Rijksmuseum — rijksmuseum (rawpixel, CC0 1.0) https://www.rawpixel.com/image/843263/vintage-swan-drawing
+- Sweet pea flowers (1833) — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/19191311264
+- Coffee Pot (ca. 1940) Oscar — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3365881/free-illustration-image-20th-century-antique-art
+- Toy Coach (ca.1939) Dorothy Brennan — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3391501/free-illustration-image-train-antique-art
+- Toy Bank (ca.1937) Lew Tower — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3340415/free-illustration-image-antique-art-artwork
+- Toy Elephant (c. 1941) Stanley — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10088289/toy-elephant-c-1941-stanley-chin
+- Toy Rooster (c. 1938) Lillian — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3391339/free-illustration-image-animal-antique-art
+- Toy Horse (1935/1942) American 20th — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10069789/toy-horse-19351942-american-20th-century
+- Toy Wooden Horse (1935/1942) David — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/10069830/toy-wooden-horse-19351942-david-ramage
+- Toy Locomotive (ca.1941) John Hall — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3391300/free-illustration-image-vintage-antique-art
+- Child's Top (ca. 1939) Fritz — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3387493/free-illustration-image-antique-art-artwork
+- Toy Locomotive (ca.1936) Alice Stearns — nationalgalleryofart (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3391255/free-illustration-image-alice-stearns-antique-art
+- Covered silver trophy — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/8544142/image-aesthetic-art-vintage
+- Caterpillars, butterflies flower wreath illustration — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16731095/image-butterfly-animal-flower
+- Italian jasmine shrub (1843-1846) — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/28418775414
+- Sunflowers (1915) Hannah Borger Overbeck — lacma (rawpixel, CC0 1.0) https://www.rawpixel.com/image/3229223/free-illustration-image-sunflower-flower-vintage
+- Thermopsis Rhombifolia North American Wildflowers — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/16757950/image-flower-plant-art
+
+From the earlier sources, first used in this collection:
+
+- Sweet peas and hollyhocks. — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/15175803148
+- Rose, Myrtle Ivy Language Flowers — bhl (rawpixel, CC0 1.0) https://www.rawpixel.com/image/2098482/beautiful-flower-bouquet
+- 18th century illustration bird orange — unknown artist (rawpixel, CC0 1.0) https://www.rawpixel.com/image/2670176/free-illustration-image-bird-botanical-butterfly
+- Dahlias. Cox Seed Annual, San Francisco, Ca. (1899) — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/14752660185
+- Garden tulip (Tulipa gesneriana) — Swallowtail Garden Seeds (flickr, PDM 1.0) https://www.flickr.com/photos/97123293@N07/14487724578

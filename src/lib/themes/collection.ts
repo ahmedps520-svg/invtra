@@ -7,8 +7,10 @@ import { stationery, type ArtworkSpec } from "./stationery";
 import type { CollectionKey, ThemeDefinition } from "./types";
 
 /**
- * The generated artwork collection: hundreds of designs for weddings, newborns and Ramadan, laid
- * out by scripts/stationery from public-domain paintings and gold-foil ornament. Each row is kept
+ * The generated artwork collection: hundreds of designs laid out by scripts/stationery from
+ * public-domain paintings and gold-foil ornament. The first part is for weddings, newborns and
+ * Ramadan (gen.py); the second for birthdays, baby showers, newborns, aqiqah, graduation, henna,
+ * corporate events, engagements, anniversaries and other gatherings (gen3.py). Each row is kept
  * compact (the list ships to the design picker) and expanded here into a full design.
  */
 

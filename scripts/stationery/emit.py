@@ -1,8 +1,16 @@
-"""Write the generated collection into the app: keys, compact rows, EN/AR names, artwork + thumbnails.
+"""Write the generated collections into the app: keys, compact rows, EN/AR names, artwork + thumbnails.
+The first collection (gen.py: weddings, newborns, Ramadan) and the second (gen3.py: birthdays, baby showers,
+graduation, henna, corporate, engagements, gatherings) are published together, in that order.
 usage: emit.py <repo>"""
 import json, os, shutil, sys
 repo = sys.argv[1]
-rows = json.load(open("artdata/collection.json"))
+SOURCES = [("artdata/collection.json", "artdata/out2", "artdata/thumb2"), ("artdata/collection3.json", "artdata/out3", "artdata/thumb3")]
+rows, art = [], {}
+for coll, out, thumb in SOURCES:
+    if not os.path.exists(coll): continue
+    for r in json.load(open(coll)):
+        rows.append(r); art[r["k"]] = (out, thumb)
+assert len({r["k"] for r in rows}) == len(rows), "duplicate keys across collections"
 T = os.path.join(repo, "src/lib/themes")
 keys = [r["k"] for r in rows]
 open(f"{T}/collection-keys.ts", "w").write(
@@ -46,8 +54,9 @@ open(f"{T}/collection-names.ts", "w").write(
 
 pub = os.path.join(repo, "public/stationery"); os.makedirs(f"{pub}/thumb", exist_ok=True)
 for k in keys:
-    shutil.copyfile(f"artdata/out2/{k}.jpg", f"{pub}/{k}.jpg")
-    shutil.copyfile(f"artdata/thumb2/{k}.jpg", f"{pub}/thumb/{k}.jpg")
+    out, thumb = art[k]
+    shutil.copyfile(f"{out}/{k}.jpg", f"{pub}/{k}.jpg")
+    shutil.copyfile(f"{thumb}/{k}.jpg", f"{pub}/thumb/{k}.jpg")
 # Drop artwork of designs no longer in the collection (keeps the hand-arranged 27).
 keep = set(keys) | {"peony", "redoute", "whiterose", "crimson", "camellia", "cherry", "magnolia", "taif", "jasmine", "olive", "laurel", "wildflower", "tulip", "hydrangea", "sweetpea", "forgetmenot", "lilyvalley", "orchid", "lily", "iris", "wisteria", "poppy", "lavender", "pomegranate", "anemone", "daisy", "fern"}
 for d in (pub, f"{pub}/thumb"):

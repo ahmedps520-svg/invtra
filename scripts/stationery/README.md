@@ -13,20 +13,23 @@ their links in `public/stationery/CREDITS.md`.
 | Find | `ov.py` | Searches Openverse for CC0 / public-domain images and makes a contact sheet. |
 | Fetch | `dl.py` | Downloads chosen results and records their credits. |
 | Cut out | `cut.py` | Removes the old paper, captions and stamps, and makes a transparent cut-out. |
-| Ornament | `gold.py` | Draws gold-foil lanterns, crescents, stars, arches, geometric bands, skylines and clouds. |
+| Ornament | `gold.py` | Draws gold-foil lanterns, crescents, stars, arches, geometric bands, skylines and clouds; shaded balloons, bunting, confetti, laurels, graduation caps, bows, crowns, hearts, henna rosettes and paisleys, and watercolour rainbows. |
 | Lay out | `recipes.py` | The 27 hand-arranged designs. |
-| Lay out | `gen.py` | The collection: templates × flower families × papers per occasion, auto-fitted so nothing covers the text or the QR. |
+| Lay out | `gen.py` | The first collection (weddings, newborns, Ramadan): templates × flower families × papers per occasion, auto-fitted so nothing covers the text or the QR. |
+| Lay out | `gen3.py` | The second collection (children's and grown-ups' birthdays, baby showers, newborns, aqiqah, graduation, henna, corporate, engagements, gatherings): painted objects, animals and ornament in their own layouts, on top of `gen.py`. |
 | Compose | `compose.py` | Prints a recipe onto paper (1080 × 1350 JPEG, optional 360 × 450 thumbnail). |
 | Premium | `premium.py` | Marks about a third of the collection Premium (stable per design). |
 | Check | `qa.py` | Flags designs whose text lands on artwork (compares card renders with and without text). |
-| Publish | `emit.py` | Writes the collection's keys, rows and English/Arabic names into the app and copies the artwork. |
+| Publish | `emit.py` | Writes both collections' keys, rows and English/Arabic names into the app and copies the artwork. |
 
 Typical run for the collection:
 
 ```sh
-python3 gen.py 110 1          # recipes for 110 designs per occasion
+python3 gen.py 110 1          # first collection: 110 designs per occasion
 python3 premium.py
 for r in artdata/recipes2/*.json; do k=$(basename "$r" .json); python3 compose.py "$r" artdata/cut "artdata/out2/$k.jpg" --thumb "artdata/thumb2/$k.jpg"; done
+python3 gen3.py 1             # second collection; artdata/existing-names.json lists the keys and EN/AR names of every other design, to stay unique
+for r in artdata/recipes3/*.json; do k=$(basename "$r" .json); python3 compose.py "$r" artdata/cut "artdata/out3/$k.jpg" --thumb "artdata/thumb3/$k.jpg"; done
 python3 emit.py /path/to/invtra
 ```
 

@@ -1,8 +1,9 @@
 /**
- * Designs printed on real artwork (painted botanicals, gold-foil ornament): every design has its
- * artwork and thumbnail, the server's renderer really draws it into the card image, and the ink stays
- * readable on the paper (light or dark).
+ * Designs printed on real artwork (painted botanicals, toys and animals, gold-foil ornament): every
+ * design has its artwork and thumbnail, the server's renderer really draws it into the card image,
+ * and the ink stays readable on the paper (light or dark).
  */
+import type { EventType } from "@prisma/client";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
@@ -41,6 +42,14 @@ describe("artwork designs", () => {
       const n = COLLECTION_KEYS.filter((k) => getTheme(k).occasions.includes(occasion)).length;
       expect(n, occasion).toBeGreaterThanOrEqual(100);
     }
+  });
+
+  it("brings painted designs for birthdays, baby showers, graduation, henna, corporate events and gatherings", () => {
+    const count = (o: EventType) => COLLECTION_KEYS.filter((k) => getTheme(k).occasions.includes(o)).length;
+    expect(count("BIRTHDAY")).toBeGreaterThanOrEqual(100);
+    expect(count("BABY_SHOWER")).toBeGreaterThanOrEqual(150);
+    expect(count("AQIQAH")).toBeGreaterThanOrEqual(100);
+    for (const occasion of ["GRADUATION", "HENNA", "CORPORATE", "OTHER"] as const) expect(count(occasion), occasion).toBeGreaterThanOrEqual(30);
   });
 
   it("gives every design a distinct name in both languages", () => {
