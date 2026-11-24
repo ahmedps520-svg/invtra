@@ -9,7 +9,7 @@ import { ProductPicker } from "@/components/dashboard/wizard/product-picker";
 import { ORDER_STEP_KEYS, ORDER_STEP_LABEL } from "@/components/dashboard/order-steps";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
-import { isThemeKey } from "@/lib/themes/registry";
+import { isRetired, isThemeKey } from "@/lib/themes/registry";
 import { EVENT_TYPES } from "@/lib/events/types";
 import { PRODUCTS, isProduct } from "@/lib/products";
 
@@ -21,7 +21,7 @@ export async function generateMetadata() {
 /** Steps 1 and 2 of the order wizard: choose the product, then fill in the details. */
 export default async function NewEventPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
-  const theme = typeof sp.theme === "string" && isThemeKey(sp.theme) ? sp.theme : null;
+  const theme = typeof sp.theme === "string" && isThemeKey(sp.theme) && !isRetired(sp.theme) ? sp.theme : null;
   // Occasion chosen on a marketing landing page (/invitations/newborn → ?occasion=NEWBORN).
   const occasion = EVENT_TYPES.find((t) => t === sp.occasion) ?? null;
   const product: Product | null = isProduct(sp.product) ? sp.product : null;

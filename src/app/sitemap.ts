@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import type { MetadataRoute } from "next";
 import { db } from "@/server/db";
-import { THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST } from "@/lib/themes/registry";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
 import { localePath } from "@/lib/i18n/routing";
 import { siteUrl } from "@/components/marketing/seo";
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/invitations", priority: 0.9, changeFrequency: "monthly" },
     ...OCCASION_PAGES.map((p) => ({ path: `/invitations/${p.slug}`, priority: 0.9, changeFrequency: "monthly" as const })),
     { path: "/designs", priority: 0.8, changeFrequency: "monthly" },
-    ...THEME_LIST.filter((t) => !inactive.has(t.key)).map((t) => ({ path: `/designs/${t.key}`, priority: 0.6, changeFrequency: "monthly" as const })),
+    ...ACTIVE_THEME_LIST.filter((t) => !inactive.has(t.key)).map((t) => ({ path: `/designs/${t.key}`, priority: 0.6, changeFrequency: "monthly" as const })),
     { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
     { path: "/privacy", priority: 0.2, changeFrequency: "yearly" },
     { path: "/terms", priority: 0.2, changeFrequency: "yearly" },

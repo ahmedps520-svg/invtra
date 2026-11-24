@@ -1,6 +1,6 @@
 import type { Dictionary } from "@/lib/i18n";
 import type { SendingMode } from "@/lib/marketing/links";
-import { THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST } from "@/lib/themes/registry";
 import { cn } from "@/lib/utils";
 import { CONTAINER } from "./styles";
 
@@ -8,7 +8,7 @@ import { CONTAINER } from "./styles";
 export function ProofStrip({ dict, mode }: { dict: Dictionary; mode: SendingMode }) {
   const p = dict.marketing.home.proof;
   // The design count comes from the catalogue itself, so it never goes stale.
-  const facts = [{ ...p.designs, value: String(THEME_LIST.length) }, p.occasions, p.test[mode], p.noApp, p.purge];
+  const facts = [{ ...p.designs, value: String(ACTIVE_THEME_LIST.length) }, p.occasions, p.test[mode], p.noApp, p.purge];
   return (
     <section aria-label={p.label} className="relative border-y border-hairline/70 bg-[#fffcf6]">
       <div className={CONTAINER}>

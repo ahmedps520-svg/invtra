@@ -97,7 +97,7 @@ async function makeEvent(userId: string, product: Product = "INVITATION") {
   // createEvent takes the validated form input; fill the rest of it from the schema's defaults.
   const { eventInputSchema } = await import("@/lib/validation/event");
   const input = eventInputSchema.parse(details);
-  return createEvent(userId, input, "minimal", product);
+  return createEvent(userId, input, "peony", product);
 }
 
 async function jobsFor(type: string, orderId: string) {

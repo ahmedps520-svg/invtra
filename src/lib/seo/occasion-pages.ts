@@ -32,7 +32,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "wedding",
     type: "WEDDING",
-    theme: "luxury",
+    theme: "redoute",
     related: ["engagement", "henna-night", "anniversary"],
     en: {
       nav: "Weddings",
@@ -76,7 +76,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "engagement",
     type: "ENGAGEMENT",
-    theme: "romantic",
+    theme: "peony",
     related: ["wedding", "henna-night", "anniversary"],
     en: {
       nav: "Engagements",
@@ -118,18 +118,18 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "henna-night",
     type: "HENNA",
-    theme: "henna",
+    theme: "peacock-portrait",
     related: ["wedding", "engagement", "ramadan-eid"],
     en: {
       nav: "Henna nights",
       title: "Henna Night Invitations on WhatsApp",
       description:
-        "Henna night invitations with traditional mandala designs, sent on WhatsApp in Arabic or English — with one-tap RSVP and a QR code for every guest.",
+        "Henna night invitations with henna rosettes, paisleys and painted peacocks, sent on WhatsApp in Arabic or English — with one-tap RSVP and a QR code for every guest.",
       h1: "Henna night invitations, rooted in tradition",
       intro:
         "Invite the women of the family and friends to the henna night with a design inspired by traditional henna art — warm terracotta, mandalas and delicate paisleys.",
       points: [
-        { title: "Inspired by henna art", body: "Our Henna design is drawn with mandalas and paisleys, in palettes from terracotta to rose and gold." },
+        { title: "Inspired by henna art", body: "Henna rosettes and paisleys, painted peacocks and jewel-coloured glass — on blush, emerald, plum or burgundy paper." },
         { title: "Arabic first", body: "Set beautifully in Arabic typefaces, with English or both languages when you need them." },
         { title: "A private guest list", body: "Only the guests you invite receive a personal invitation and entry code — perfect for ladies-only evenings." },
       ],
@@ -146,7 +146,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
       h1: "دعوات ليلة الحناء بروح التراث",
       intro: "ادعي الأهل والصديقات إلى ليلة الحناء بتصميم مستوحى من فن الحناء التقليدي: ألوان دافئة وزخارف ونقوش رقيقة.",
       points: [
-        { title: "مستوحاة من نقش الحناء", body: "تصميم «حناء» مرسوم بزخارف ونقوش، بألوان من الطيني إلى الوردي والذهبي." },
+        { title: "مستوحاة من نقش الحناء", body: "نقوش الحناء والبوتة وطواويس مرسومة وزجاج بألوان الجواهر — على ورق وردي أو زمردي أو بنفسجي أو عنابي." },
         { title: "العربية أولًا", body: "خطوط عربية أنيقة، مع الإنجليزية أو اللغتين معًا عند الحاجة." },
         { title: "قائمة ضيوف خاصة", body: "لا يتلقى الدعوة ورمز الدخول إلا من تدعوهن — مثالية للأمسيات النسائية." },
       ],
@@ -160,18 +160,18 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "newborn",
     type: "NEWBORN",
-    theme: "teddy",
+    theme: "stork-balloons-mint",
     related: ["baby-shower", "aqiqah", "birthday"],
     en: {
       nav: "New baby & hospital visits",
       title: "New Baby & Hospital Visit Invitations on WhatsApp",
       description:
-        "Welcome your newborn with a sweet digital invitation — teddy bears, moons and clouds. Invite family and friends to visit at the hospital or at home, with replies on WhatsApp.",
+        "Welcome your newborn with a sweet digital invitation — storks, little lambs and painted blossoms. Invite family and friends to visit at the hospital or at home, with replies on WhatsApp.",
       h1: "Welcome your little one — and invite visitors with love",
       intro:
-        "Share the joy of your new baby and let family and friends know when to visit, at the hospital or at home. Choose a soft design with teddy bears, moons or clouds, and INVTRA sends every guest their own invitation on WhatsApp.",
+        "Share the joy of your new baby and let family and friends know when to visit, at the hospital or at home. Choose a soft design with storks, lambs or painted blossoms, and INVTRA sends every guest their own invitation on WhatsApp.",
       points: [
-        { title: "Baby designs with heart", body: "Teddy bears and balloons, moonlit skies, soft clouds and a lullaby crib mobile — in baby blue, blush, mint or lavender." },
+        { title: "Baby designs with heart", body: "Storks and balloons, little lambs under a crescent moon, rainbows and a nursery mobile — in baby blue, blush, mint or lavender." },
         { title: "Visiting hours made easy", body: "Share the hospital, room number and visiting times, with a map link. Guests confirm in one tap, so you know who's coming." },
         { title: "Gentle on new parents", body: "No phone calls to return: replies, directions and reminders are handled for you while you rest." },
       ],
@@ -184,11 +184,11 @@ export const OCCASION_PAGES: OccasionPage[] = [
     ar: {
       nav: "استقبال المولود وزيارات المستشفى",
       title: "دعوات استقبال المولود وزيارة المستشفى عبر واتساب",
-      description: "رحّب بمولودك بدعوة إلكترونية لطيفة — دببة وأقمار وغيوم. ادعُ الأهل والأصدقاء للزيارة في المستشفى أو المنزل، مع الردود عبر واتساب.",
+      description: "رحّب بمولودك بدعوة إلكترونية لطيفة — لقالق وحملان صغيرة وأزهار مرسومة. ادعُ الأهل والأصدقاء للزيارة في المستشفى أو المنزل، مع الردود عبر واتساب.",
       h1: "رحّب بمولودك وادعُ الزوّار بكل حب",
-      intro: "شارك فرحة المولود الجديد وأخبر الأهل والأصدقاء بموعد الزيارة في المستشفى أو المنزل. اختر تصميمًا هادئًا بالدببة أو الأقمار أو الغيوم، وتُرسل إنفترا لكل ضيف دعوته الخاصة عبر واتساب.",
+      intro: "شارك فرحة المولود الجديد وأخبر الأهل والأصدقاء بموعد الزيارة في المستشفى أو المنزل. اختر تصميمًا هادئًا باللقالق أو الحملان أو الأزهار المرسومة، وتُرسل إنفترا لكل ضيف دعوته الخاصة عبر واتساب.",
       points: [
-        { title: "تصاميم مواليد مليئة بالحب", body: "دببة وبالونات، وسماء يضيئها القمر، وغيوم ناعمة، ودوّارة مهد — بألوان الأزرق والوردي والنعناعي والبنفسجي." },
+        { title: "تصاميم مواليد مليئة بالحب", body: "لقالق وبالونات، وحملان صغيرة تحت هلال، وأقواس قزح، ودوّارة مهد — بألوان الأزرق والوردي والنعناعي والبنفسجي." },
         { title: "مواعيد زيارة واضحة", body: "شارك اسم المستشفى ورقم الغرفة وأوقات الزيارة مع رابط الخريطة، ويؤكد الضيف حضوره بضغطة واحدة." },
         { title: "راحة للوالدين", body: "لا اتصالات تحتاج إلى رد: الردود والاتجاهات والتذكيرات تتم عنكم بينما ترتاحون." },
       ],
@@ -202,18 +202,18 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "baby-shower",
     type: "BABY_SHOWER",
-    theme: "clouds",
+    theme: "nursery-rainbow-rose",
     related: ["newborn", "aqiqah", "birthday"],
     en: {
       nav: "Baby showers",
       title: "Baby Shower Invitations on WhatsApp",
       description:
-        "Cute baby shower invitations with clouds, teddy bears and balloons — sent on WhatsApp with one-tap RSVP and a personal invitation page for every guest.",
+        "Cute baby shower invitations with storks, rainbows and balloons — sent on WhatsApp with one-tap RSVP and a personal invitation page for every guest.",
       h1: "Baby shower invitations as sweet as the guest of honour",
       intro:
-        "Celebrate the mum-to-be with an invitation full of clouds, balloons and pastel colours. Guests reply in WhatsApp, and you always know how many are coming.",
+        "Celebrate the mum-to-be with an invitation full of rainbows, balloons and pastel colours. Guests reply in WhatsApp, and you always know how many are coming.",
       points: [
-        { title: "Pastel designs, your colours", body: "Clouds, teddy bears and balloons in baby blue, blush, mint or butter yellow — or any colours you like." },
+        { title: "Pastel designs, your colours", body: "Storks, prams and balloons in baby blue, blush, mint or butter yellow — or any colours you like." },
         { title: "Know your numbers", body: "See accepted and declined guests and the total attending, so planning the cake and the games is easy." },
         { title: "Photos and music", body: "Add a photo gallery and a song to the invitation page (music never plays until the guest presses play)." },
       ],
@@ -226,11 +226,11 @@ export const OCCASION_PAGES: OccasionPage[] = [
     ar: {
       nav: "حفلات استقبال المواليد",
       title: "دعوات حفل استقبال المولود (بيبي شاور) عبر واتساب",
-      description: "دعوات بيبي شاور لطيفة بالغيوم والدببة والبالونات، تُرسل عبر واتساب مع رد بضغطة واحدة وصفحة دعوة شخصية لكل ضيف.",
+      description: "دعوات بيبي شاور لطيفة باللقالق وأقواس قزح والبالونات، تُرسل عبر واتساب مع رد بضغطة واحدة وصفحة دعوة شخصية لكل ضيف.",
       h1: "دعوات استقبال المولود بلطف ضيفه المنتظر",
-      intro: "احتفلوا بالأم المنتظرة بدعوة مليئة بالغيوم والبالونات والألوان الهادئة. يرد الضيوف عبر واتساب، وتعرفون دائمًا عدد الحضور.",
+      intro: "احتفلوا بالأم المنتظرة بدعوة مليئة بأقواس قزح والبالونات والألوان الهادئة. يرد الضيوف عبر واتساب، وتعرفون دائمًا عدد الحضور.",
       points: [
-        { title: "ألوان ناعمة بذوقك", body: "غيوم ودببة وبالونات بالأزرق الفاتح أو الوردي أو النعناعي أو الأصفر الهادئ — أو أي ألوان تحبونها." },
+        { title: "ألوان ناعمة بذوقك", body: "لقالق وعربات أطفال وبالونات بالأزرق الفاتح أو الوردي أو النعناعي أو الأصفر الهادئ — أو أي ألوان تحبونها." },
         { title: "اعرفوا عدد الحضور", body: "شاهدوا من قبل ومن اعتذر وإجمالي الحضور، ليسهل التخطيط للكعكة والفقرات." },
         { title: "صور وموسيقى", body: "أضيفوا معرض صور وأغنية إلى صفحة الدعوة (لا تعمل الموسيقى إلا عندما يضغط الضيف تشغيل)." },
       ],
@@ -244,18 +244,18 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "aqiqah",
     type: "AQIQAH",
-    theme: "moonlight",
+    theme: "lamb-moonlight",
     related: ["newborn", "baby-shower", "ramadan-eid"],
     en: {
       nav: "Aqiqah",
       title: "Aqiqah Invitations on WhatsApp",
       description:
-        "Aqiqah invitation cards in Arabic and English with moonlit, gentle designs — sent on WhatsApp with one-tap RSVP and a QR code for every guest.",
+        "Aqiqah invitation cards in Arabic and English with gentle designs of lambs, crescents and blossoms — sent on WhatsApp with one-tap RSVP and a QR code for every guest.",
       h1: "Aqiqah invitations to give thanks together",
       intro:
-        "Invite family and friends to celebrate the blessing of your child. Choose a moonlit or traditional design, write your wording in Arabic, English or both, and INVTRA delivers each invitation on WhatsApp.",
+        "Invite family and friends to celebrate the blessing of your child. Choose a lamb under a gold crescent or a meadow of blossoms, write your wording in Arabic, English or both, and INVTRA delivers each invitation on WhatsApp.",
       points: [
-        { title: "Graceful, meaningful designs", body: "Moonlight, Lullaby and traditional Arabic designs, with wording written for an aqiqah." },
+        { title: "Graceful, meaningful designs", body: "Little lambs under a gold crescent and stars, or in a meadow of blossoms, with wording written for an aqiqah." },
         { title: "Arabic done properly", body: "Real Arabic typefaces, right-to-left layout and your choice of Arabic or Latin numerals." },
         { title: "Know how many to cater for", body: "Every reply updates your total attending, so the lunch or dinner is planned with confidence." },
       ],
@@ -268,11 +268,11 @@ export const OCCASION_PAGES: OccasionPage[] = [
     ar: {
       nav: "العقيقة",
       title: "دعوات العقيقة عبر واتساب",
-      description: "بطاقات دعوة عقيقة بالعربية والإنجليزية بتصاميم هادئة يضيئها القمر، تُرسل عبر واتساب مع رد بضغطة واحدة ورمز QR لكل ضيف.",
+      description: "بطاقات دعوة عقيقة بالعربية والإنجليزية بتصاميم هادئة لحملان صغيرة وأهلّة وأزهار، تُرسل عبر واتساب مع رد بضغطة واحدة ورمز QR لكل ضيف.",
       h1: "دعوات عقيقة لنشكر الله معًا",
-      intro: "ادعُ الأهل والأصدقاء للاحتفال بنعمة المولود. اختر تصميمًا يضيئه القمر أو تصميمًا تقليديًا، واكتب صياغتك بالعربية أو الإنجليزية أو كلتيهما، وتصل كل دعوة عبر واتساب.",
+      intro: "ادعُ الأهل والأصدقاء للاحتفال بنعمة المولود. اختر حملًا صغيرًا تحت هلال ذهبي أو مرجًا من الأزهار، واكتب صياغتك بالعربية أو الإنجليزية أو كلتيهما، وتصل كل دعوة عبر واتساب.",
       points: [
-        { title: "تصاميم راقية ذات معنى", body: "تصاميم «ضوء القمر» و«التهويدة» والتصاميم العربية التقليدية، بصياغة مكتوبة للعقيقة." },
+        { title: "تصاميم راقية ذات معنى", body: "حملان صغيرة تحت هلال ذهبي ونجوم، أو في مرج من الأزهار، بصياغة مكتوبة للعقيقة." },
         { title: "عربية متقنة", body: "خطوط عربية حقيقية واتجاه من اليمين إلى اليسار، مع اختيار الأرقام العربية أو اللاتينية." },
         { title: "اعرف عدد الحضور", body: "كل رد يحدّث إجمالي الحضور، فتخطط للغداء أو العشاء بثقة." },
       ],
@@ -286,18 +286,18 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "birthday",
     type: "BIRTHDAY",
-    theme: "confetti",
+    theme: "hot-air-balloon-skies",
     related: ["graduation", "baby-shower", "anniversary"],
     en: {
       nav: "Birthdays",
       title: "Birthday Party Invitations on WhatsApp",
       description:
-        "Fun, stylish birthday invitations for kids and grown-ups — confetti, teddy bears or elegant designs — sent on WhatsApp with one-tap RSVP.",
+        "Fun, stylish birthday invitations for kids and grown-ups — hot-air balloons, antique toys or elegant florals — sent on WhatsApp with one-tap RSVP.",
       h1: "Birthday invitations that get everyone excited",
       intro:
-        "From a first birthday to a milestone fortieth, send an invitation that sets the mood. Pick confetti and colour or something elegant, and let guests reply in WhatsApp.",
+        "From a first birthday to a milestone fortieth, send an invitation that sets the mood. Pick balloons and bunting or something elegant, and let guests reply in WhatsApp.",
       points: [
-        { title: "For every age", body: "Teddy and clouds for little ones, confetti for parties, and refined designs for milestone celebrations." },
+        { title: "For every age", body: "Antique toys and hot-air balloons for little ones, balloons and bunting for parties, and painted florals for milestone celebrations." },
         { title: "Replies without the group chat", body: "Each guest answers privately with one tap — no lost messages in a busy group." },
         { title: "Countdown to the day", body: "Every invitation page shows a live countdown, the venue map and your programme." },
       ],
@@ -310,11 +310,11 @@ export const OCCASION_PAGES: OccasionPage[] = [
     ar: {
       nav: "أعياد الميلاد",
       title: "دعوات عيد ميلاد إلكترونية عبر واتساب",
-      description: "دعوات عيد ميلاد مرحة وأنيقة للصغار والكبار — قصاصات ملونة أو دببة أو تصاميم راقية — تُرسل عبر واتساب مع رد بضغطة واحدة.",
+      description: "دعوات عيد ميلاد مرحة وأنيقة للصغار والكبار — مناطيد أو ألعاب عتيقة أو أزهار راقية — تُرسل عبر واتساب مع رد بضغطة واحدة.",
       h1: "دعوات عيد ميلاد تُفرح الجميع",
-      intro: "من عيد الميلاد الأول إلى الأربعين، أرسل دعوة تصنع الأجواء. اختر القصاصات الملونة أو تصميمًا راقيًا، ودع الضيوف يردون عبر واتساب.",
+      intro: "من عيد الميلاد الأول إلى الأربعين، أرسل دعوة تصنع الأجواء. اختر البالونات والرايات أو تصميمًا راقيًا، ودع الضيوف يردون عبر واتساب.",
       points: [
-        { title: "لكل الأعمار", body: "دببة وغيوم للصغار، وقصاصات ملونة للحفلات، وتصاميم راقية للمناسبات المميزة." },
+        { title: "لكل الأعمار", body: "ألعاب عتيقة ومناطيد للصغار، وبالونات ورايات للحفلات، وأزهار مرسومة للمناسبات المميزة." },
         { title: "ردود دون مجموعات", body: "يرد كل ضيف بشكل خاص بضغطة واحدة، دون أن تضيع الرسائل في مجموعة مزدحمة." },
         { title: "عدّ تنازلي لليوم الكبير", body: "تعرض كل صفحة دعوة عدًّا تنازليًا وخريطة المكان وبرنامج الحفل." },
       ],
@@ -328,7 +328,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "graduation",
     type: "GRADUATION",
-    theme: "modern",
+    theme: "owl-celebration-emerald",
     related: ["birthday", "corporate", "anniversary"],
     en: {
       nav: "Graduations",
@@ -337,7 +337,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
       h1: "Graduation invitations worth celebrating",
       intro: "Years of hard work deserve a proper celebration. Send family and friends a modern invitation, and see who's coming as the replies arrive.",
       points: [
-        { title: "Modern and bold", body: "Clean, contemporary designs — or confetti for a party mood — personalised with the graduate's name." },
+        { title: "Laurels and owls", body: "Gold laurels, wise owls, silver cups and tossed graduation caps — personalised with the graduate's name." },
         { title: "Share the programme", body: "Dinner, speeches and photos: add the schedule so guests know what to expect." },
         { title: "Welcome guests by name", body: "Each guest's QR code lets you check them in at the door and see the room fill up." },
       ],
@@ -354,7 +354,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
       h1: "دعوات تخرج تليق بالإنجاز",
       intro: "سنوات من الجهد تستحق احتفالًا يليق بها. أرسل للأهل والأصدقاء دعوة عصرية، وتابع الحضور مع وصول الردود.",
       points: [
-        { title: "عصرية وجريئة", body: "تصاميم معاصرة نظيفة — أو قصاصات ملونة لأجواء احتفالية — باسم الخريج." },
+        { title: "أكاليل غار وبوم", body: "أكاليل غار ذهبية وبوم حكيم وكؤوس فضية وقبعات تخرّج — باسم الخريج." },
         { title: "شارك البرنامج", body: "العشاء والكلمات والصور: أضف الفقرات ليعرف الضيوف ما ينتظرهم." },
         { title: "استقبل الضيوف بأسمائهم", body: "رمز QR لكل ضيف يتيح تسجيل حضوره عند الباب ومتابعة امتلاء القاعة." },
       ],
@@ -368,7 +368,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "anniversary",
     type: "ANNIVERSARY",
-    theme: "garden",
+    theme: "lovebirds-wreath",
     related: ["wedding", "engagement", "birthday"],
     en: {
       nav: "Anniversaries",
@@ -377,7 +377,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
       h1: "Anniversary invitations to celebrate the years together",
       intro: "Gather the people who have shared your journey. Choose a blossoming garden design or timeless luxury, and INVTRA delivers each invitation personally on WhatsApp.",
       points: [
-        { title: "Timeless designs", body: "Garden blossoms, classic luxury and royal designs for silver and golden anniversaries." },
+        { title: "Timeless designs", body: "Painted roses, lovebirds and flower wreaths for silver and golden anniversaries." },
         { title: "Your story, your words", body: "Write your own invitation text and add photos from over the years to the invitation page." },
         { title: "Easy for every generation", body: "Guests just tap a button in WhatsApp — no links to copy and nothing to install." },
       ],
@@ -394,7 +394,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
       h1: "دعوات ذكرى الزواج للاحتفال بسنوات العمر معًا",
       intro: "اجمع من شاركوكم رحلتكم. اختر تصميم الحديقة المزهرة أو الفخامة الكلاسيكية، وتصل كل دعوة شخصيًا عبر واتساب.",
       points: [
-        { title: "تصاميم خالدة", body: "أزهار الحديقة والفخامة الكلاسيكية والتصاميم الملكية لليوبيل الفضي والذهبي." },
+        { title: "تصاميم خالدة", body: "ورود مرسومة وطيور الحب وأكاليل زهور لليوبيل الفضي والذهبي." },
         { title: "قصتكم بكلماتكم", body: "اكتبوا نص الدعوة بأنفسكم وأضيفوا صورًا من السنين إلى صفحة الدعوة." },
         { title: "سهلة لكل الأجيال", body: "يكفي أن يضغط الضيف زرًا في واتساب — لا روابط لنسخها ولا شيء لتثبيته." },
       ],
@@ -408,7 +408,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "ramadan-eid",
     type: "RAMADAN",
-    theme: "lantern",
+    theme: "navy-lanterns",
     related: ["aqiqah", "corporate", "henna-night"],
     en: {
       nav: "Ramadan & Eid",
@@ -417,7 +417,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
         "Ramadan and Eid invitations with lanterns and crescent moons — for ghabgas, iftars, suhoors and Eid gatherings — sent on WhatsApp in Arabic and English.",
       h1: "Ramadan & Eid invitations, glowing with lanterns",
       intro:
-        "Bring family, friends and colleagues together for a ghabga, iftar or Eid gathering. Choose our Lantern design or a traditional Arabic one, and send every guest their own invitation on WhatsApp.",
+        "Bring family, friends and colleagues together for a ghabga, iftar or Eid gathering. Choose gold-foil lanterns, date palms or pomegranates, and send every guest their own invitation on WhatsApp.",
       points: [
         { title: "Lanterns and crescents", body: "A Ramadan design with hanging lanterns, a crescent moon and a starry night — in midnight, plum, emerald or ivory." },
         { title: "Perfect for majlis and offices", body: "Family ghabgas, company iftars and Eid lunches — each with its own guest list and replies." },
@@ -434,7 +434,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
       title: "دعوات الغبقة الرمضانية والإفطار والعيد عبر واتساب",
       description: "دعوات رمضان والعيد بالفوانيس والأهلّة — للغبقات والإفطار والسحور وتجمعات العيد — تُرسل عبر واتساب بالعربية والإنجليزية.",
       h1: "دعوات رمضان والعيد تضيئها الفوانيس",
-      intro: "اجمع الأهل والأصدقاء والزملاء في غبقة أو إفطار أو تجمع عيد. اختر تصميم «الفانوس» أو تصميمًا عربيًا تقليديًا، وأرسل لكل ضيف دعوته الخاصة عبر واتساب.",
+      intro: "اجمع الأهل والأصدقاء والزملاء في غبقة أو إفطار أو تجمع عيد. اختر الفوانيس الذهبية أو النخيل أو الرمان، وأرسل لكل ضيف دعوته الخاصة عبر واتساب.",
       points: [
         { title: "فوانيس وأهلّة", body: "تصميم رمضاني بفوانيس معلّقة وهلال وسماء مرصّعة بالنجوم — بالكحلي أو الأرجواني أو الزمردي أو العاجي." },
         { title: "مثالية للمجالس والشركات", body: "غبقات عائلية وإفطارات الشركات وغداء العيد — لكل منها قائمة ضيوف وردود." },
@@ -450,7 +450,7 @@ export const OCCASION_PAGES: OccasionPage[] = [
   {
     slug: "corporate",
     type: "CORPORATE",
-    theme: "modern",
+    theme: "heirloom-gilt-navy",
     related: ["ramadan-eid", "graduation", "anniversary"],
     en: {
       nav: "Corporate events",

@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { recordActivity } from "@/server/activity";
 import { cancelPendingJobs } from "@/server/queue/queue";
 import { zonedToUtc, utcToZoned } from "@/lib/time";
-import { DEFAULT_THEME, getTheme, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
+import { OCCASION_DESIGN, getTheme, isRetired, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
 import type { EventInput } from "@/lib/validation/event";
 import { parseSections, sectionDiffers, SECTION_KEYS } from "@/lib/sections";
 import { walletChanged } from "@/server/apple/push";
@@ -84,20 +84,9 @@ function cardSections(e: { sectionsEnabled: boolean; sections: unknown }) {
   return SECTION_KEYS.map((k) => (sectionDiffers(s[k]) ? [s[k].time, s[k].venueName, s[k].venueNameAr, s[k].address, s[k].addressAr] : null));
 }
 
-/** The design a new event starts with when the customer hasn't picked one yet. */
-const OCCASION_THEME: Partial<Record<EventInput["type"], ThemeKey>> = {
-  NEWBORN: "teddy",
-  BABY_SHOWER: "clouds",
-  AQIQAH: "moonlight",
-  HENNA: "henna",
-  RAMADAN: "lantern",
-  BIRTHDAY: "confetti",
-  GRADUATION: "confetti",
-};
-
 export async function createEvent(userId: string, input: EventDetails, preferredTheme?: string | null, product: Product = "INVITATION") {
-  const byLanguage: ThemeKey = input.language === "AR" ? "arabic" : input.language === "BILINGUAL" ? "bilingual" : DEFAULT_THEME;
-  const themeKey: ThemeKey = isThemeKey(preferredTheme) ? preferredTheme : (OCCASION_THEME[input.type] ?? byLanguage);
+  // The design the customer picked (never a retired one), else the painted design made for the occasion.
+  const themeKey: ThemeKey = isThemeKey(preferredTheme) && !isRetired(preferredTheme) ? preferredTheme : OCCASION_DESIGN[input.type];
   const theme = getTheme(themeKey);
   // Photo only is a picture to share or print: no personal QR code on it, nothing to send.
   const photo = product === "PHOTO_ONLY";

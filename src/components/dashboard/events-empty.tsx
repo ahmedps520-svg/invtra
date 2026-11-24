@@ -58,7 +58,7 @@ export function EventsEmptyState({ firstName }: { firstName: string }) {
           className="mx-auto w-full max-w-[300px]"
         >
           <CardPreview
-            themeKey={ar ? "arabic" : "minimal"}
+            themeKey={ar ? "taif" : "peony"}
             language={ar ? "AR" : "EN"}
             qrPlaceholder
             className="rounded-[4px] shadow-lift ring-1 ring-ink/5"

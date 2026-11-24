@@ -371,6 +371,6 @@ describe("occasions beyond weddings", () => {
       allowWebRsvp: true,
       schedule: [],
     });
-    expect(event.themeKey).toBe("teddy");
+    expect(event.themeKey).toBe("stork-balloons-mint");
   });
 });

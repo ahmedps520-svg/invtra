@@ -1,4 +1,4 @@
-import { THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST } from "@/lib/themes/registry";
 import { COLLECTION_STYLE } from "@/lib/themes/collection";
 import type { ThemeDefinition, ThemeKey } from "@/lib/themes/types";
 import { EVENT_TYPES, occasionGroup } from "@/lib/events/types";
@@ -55,13 +55,25 @@ export const THEME_STYLE: Record<ThemeKey, DesignStyle> = {
 };
 
 /** Designs shown first wherever the catalogue is listed (the homepage shows the first eight). */
-const SHOWCASE: ThemeKey[] = ["peony", "taif", "redoute", "royal", "jasmine", "wildflower", "magnolia", "teddy", "orchid", "whiterose", "olive", "lantern"];
+const SHOWCASE: ThemeKey[] = [
+  "peony",
+  "taif",
+  "redoute",
+  "navy-lanterns",
+  "jasmine",
+  "hot-air-balloon-skies",
+  "magnolia",
+  "stork-balloons-mint",
+  "peacock-portrait",
+  "whiterose",
+  "owl-celebration-emerald",
+  "toy-box-bunting",
+];
 
-/** The catalogue in showcase order: the featured designs, then the painted ones, then the rest. */
+/** The catalogue in showcase order: the featured designs, then the rest (retired designs are never listed). */
 export const SHOWCASE_LIST: ThemeDefinition[] = [
-  ...SHOWCASE.map((k) => THEME_LIST.find((t) => t.key === k)!),
-  ...THEME_LIST.filter((t) => !SHOWCASE.includes(t.key) && t.card.art),
-  ...THEME_LIST.filter((t) => !SHOWCASE.includes(t.key) && !t.card.art),
+  ...SHOWCASE.map((k) => ACTIVE_THEME_LIST.find((t) => t.key === k)!),
+  ...ACTIVE_THEME_LIST.filter((t) => !SHOWCASE.includes(t.key)),
 ];
 
 /**

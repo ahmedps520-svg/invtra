@@ -1,9 +1,9 @@
 import { db } from "@/server/db";
 import { notFound } from "@/server/http";
 import { audit } from "@/server/log";
-import { isThemeKey, THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST, isRetired, isThemeKey, THEME_LIST } from "@/lib/themes/registry";
 
-/** The code-defined themes joined with their operational settings and usage. */
+/** The code-defined themes (all but the retired ones) joined with their operational settings and usage. */
 export async function listThemes() {
   const [rows, usage] = await Promise.all([
     db.invitationTheme.findMany(),
@@ -11,7 +11,7 @@ export async function listThemes() {
   ]);
   const byKey = new Map(rows.map((r) => [r.key, r]));
   const used = new Map(usage.map((u) => [u.themeKey, u._count._all]));
-  return THEME_LIST.map((t, i) => {
+  return ACTIVE_THEME_LIST.map((t, i) => {
     const row = byKey.get(t.key);
     return {
       key: t.key,
@@ -28,7 +28,7 @@ export async function listThemes() {
 }
 
 export async function updateTheme(actorId: string, key: string, patch: { isActive?: boolean; isPremium?: boolean; sortOrder?: number }) {
-  if (!isThemeKey(key)) throw notFound("Theme");
+  if (!isThemeKey(key) || isRetired(key)) throw notFound("Theme");
   const def = THEME_LIST.find((t) => t.key === key)!;
   const before = await db.invitationTheme.findUnique({ where: { key } });
   const row = await db.invitationTheme.upsert({

@@ -28,7 +28,7 @@ export function QuizBanner({ dict, locale }: { dict: Dictionary; locale: "en" | 
               </QuizButton>
             </div>
             <div aria-hidden="true" className="relative hidden h-44 w-64 md:block">
-              {(["teddy", "royal", "lantern"] as const).map((k, i) => (
+              {(["stork-balloons-mint", "redoute", "navy-lanterns"] as const).map((k, i) => (
                 // eslint-disable-next-line @next/next/no-img-element -- pre-rendered sample
                 <img
                   key={k}

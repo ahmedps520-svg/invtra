@@ -13,11 +13,11 @@ export const STUDIO_OCCASIONS: StudioOccasion[] = ["WEDDING", "NEWBORN", "RAMADA
 
 /** The catalogue design each occasion opens with in the hero, and the sample wording it uses. */
 export const STUDIO_DESIGN: Record<StudioOccasion, ThemeKey> = {
-  WEDDING: "royal",
-  NEWBORN: "teddy",
-  RAMADAN: "lantern",
-  BIRTHDAY: "confetti",
-  CORPORATE: "modern",
+  WEDDING: "redoute",
+  NEWBORN: "stork-balloons-mint",
+  RAMADAN: "navy-lanterns",
+  BIRTHDAY: "toy-box-bunting",
+  CORPORATE: "heirloom-gilt-navy",
 };
 
 type Chat = {

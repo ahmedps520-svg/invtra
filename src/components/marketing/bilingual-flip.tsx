@@ -26,7 +26,7 @@ export function BilingualFlip({ labels, label }: { labels: Record<Lang, string>;
           // eslint-disable-next-line @next/next/no-img-element -- pre-rendered sample
           <img
             key={l}
-            src={sampleSrc("bilingual", FILE[l])}
+            src={sampleSrc("jasmine", FILE[l])}
             width={SAMPLE_WIDTH}
             height={SAMPLE_HEIGHT}
             alt=""

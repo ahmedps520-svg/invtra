@@ -20,7 +20,7 @@ type Language = "EN" | "AR" | "BILINGUAL";
 type Digits = "arab" | "latn";
 
 /** Where the names sit on the opening design, so the "writing" lands on them (measured on the card). */
-const OPENING = { theme: "royal", background: "#0F2E26", namesTop: "18.5%", namesHeight: "15%" } as const;
+const OPENING = { theme: "redoute", background: "#F9F2EA", namesTop: "27.5%", namesHeight: "13.5%" } as const;
 
 /**
  * The homepage hero: the invitation arriving (envelope → card → WhatsApp) and the "Make it

@@ -7,7 +7,7 @@ import { db } from "@/server/db";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { sendingMode } from "@/server/marketing";
-import { COLLECTION_KEYS, THEME_LIST, getTheme, isThemeKey } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST, COLLECTION_KEYS, getTheme, isRetired, isThemeKey } from "@/lib/themes/registry";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
 import { THEME_STYLE } from "@/lib/marketing/design-styles";
 import { SAMPLE_HEIGHT, SAMPLE_WIDTH, sampleSrc } from "@/lib/marketing/samples";
@@ -30,12 +30,12 @@ type Props = { params: Promise<{ key: string }> };
  * the build machine's memory.
  */
 export function generateStaticParams() {
-  return THEME_LIST.filter((t) => !(COLLECTION_KEYS as readonly string[]).includes(t.key)).map((t) => ({ key: t.key }));
+  return ACTIVE_THEME_LIST.filter((t) => !(COLLECTION_KEYS as readonly string[]).includes(t.key)).map((t) => ({ key: t.key }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { key } = await params;
-  if (!isThemeKey(key)) return {};
+  if (!isThemeKey(key) || isRetired(key)) return {};
   const { dict, locale } = await getI18n();
   const theme = getTheme(key);
   const occasions = theme.occasions
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** One design: a large live preview in every language, the occasions it suits and similar designs. */
 export default async function DesignPage({ params }: Props) {
   const { key } = await params;
-  if (!isThemeKey(key)) notFound();
+  if (!isThemeKey(key) || isRetired(key)) notFound();
   const row = await db.invitationTheme.findUnique({ where: { key }, select: { isActive: true } });
   if (row && !row.isActive) notFound();
   const [{ dict, locale }, user, nonce] = await Promise.all([getI18n(), getSessionUser(), headers().then((h) => h.get("x-nonce") ?? undefined)]);
@@ -66,8 +66,8 @@ export default async function DesignPage({ params }: Props) {
   const languages = { EN: dict.common.language.en, AR: dict.common.language.ar, BILINGUAL: dict.common.language.bilingual };
 
   // Similar: the same look first, then designs that share its occasions.
-  const shared = (k: (typeof THEME_LIST)[number]) => k.occasions.filter((o) => theme.occasions.includes(o)).length;
-  const similar = THEME_LIST.filter((th) => th.key !== key)
+  const shared = (k: (typeof ACTIVE_THEME_LIST)[number]) => k.occasions.filter((o) => theme.occasions.includes(o)).length;
+  const similar = ACTIVE_THEME_LIST.filter((th) => th.key !== key)
     .sort((a, b) => Number(THEME_STYLE[b.key] === THEME_STYLE[key]) * 10 + shared(b) - (Number(THEME_STYLE[a.key] === THEME_STYLE[key]) * 10 + shared(a)))
     .slice(0, 4);
 

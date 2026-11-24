@@ -5,7 +5,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/routing";
 import { OCCASION_GROUP_KEYS, occasionGroup } from "@/lib/events/types";
 import { THEME_STYLE, homepageDesigns } from "@/lib/marketing/design-styles";
-import { THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST } from "@/lib/themes/registry";
 import { buttonClasses } from "@/components/ui/button";
 import { DesignsBrowser, type BrowserItem } from "./designs-browser";
 import { SectionHeading } from "./section-heading";
@@ -43,7 +43,7 @@ export function DesignsSection({ dict, locale }: { dict: Dictionary; locale: Loc
         </div>
         <div className="mt-12 flex justify-center">
           <Link href={localePath(locale, "/designs")} className={buttonClasses("outline", "lg", "group")}>
-            {h.exploreAll.replace("{n}", String(THEME_LIST.length))}
+            {h.exploreAll.replace("{n}", String(ACTIVE_THEME_LIST.length))}
             <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
           </Link>
         </div>

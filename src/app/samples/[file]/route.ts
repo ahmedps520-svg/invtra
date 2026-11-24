@@ -1,4 +1,5 @@
 import { COLLECTION_KEYS, THEME_KEYS } from "@/lib/themes/types";
+import { isRetired } from "@/lib/themes/registry";
 import { SAMPLE_LANGS, SAMPLE_QR_TOKENS, parseSampleFile, sampleFileName } from "@/lib/marketing/samples";
 import { qrSvg } from "@/lib/qr";
 import { sampleCardWebp } from "@/server/seo/sample-card";
@@ -9,7 +10,7 @@ const CACHE = "public, max-age=604800, s-maxage=2592000, stale-while-revalidate=
 export function generateStaticParams() {
   return [
     // The generated collection (hundreds of designs) renders on first request instead, to keep builds quick.
-    ...THEME_KEYS.filter((k) => !(COLLECTION_KEYS as readonly string[]).includes(k)).flatMap((theme) => SAMPLE_LANGS.map((lang) => ({ file: sampleFileName(theme, lang) }))),
+    ...THEME_KEYS.filter((k) => !(COLLECTION_KEYS as readonly string[]).includes(k) && !isRetired(k)).flatMap((theme) => SAMPLE_LANGS.map((lang) => ({ file: sampleFileName(theme, lang) }))),
     ...SAMPLE_QR_TOKENS.map((t) => ({ file: `qr-${t}.svg` })),
   ];
 }
@@ -22,7 +23,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
     return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": CACHE } });
   }
   const spec = parseSampleFile(file);
-  if (!spec) return new Response("Not found", { status: 404 });
+  // Retired designs are no longer shown anywhere.
+  if (!spec || isRetired(spec.theme)) return new Response("Not found", { status: 404 });
   const webp = await sampleCardWebp(spec.theme, spec.lang, spec.occasion);
   // Addresses carry ?v=SAMPLE_VERSION, so a design change is a new address.
   return new Response(new Uint8Array(webp), { headers: { "Content-Type": "image/webp", "Cache-Control": CACHE } });

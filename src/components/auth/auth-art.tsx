@@ -17,12 +17,12 @@ export function AuthArt({ dict, locale }: { dict: Dictionary; locale: "en" | "ar
         <div className="relative w-[min(19rem,52%)]">
           <div className="absolute inset-0 translate-x-[34%] translate-y-[6%] rotate-[8deg] opacity-80 rtl:-translate-x-[34%] rtl:-rotate-[8deg]">
             <div className="overflow-hidden rounded-[5px] shadow-[0_40px_80px_-30px_rgb(0_0_0/0.8)] ring-1 ring-white/10">
-              <CardPreview themeKey={ar ? "bilingual" : "romantic"} language={ar ? "BILINGUAL" : "EN"} qrPlaceholder title="" />
+              <CardPreview themeKey={ar ? "jasmine" : "peony"} language={ar ? "BILINGUAL" : "EN"} qrPlaceholder title="" />
             </div>
           </div>
           <div className="relative -rotate-[3deg] rtl:rotate-[3deg]">
             <div className="overflow-hidden rounded-[5px] shadow-[0_50px_90px_-30px_rgb(0_0_0/0.85)] ring-1 ring-white/10">
-              <CardPreview themeKey={ar ? "arabic" : "minimal"} language={ar ? "AR" : "EN"} qrPlaceholder title="" />
+              <CardPreview themeKey={ar ? "taif" : "redoute"} language={ar ? "AR" : "EN"} qrPlaceholder title="" />
             </div>
           </div>
         </div>

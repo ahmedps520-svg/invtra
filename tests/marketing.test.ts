@@ -7,15 +7,15 @@ import { describe, expect, it } from "vitest";
 import { getDictionary } from "@/lib/i18n";
 import { ownWhatsAppCopy } from "@/lib/i18n/sending-mode";
 import { THEME_KEYS } from "@/lib/themes/types";
-import { THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST, OCCASION_DESIGN, RETIRED_THEME_KEYS, THEME_LIST, getTheme, isRetired } from "@/lib/themes/registry";
 import { OCCASION_PAGES, INVITATIONS_HUB } from "@/lib/seo/occasion-pages";
 import { hubCopy, occasionCopy } from "@/lib/seo/occasion-sending";
 import { OCCASION_WORDING } from "@/lib/seo/occasion-wording";
-import { THEME_STYLE } from "@/lib/marketing/design-styles";
+import { SHOWCASE_LIST, THEME_STYLE, homepageDesigns, quizDesigns } from "@/lib/marketing/design-styles";
 import { matchDesigns, planFor, type QuizDesign } from "@/lib/marketing/quiz";
 import { SAMPLE_LANGS, parseSampleFile, sampleFileName, sampleSrc } from "@/lib/marketing/samples";
 import { startHref } from "@/lib/marketing/links";
-import { withDigits } from "@/lib/marketing/demo-copy";
+import { STUDIO_DESIGN, withDigits } from "@/lib/marketing/demo-copy";
 import { sampleCardWebp } from "@/server/seo/sample-card";
 
 /** Claims that only hold with INVTRA's own WhatsApp Business number. */
@@ -129,5 +129,35 @@ describe("copy when hosts send from their own WhatsApp", () => {
       expect(OCCASION_WORDING[page.slug]?.en.length, page.slug).toBeGreaterThanOrEqual(3);
       expect(OCCASION_WORDING[page.slug]?.ar.length, page.slug).toBeGreaterThanOrEqual(3);
     }
+  });
+});
+
+describe("retired designs", () => {
+  const retired = new Set<string>(RETIRED_THEME_KEYS);
+
+  it("are the flat designs without artwork, and every other design is painted", () => {
+    for (const t of THEME_LIST) expect(retired.has(t.key), t.key).toBe(!t.card.art);
+    expect(ACTIVE_THEME_LIST.length).toBe(THEME_LIST.length - RETIRED_THEME_KEYS.length);
+  });
+
+  it("are never listed: catalogue, homepage, quiz, occasion pages, share images, the hero and the footer", () => {
+    for (const t of [...SHOWCASE_LIST, ...homepageDesigns(), ...quizDesigns()]) expect(retired.has(t.key), t.key).toBe(false);
+    for (const p of OCCASION_PAGES) expect(retired.has(p.theme), p.slug).toBe(false);
+    for (const k of Object.values(STUDIO_DESIGN)) expect(retired.has(k), k).toBe(false);
+  });
+
+  it("are never given to a new event; each occasion starts on a painted design made for it", () => {
+    for (const [occasion, key] of Object.entries(OCCASION_DESIGN)) {
+      expect(retired.has(key), occasion).toBe(false);
+      expect(getTheme(key).key, occasion).toBe(key);
+      expect(getTheme(key).occasions, occasion).toContain(occasion);
+    }
+    expect(retired.has(getTheme("not-a-design").key)).toBe(false);
+  });
+
+  it("still render, for invitations already made with them", () => {
+    expect(getTheme("royal").key).toBe("royal");
+    expect(isRetired("royal")).toBe(true);
+    expect(isRetired("peony")).toBe(false);
   });
 });

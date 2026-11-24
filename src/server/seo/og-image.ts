@@ -3,7 +3,7 @@ import { getDictionary } from "@/lib/i18n";
 import { buildCardSvg } from "@/lib/card/build";
 import { sampleCardContent, themeSampleContent } from "@/lib/card/sample";
 import { escapeXml, measure, type TextStyle } from "@/lib/card/text";
-import { getTheme, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST, getTheme, isRetired, isThemeKey, type ThemeKey } from "@/lib/themes/registry";
 import { INVITATIONS_HUB, getOccasionPage } from "@/lib/seo/occasion-pages";
 import { renderSvgToPng } from "@/server/render/card";
 
@@ -23,21 +23,25 @@ function specFor(key: string, locale: Locale): Spec | null {
   const tagline = ar ? "دعوات إلكترونية تصل عبر واتساب" : "Digital invitations, delivered on WhatsApp";
   switch (key) {
     case "home":
-      return { title: `${m.hero.titleLine1} ${m.hero.titleLine2}`, subtitle: ar ? "دعوات رقمية للأعراس والمواليد وكل مناسبة — عبر واتساب" : "Digital invitations for weddings, newborns & every occasion — on WhatsApp", cards: [{ theme: "teddy" }, { theme: "luxury" }, { theme: "lantern" }] };
+      return { title: `${m.hero.titleLine1} ${m.hero.titleLine2}`, subtitle: ar ? "دعوات رقمية للأعراس والمواليد وكل مناسبة — عبر واتساب" : "Digital invitations for weddings, newborns & every occasion — on WhatsApp", cards: [{ theme: "stork-balloons-mint" }, { theme: "redoute" }, { theme: "navy-lanterns" }] };
     case "invitations":
-      return { title: INVITATIONS_HUB[locale].h1, subtitle: tagline, cards: [{ theme: "moonlight" }, { theme: "royal" }, { theme: "confetti" }] };
+      return { title: INVITATIONS_HUB[locale].h1, subtitle: tagline, cards: [{ theme: "lamb-moonlight" }, { theme: "peony" }, { theme: "hot-air-balloon-skies" }] };
     case "designs":
-      return { title: m.designsPage.title, subtitle: m.designs.title, cards: [{ theme: "clouds" }, { theme: "romantic" }, { theme: "henna" }] };
+      return { title: m.designsPage.title, subtitle: m.designs.title, cards: [{ theme: "nursery-rainbow-rose" }, { theme: "taif" }, { theme: "peacock-portrait" }] };
     case "pricing":
-      return { title: m.pricing.title, subtitle: tagline, cards: [{ theme: "minimal" }, { theme: "traditional" }] };
+      return { title: m.pricing.title, subtitle: tagline, cards: [{ theme: "redoute" }, { theme: "jasmine" }] };
   }
   const page = getOccasionPage(key);
   if (page) {
     const content = sampleCardContent(page.type);
-    const second = (["luxury", "minimal", "arabic"] as ThemeKey[]).find((t) => t !== page.theme && getTheme(t).occasions.includes(page.type)) ?? "minimal";
+    // A second painted design made for the occasion beside the page's own.
+    const second =
+      ACTIVE_THEME_LIST.find((t) => t.key !== page.theme && t.occasions[0] === page.type)?.key ??
+      ACTIVE_THEME_LIST.find((t) => t.key !== page.theme && t.occasions.includes(page.type))?.key ??
+      "peony";
     return { title: page[locale].title, subtitle: tagline, cards: [{ theme: second, content }, { theme: page.theme }] };
   }
-  if (isThemeKey(key)) {
+  if (isThemeKey(key) && !isRetired(key)) {
     return { title: `${dict.themes[key].name}`, subtitle: dict.themes[key].description, cards: [{ theme: key }] };
   }
   return null;

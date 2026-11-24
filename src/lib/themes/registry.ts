@@ -1,3 +1,4 @@
+import type { EventType } from "@prisma/client";
 import { THEME_KEYS, type ThemeDefinition, type ThemeKey } from "./types";
 import { baseCard, design } from "./base";
 import { STATIONERY } from "./stationery";
@@ -225,7 +226,8 @@ export const THEMES: Record<ThemeKey, ThemeDefinition> = {
   ...COLLECTION,
 };
 
-export const DEFAULT_THEME: ThemeKey = "minimal";
+/** The design used when a key is unknown (a painted one, like every design still offered). */
+export const DEFAULT_THEME: ThemeKey = "peony";
 
 export function isThemeKey(v: unknown): v is ThemeKey {
   return typeof v === "string" && (THEME_KEYS as readonly string[]).includes(v);
@@ -236,3 +238,53 @@ export function getTheme(key: string | null | undefined): ThemeDefinition {
 }
 
 export const THEME_LIST: ThemeDefinition[] = THEME_KEYS.map((k) => THEMES[k]);
+
+/**
+ * The first, flat drawn designs. They are retired: kept so invitations already made with them still
+ * render, but hidden from the catalogue, the website, the share images and the editor's picker, and
+ * never given to a new event.
+ */
+export const RETIRED_THEME_KEYS = [
+  "minimal",
+  "luxury",
+  "romantic",
+  "modern",
+  "traditional",
+  "arabic",
+  "bilingual",
+  "royal",
+  "garden",
+  "henna",
+  "moonlight",
+  "teddy",
+  "clouds",
+  "lullaby",
+  "confetti",
+  "lantern",
+] as const satisfies readonly ThemeKey[];
+
+export function isRetired(key: string): boolean {
+  return (RETIRED_THEME_KEYS as readonly string[]).includes(key);
+}
+
+/** The designs offered anywhere: everything but the retired ones. */
+export const ACTIVE_THEME_LIST: ThemeDefinition[] = THEME_LIST.filter((t) => !isRetired(t.key));
+
+/**
+ * The painted design a new event starts with until the customer picks one: made for the occasion,
+ * and free (as the old defaults were) except where the old default was premium (henna, Ramadan).
+ */
+export const OCCASION_DESIGN: Record<EventType, ThemeKey> = {
+  WEDDING: "peony",
+  ENGAGEMENT: "crimson",
+  ANNIVERSARY: "lavender",
+  HENNA: "peacock-portrait",
+  NEWBORN: "stork-balloons-mint",
+  BABY_SHOWER: "nursery-rainbow-rose",
+  AQIQAH: "lamb-moonlight",
+  RAMADAN: "navy-lanterns",
+  BIRTHDAY: "toy-box-bunting",
+  GRADUATION: "owl-portrait-champagne",
+  CORPORATE: "heirloom-parade",
+  OTHER: "wildflower",
+};

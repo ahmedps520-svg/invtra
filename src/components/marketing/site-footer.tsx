@@ -9,12 +9,12 @@ import type { CompanyDetails } from "@/server/legal";
 import { formatPhone } from "@/lib/phone";
 import { WhatsAppIcon } from "@/components/brand/whatsapp-icon";
 import { supportChatUrl } from "@/lib/support";
-import { THEME_LIST } from "@/lib/themes/registry";
+import { ACTIVE_THEME_LIST } from "@/lib/themes/registry";
 import { LanguagePill } from "./language-pill";
 
 const CONTACT_EMAIL = "contact@invtra.store";
 /** Designs listed by name in the footer (the full collection is one link away). */
-const FOOTER_DESIGNS = ["peony", "taif", "redoute", "royal", "jasmine", "teddy"];
+const FOOTER_DESIGNS = ["peony", "taif", "redoute", "navy-lanterns", "jasmine", "stork-balloons-mint"];
 
 /** Marketing footer: brand, link columns, contact, language and the legal line. */
 export function SiteFooter({
@@ -60,7 +60,7 @@ export function SiteFooter({
     {
       title: f.designs,
       links: [
-        ...THEME_LIST.filter((th) => FOOTER_DESIGNS.includes(th.key)).map((th) => ({ href: lp(`/designs/${th.key}`), label: dict.themes[th.key].name })),
+        ...ACTIVE_THEME_LIST.filter((th) => FOOTER_DESIGNS.includes(th.key)).map((th) => ({ href: lp(`/designs/${th.key}`), label: dict.themes[th.key].name })),
         { href: lp("/designs#upload"), label: f.uploadOwn },
         { href: lp("/designs"), label: f.allDesigns },
       ],

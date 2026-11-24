@@ -42,7 +42,7 @@ export function WhatsAppStory({
   const chat = DEMO_CHAT.WEDDING[locale];
   const name = GUEST[locale];
   const invite = `${fmt(ui.dear, { name })} ${fmt(ui.invited, { invite: chat.invite })}`;
-  const thumb = sampleSrc(locale === "ar" ? "arabic" : "romantic", locale);
+  const thumb = sampleSrc("redoute", locale);
   const accepted = path === "accept";
 
   return (
@@ -118,7 +118,7 @@ export function WhatsAppStory({
                   <div className={cn("w-[62%] self-start", pop)}>
                     <Bubble>
                       {/* eslint-disable-next-line @next/next/no-img-element -- pre-rendered sample */}
-                      <img src={sampleSrc("royal", locale)} width={SAMPLE_WIDTH} height={SAMPLE_HEIGHT} alt="" loading="lazy" className="block h-auto w-full rounded-md" />
+                      <img src={thumb} width={SAMPLE_WIDTH} height={SAMPLE_HEIGHT} alt="" loading="lazy" className="block h-auto w-full rounded-md" />
                       <p className="flex items-center justify-center gap-1.5 border-t border-black/[0.06] pt-1.5 text-[12.5px] font-medium text-[#00866e]">
                         <SquareArrowOutUpRight className="size-3 rtl:-scale-x-100" strokeWidth={2} />
                         {ui.view}

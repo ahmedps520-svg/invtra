@@ -246,7 +246,7 @@ export const marketing = {
       PREMIUM: {
         tagline: "For weddings, new arrivals and celebrations where every detail matters.",
         features: [
-          "Every premium design — Royal, Moonlight, Lullaby, Henna, Lantern, Luxury & Traditional",
+          "Every premium design — gold-foil lanterns, peacocks, laurels, Redouté roses and more",
           "Everything in Standard",
           "Priority support",
         ],
@@ -273,7 +273,7 @@ export const marketing = {
     items: [
       {
         q: "Is INVTRA only for weddings?",
-        a: "Not at all. INVTRA is for every occasion: welcoming a newborn and hospital or home visits, baby showers, aqiqah, birthdays, graduations, anniversaries, henna nights, Ramadan and Eid gatherings, corporate events and more. Each occasion has its own wording, WhatsApp message and designs — teddy bears, moons and clouds for babies, lanterns for Ramadan, confetti for birthdays.",
+        a: "Not at all. INVTRA is for every occasion: welcoming a newborn and hospital or home visits, baby showers, aqiqah, birthdays, graduations, anniversaries, henna nights, Ramadan and Eid gatherings, corporate events and more. Each occasion has its own wording, WhatsApp message and designs — storks, lambs and nursery toys for babies, gold lanterns for Ramadan, hot-air balloons and bunting for birthdays.",
       },
       {
         q: "Do you use the official WhatsApp?",
@@ -332,12 +332,12 @@ export const marketing = {
     titleAccent: "Every moment worth sharing.",
     body: "Welcoming a newborn, visiting at the hospital, a Ramadan ghabga or a birthday — every occasion gets its own designs, wording and WhatsApp message.",
     items: {
-      newborn: { title: "New baby & hospital visits", body: "Teddy bears, moons and soft colours to welcome your little one — and invite visitors." },
-      shower: { title: "Baby showers", body: "Clouds, balloons and pastel palettes for the newest member of the family." },
-      aqiqah: { title: "Aqiqah", body: "Gentle, moonlit designs to give thanks and celebrate your child's arrival." },
+      newborn: { title: "New baby & hospital visits", body: "Storks, little lambs and soft blossoms to welcome your little one — and invite visitors." },
+      shower: { title: "Baby showers", body: "Rainbows, balloons and a vintage pram for the newest member of the family." },
+      aqiqah: { title: "Aqiqah", body: "A little lamb under a gold crescent, to give thanks and celebrate your child's arrival." },
       weddings: { title: "Weddings & engagements", body: "Timeless designs for the biggest day — and every celebration leading up to it." },
-      henna: { title: "Henna nights", body: "Mandalas and warm terracotta inspired by traditional henna art." },
-      birthdays: { title: "Birthdays & graduations", body: "Confetti, colour and a little sparkle for milestones big and small." },
+      henna: { title: "Henna nights", body: "Henna rosettes, paisleys and painted peacocks in rich jewel colours." },
+      birthdays: { title: "Birthdays & graduations", body: "Hot-air balloons, antique toys and gold laurels for milestones big and small." },
       ramadan: { title: "Ramadan & Eid", body: "Lanterns and crescent moons for ghabgas, iftars and Eid gatherings." },
       anniversaries: { title: "Anniversaries", body: "Blossoming designs to celebrate the years together." },
     },

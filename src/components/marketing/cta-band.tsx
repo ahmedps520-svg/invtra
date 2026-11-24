@@ -73,7 +73,7 @@ export function CtaBand({
                 </div>
                 <div aria-hidden="true" className="relative mt-5 flex items-center gap-3 rounded-2xl bg-[#efe9df] p-3">
                   {/* eslint-disable-next-line @next/next/no-img-element -- pre-rendered sample */}
-                  <img src={sampleSrc("royal", locale === "ar" ? "ar" : "en")} width={SAMPLE_WIDTH} height={SAMPLE_HEIGHT} alt="" loading="lazy" className="h-auto w-14 rounded-md shadow-soft" />
+                  <img src={sampleSrc("redoute", locale === "ar" ? "ar" : "en")} width={SAMPLE_WIDTH} height={SAMPLE_HEIGHT} alt="" loading="lazy" className="h-auto w-14 rounded-md shadow-soft" />
                   <div className="min-w-0 flex-1 rounded-xl rounded-ss-[4px] bg-white px-3 py-2 text-[12.5px] leading-snug text-[#111b21] shadow-[0_1px_0.5px_rgb(0_0_0/0.1)]">
                     <p className="truncate">{dict.marketing.demo.delivery}</p>
                     <p className="mt-0.5 flex items-center justify-end gap-1 text-[10px] text-[#54656f]">

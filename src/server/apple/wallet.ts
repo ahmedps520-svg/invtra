@@ -190,7 +190,7 @@ export async function sampleWalletPass(): Promise<Buffer | null> {
   const config = await walletConfig();
   if (!config) return null;
   const { sampleEvent } = await import("@/server/invitations/sample");
-  const event = sampleEvent("luxury", "BILINGUAL");
+  const event = sampleEvent("heirloom-gilt-navy", "BILINGUAL");
   const now = new Date();
   const guest = {
     id: "sample-guest",
