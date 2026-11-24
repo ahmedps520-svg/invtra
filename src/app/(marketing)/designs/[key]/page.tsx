@@ -7,7 +7,7 @@ import { db } from "@/server/db";
 import { getI18n } from "@/server/i18n";
 import { getSessionUser } from "@/server/auth/session";
 import { sendingMode } from "@/server/marketing";
-import { THEME_LIST, getTheme, isThemeKey } from "@/lib/themes/registry";
+import { COLLECTION_KEYS, THEME_LIST, getTheme, isThemeKey } from "@/lib/themes/registry";
 import { OCCASION_PAGES } from "@/lib/seo/occasion-pages";
 import { THEME_STYLE } from "@/lib/marketing/design-styles";
 import { SAMPLE_HEIGHT, SAMPLE_WIDTH, sampleSrc } from "@/lib/marketing/samples";
@@ -24,8 +24,13 @@ import { breadcrumbLd, jsonLdHtml, pageMetadata, siteUrl } from "@/components/ma
 
 type Props = { params: Promise<{ key: string }> };
 
+/**
+ * The core and hand-arranged designs are pre-rendered at build time. The generated collection
+ * (hundreds of designs) renders on first request instead, which keeps the build quick and within
+ * the build machine's memory.
+ */
 export function generateStaticParams() {
-  return THEME_LIST.map((t) => ({ key: t.key }));
+  return THEME_LIST.filter((t) => !(COLLECTION_KEYS as readonly string[]).includes(t.key)).map((t) => ({ key: t.key }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
