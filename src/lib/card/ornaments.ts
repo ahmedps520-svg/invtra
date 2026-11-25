@@ -161,6 +161,9 @@ function heartDivider(color: string) {
 
 const DIVIDERS = { floral: floralDivider, diamond: diamondDivider, hairline: hairlineDivider, dots: dotsDivider, star: starDivider, heart: heartDivider } as const;
 
+/** The dividers, drawn about (0, 0) within about ±100 × ±15 at scale 1, for INVTRA Studio. */
+export const STUDIO_DIVIDERS = { ...DIVIDERS, moon: moonDivider } as const;
+
 /** Designs printed on artwork: the flowers are in the image, so only the geometry and the divider come from here. */
 export function artOrnament(art: ThemeArt, ctx: OrnamentContext): OrnamentResult {
   const { content, bottomPad, sidePad, divider } = art;

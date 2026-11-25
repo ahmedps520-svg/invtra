@@ -21,7 +21,9 @@ const MAX_EDGE: Record<UploadKind, number> = {
   BACKGROUND: 2400,
   CUSTOM_INVITATION: 3000,
   MUSIC: 0,
-REFERENCE: 2400 };
+  REFERENCE: 2400,
+  STUDIO: 2400,
+};
 
 function audioType(buf: Buffer): { mime: string; ext: string } | null {
   if (buf.subarray(0, 3).toString("latin1") === "ID3" || (buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0)) return { mime: "audio/mpeg", ext: "mp3" };
@@ -52,7 +54,7 @@ export async function saveUpload(opts: { userId: string; eventId: string; kind: 
     throw badRequest("unsupported_file", "Upload a JPG, PNG, WEBP or HEIC image.");
   }
   if (!meta.width || !meta.height) throw badRequest("unsupported_file", "That image couldn't be read.");
-  const keepAlpha = kind === "LOGO" && meta.hasAlpha;
+  const keepAlpha = (kind === "LOGO" || kind === "STUDIO") && meta.hasAlpha;
   const edge = MAX_EDGE[kind];
   const pipeline = img.resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true });
   const out = keepAlpha

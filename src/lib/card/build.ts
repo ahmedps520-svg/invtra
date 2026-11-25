@@ -53,6 +53,8 @@ export interface CardInput {
   backgroundImage?: CardImage | null;
   /** Draw artwork designs from their thumbnail (small previews in the browser). */
   artThumb?: boolean;
+  /** Tag every line with its part of the card (data-role), for turning the layout into Studio layers. */
+  annotate?: boolean;
 }
 
 type Block = { height: number; render: (top: number) => string };
@@ -64,6 +66,21 @@ const HOSTS_WITH_COUPLE = 0.6;
 
 function family(key: keyof typeof FONTS) {
   return FONTS[key].family;
+}
+
+/**
+ * While a card is laid out for INVTRA Studio (`annotate`), the part of the card being drawn: every
+ * text line gets a data-role, so the layout can be turned into separate, editable text layers.
+ */
+let ROLE: string | null = null;
+function withRole<T>(role: string | null, draw: () => T): T {
+  const prev = ROLE;
+  ROLE = role;
+  try {
+    return draw();
+  } finally {
+    ROLE = prev;
+  }
 }
 
 function textEl(
@@ -89,7 +106,7 @@ function textEl(
   return (
     `<text x="${x.toFixed(1)}" y="${baseline.toFixed(1)}" font-family="'${style.family}'" font-size="${style.size.toFixed(1)}"` +
     ` font-weight="${style.weight}"${style.italic ? ' font-style="italic"' : ""} fill="${fill}"${opacity !== 1 ? ` fill-opacity="${opacity}"` : ""}` +
-    ` text-anchor="${a}"${ar ? ' direction="rtl" xml:lang="ar"' : ""}${ls}>${escapeXml(t)}</text>`
+    ` text-anchor="${a}"${ar ? ' direction="rtl" xml:lang="ar"' : ""}${ls}${ROLE ? ` data-role="${ROLE}"` : ""}>${escapeXml(t)}</text>`
   );
 }
 
@@ -123,7 +140,7 @@ const SAMPLE_QR = "HTTPS://INVTRA.STORE/Q/SAMPLE0000";
  * What the card's QR encodes: nothing when the QR is turned off, else the design's own link
  * when one is set, else the guest's personal link (or the sample in the editor).
  */
-function effectiveQrText(design: InvitationDesign, qrText: string | null | undefined, placeholder: boolean | undefined): string | null {
+export function effectiveQrText(design: Pick<InvitationDesign, "card">, qrText: string | null | undefined, placeholder: boolean | undefined): string | null {
   if (!qrText && !placeholder) return null;
   return cardQrText(design, qrText || SAMPLE_QR);
 }
@@ -145,6 +162,8 @@ function splitNames(names: string): [string, string] | null {
 
 export function buildCardSvg(input: CardInput): string {
   const { theme, design, language, content, guest } = input;
+  const annotate = Boolean(input.annotate);
+  const tag = (role: string) => (annotate ? role : null);
   const p = design.palette;
   const W = CARD_W;
   const H = CARD_H;
@@ -198,8 +217,12 @@ export function buildCardSvg(input: CardInput): string {
   const build = (k: number, nk: number): { blocks: Block[]; gaps: number[] } => {
     const blocks: Block[] = [];
     const gaps: number[] = [];
-    const push = (b: Block, gapAfter: number) => {
-      blocks.push(b);
+    const push = (b: Block, gapAfter: number, role?: string) => {
+      blocks.push(
+        annotate && role
+          ? { height: b.height, render: (top) => withRole(role, () => (role === "divider" || role === "monogram" ? `<g data-role="${role}">${b.render(top)}</g>` : b.render(top))) }
+          : b,
+      );
       gaps.push(gapAfter * k);
     };
 
@@ -217,6 +240,7 @@ export function buildCardSvg(input: CardInput): string {
             textEl(mono, cx, top + r + st.size * 0.34, st, p.accent),
         },
         BASE_GAPS.afterMonogram,
+        "monogram",
       );
     }
 
@@ -230,8 +254,8 @@ export function buildCardSvg(input: CardInput): string {
     };
     const eyebrowStyleAr: TextStyle = { family: arBody, weight: 400, size: 32 * k };
     if (lines.eyebrow) {
-      if (isAr || bi) push(textBlock(arCopy.eyebrow, eyebrowStyleAr, cw, 2, cx, p.accent), bi ? 10 : BASE_GAPS.afterEyebrow);
-      if (!isAr) push(textBlock(enCopy.eyebrow, eyebrowStyleEn, cw, 2, cx, p.accent), BASE_GAPS.afterEyebrow);
+      if (isAr || bi) push(textBlock(arCopy.eyebrow, eyebrowStyleAr, cw, 2, cx, p.accent), bi ? 10 : BASE_GAPS.afterEyebrow, "eyebrow");
+      if (!isAr) push(textBlock(enCopy.eyebrow, eyebrowStyleEn, cw, 2, cx, p.accent), BASE_GAPS.afterEyebrow, "eyebrow");
     }
 
     // Names (smaller when the couple's names are printed below them, unless the host chose a size)
@@ -276,19 +300,23 @@ export function buildCardSvg(input: CardInput): string {
     const namesAr = (content.hostNamesAr ?? "").trim();
     if (!lines.names || (!namesEn && !namesAr)) {
       // Left off the card (or not given).
-    } else if (isAr) push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn)), BASE_GAPS.afterNames);
+    } else if (isAr) push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn)), BASE_GAPS.afterNames, "names");
     else if (bi) {
-      push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn), 0.78), namesAr && namesEn ? 6 : BASE_GAPS.afterNames);
+      push(namesFor(namesAr || namesEn, Boolean(namesAr) || isArabic(namesEn), 0.78), namesAr && namesEn ? 6 : BASE_GAPS.afterNames, "names");
       if (namesAr && namesEn)
-        push(textBlock(namesEn, { family: namesLatin, weight: namesWeight, size: nameSize * 0.6, uppercase: namesUpper, letterSpacing: namesUpper ? 0.08 : 0 }, cw, 1, cx, namesColor), BASE_GAPS.afterNames);
-    } else if (namesEn) push(namesFor(namesEn, false), BASE_GAPS.afterNames);
+        push(
+          textBlock(namesEn, { family: namesLatin, weight: namesWeight, size: nameSize * 0.6, uppercase: namesUpper, letterSpacing: namesUpper ? 0.08 : 0 }, cw, 1, cx, namesColor),
+          BASE_GAPS.afterNames,
+          "names-en",
+        );
+    } else if (namesEn) push(namesFor(namesEn, false), BASE_GAPS.afterNames, "names");
 
     // Intro line
     const introEn: TextStyle = { family: latinBody, weight: 400, italic: bodyItalic, size: 33 * k };
     const introAr: TextStyle = { family: arBody, weight: 400, size: 36 * k };
     if (lines.intro) {
-      if (isAr || bi) push(textBlock(arCopy.intro, introAr, cw * 0.9, 2, cx, p.text, 1.45, 0.85), bi ? 6 : BASE_GAPS.afterIntro);
-      if (!isAr) push(textBlock(enCopy.intro, introEn, cw * (bi ? 0.9 : 0.86), bi ? 2 : 3, cx, p.text, 1.3, 0.85), BASE_GAPS.afterIntro);
+      if (isAr || bi) push(textBlock(arCopy.intro, introAr, cw * 0.9, 2, cx, p.text, 1.45, 0.85), bi ? 6 : BASE_GAPS.afterIntro, "intro");
+      if (!isAr) push(textBlock(enCopy.intro, introEn, cw * (bi ? 0.9 : 0.86), bi ? 2 : 3, cx, p.text, 1.3, 0.85), BASE_GAPS.afterIntro, "intro");
     }
 
     // Divider (between the greeting and the practical details, when there are both)
@@ -334,10 +362,10 @@ export function buildCardSvg(input: CardInput): string {
     const divider: Block = { height: 24 * k, render: (top) => orn.divider(cx, top + 12 * k, k) };
     if (hasCouple) {
       // The couple's names, then the design's ornament beneath them.
-      if (coupleAr) push(coupleRow(coupleAr, true, coupleEn ? 0.82 : 1), coupleEn ? 14 : BASE_GAPS.afterCouple);
-      if (coupleEn) push(coupleRow(coupleEn, false, coupleAr ? 0.7 : 1), BASE_GAPS.afterCouple);
-      if (below) push(divider, BASE_GAPS.afterDivider);
-    } else if (blocks.length && below) push(divider, BASE_GAPS.afterDivider);
+      if (coupleAr) push(coupleRow(coupleAr, true, coupleEn ? 0.82 : 1), coupleEn ? 14 : BASE_GAPS.afterCouple, "couple");
+      if (coupleEn) push(coupleRow(coupleEn, false, coupleAr ? 0.7 : 1), BASE_GAPS.afterCouple, "couple");
+      if (below) push(divider, BASE_GAPS.afterDivider, "divider");
+    } else if (blocks.length && below) push(divider, BASE_GAPS.afterDivider, "divider");
 
     // Date & time
     const dateEn: TextStyle = { family: latinBody, weight: 500, size: 31 * k, uppercase: true, letterSpacing: 0.14 };
@@ -347,14 +375,14 @@ export function buildCardSvg(input: CardInput): string {
     // An unknown time ("to be announced") has no line.
     const showTime = lines.time && Boolean(content.time.en || content.time.ar);
     if (lines.date) {
-      if (isAr || bi) push(textBlock(content.date.ar, dateAr, cw, 1, cx, p.text), showTime ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
-      if (!isAr) push(textBlock(content.date.en, dateEn, cw, 1, cx, p.text), showTime ? BASE_GAPS.afterDate : BASE_GAPS.afterTime);
+      if (isAr || bi) push(textBlock(content.date.ar, dateAr, cw, 1, cx, p.text), showTime ? BASE_GAPS.afterDate : BASE_GAPS.afterTime, "date");
+      if (!isAr) push(textBlock(content.date.en, dateEn, cw, 1, cx, p.text), showTime ? BASE_GAPS.afterDate : BASE_GAPS.afterTime, "date");
     }
     if (!showTime) {
       // Left off the card.
-    } else if (isAr) push(textBlock(`${CARD_PHRASES.ar.at} ${content.time.ar}`, timeAr, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
-    else if (bi) push(textBlock(`${content.time.en}  ·  ${content.time.ar}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
-    else push(textBlock(`${CARD_PHRASES.en.at} ${content.time.en}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime);
+    } else if (isAr) push(textBlock(`${CARD_PHRASES.ar.at} ${content.time.ar}`, timeAr, cw, 1, cx, p.muted), BASE_GAPS.afterTime, "time");
+    else if (bi) push(textBlock(`${content.time.en}  ·  ${content.time.ar}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime, "time");
+    else push(textBlock(`${CARD_PHRASES.en.at} ${content.time.en}`, timeEn, cw, 1, cx, p.muted), BASE_GAPS.afterTime, "time");
 
     // Venue
     const venueEn: TextStyle = { family: latinDisplay === "Pinyon Script" ? latinBody : latinBody, weight: 600, size: 33 * k };
@@ -362,17 +390,17 @@ export function buildCardSvg(input: CardInput): string {
     const addrEn: TextStyle = { family: latinBody, weight: 400, size: 25 * k };
     const addrAr: TextStyle = { family: arBody, weight: 400, size: 28 * k };
     if (lines.venue) {
-      if ((isAr || bi) && venueArText) push(textBlock(venueArText, venueAr, cw, 2, cx, p.text), bi && venueEnText ? 4 : BASE_GAPS.afterVenue);
-      if (!isAr && venueEnText) push(textBlock(venueEnText, venueEn, cw, 2, cx, p.text), BASE_GAPS.afterVenue);
+      if ((isAr || bi) && venueArText) push(textBlock(venueArText, venueAr, cw, 2, cx, p.text), bi && venueEnText ? 4 : BASE_GAPS.afterVenue, "venue");
+      if (!isAr && venueEnText) push(textBlock(venueEnText, venueEn, cw, 2, cx, p.text), BASE_GAPS.afterVenue, "venue");
     }
-    if (addrText) push(textBlock(addrText, isAr ? addrAr : addrEn, cw * 0.92, 2, cx, p.muted), 0);
+    if (addrText) push(textBlock(addrText, isAr ? addrAr : addrEn, cw * 0.92, 2, cx, p.muted), 0, "address");
 
     // Your own extra lines (custom events), Arabic first on bilingual cards like the rest.
     const extraStyleEn: TextStyle = { family: latinBody, weight: 400, italic: bodyItalic, size: 26 * k };
     const extraStyleAr: TextStyle = { family: arBody, weight: 400, size: 29 * k };
     const extras = [...(isAr || bi ? (extraAr.length ? extraAr : isAr ? extraEn : []) : []), ...(!isAr ? extraEn : [])];
     if (extras.length && blocks.length) gaps[gaps.length - 1] = Math.max(gaps[gaps.length - 1], 22 * k);
-    for (const line of extras) push(textBlock(line, isArabic(line) ? extraStyleAr : extraStyleEn, cw * 0.92, 2, cx, p.text, 1.3, 0.85), 8);
+    for (const line of extras) push(textBlock(line, isArabic(line) ? extraStyleAr : extraStyleEn, cw * 0.92, 2, cx, p.text, 1.3, 0.85), 8, "extra");
     if (gaps.length) gaps[gaps.length - 1] = 0;
     return { blocks, gaps };
   };
@@ -422,18 +450,19 @@ export function buildCardSvg(input: CardInput): string {
   const plate = (x: number, yy: number) =>
     `<rect x="${x - 12}" y="${yy - 12}" width="${qrSize + 24}" height="${qrSize + 24}" rx="22" fill="none" stroke="${p.accent}" stroke-width="1.4" opacity="0.7"/>`;
 
+  const qrGroup = (x: number, yy: number) => (annotate ? `<g data-role="qr">${plate(x, yy) + qr(x, yy)}</g>` : plate(x, yy) + qr(x, yy));
   if (centered || !hasQr) {
     let fy = footerTop;
     if (showGuest) {
       const fitted = fit(guestText, guestStyle, cw + 80, { maxLines: 1 });
-      footer += textEl(fitted.lines[0] ?? guestText, W / 2, fy + fitted.style.size, fitted.style, p.text);
+      footer += withRole(tag("guest"), () => textEl(fitted.lines[0] ?? guestText, W / 2, fy + fitted.style.size, fitted.style, p.text));
       fy += 52;
     }
     if (hasQr) {
       const qx = (W - qrSize) / 2;
-      footer += plate(qx, fy + 4) + qr(qx, fy + 4);
+      footer += qrGroup(qx, fy + 4);
       const cap = fit(scanText, capStyle, cw + 80, { maxLines: 1 });
-      footer += textEl(cap.lines[0] ?? scanText, W / 2, fy + qrSize + 48, cap.style, p.muted);
+      footer += withRole(tag("caption"), () => textEl(cap.lines[0] ?? scanText, W / 2, fy + qrSize + 48, cap.style, p.muted));
     }
   } else {
     // QR to one side, guest details beside it. "start" follows reading direction.
@@ -442,30 +471,34 @@ export function buildCardSvg(input: CardInput): string {
     const side = Math.max(orn.sidePad, 110);
     const qx = qrOnLeft ? side : W - side - qrSize;
     const qy = footerTop;
-    footer += plate(qx, qy) + qr(qx, qy);
+    footer += qrGroup(qx, qy);
     const tx = qrOnLeft ? qx + qrSize + 44 : qx - 44;
     const anchor = qrOnLeft ? "start" : "end";
     const colW = W - side - qrSize - 44 - side;
     let ty = qy + qrSize / 2 - (showGuest ? 34 : 0);
     if (showGuest && guest) {
       const nameStyle = fit(fmt(phrases.dear, { name: guest.name }), guestStyle, colW, { maxLines: 1 }).style;
-      footer += textEl(fmt(phrases.dear, { name: guest.name }), tx, ty, nameStyle, p.text, anchor);
+      footer += withRole(tag("guest"), () => textEl(fmt(phrases.dear, { name: guest.name }), tx, ty, nameStyle, p.text, anchor));
       ty += 40;
-      footer += textEl(
-        guest.allowedCount > 1 ? fmt(phrases.admits, { n: num(guest.allowedCount) }) : phrases.admitsOne,
-        tx,
-        ty,
-        { ...guestStyle, weight: 400, size: guestStyle.size * 0.85 },
-        p.muted,
-        anchor,
+      footer += withRole(tag("admits"), () =>
+        textEl(
+          guest.allowedCount > 1 ? fmt(phrases.admits, { n: num(guest.allowedCount) }) : phrases.admitsOne,
+          tx,
+          ty,
+          { ...guestStyle, weight: 400, size: guestStyle.size * 0.85 },
+          p.muted,
+          anchor,
+        ),
       );
       ty += 44;
     }
-    footer += textEl(scanText, tx, ty, fit(scanText, capStyle, colW, { maxLines: 1 }).style, p.accent, anchor);
+    footer += withRole(tag("caption"), () => textEl(scanText, tx, ty, fit(scanText, capStyle, colW, { maxLines: 1 }).style, p.accent, anchor));
   }
 
   if (design.card.showBranding) {
-    footer += textEl("INVTRA", W / 2, H - bottomPad + 8, { family: "Jost", weight: 500, size: 15, letterSpacing: 0.5 }, p.muted, "middle", 0.7);
+    footer += withRole(tag("brand"), () =>
+      textEl("INVTRA", W / 2, H - bottomPad + 8, { family: "Jost", weight: 500, size: 15, letterSpacing: 0.5 }, p.muted, "middle", 0.7),
+    );
   }
 
   // ── Background ─────────────────────────────────────────────────────────────

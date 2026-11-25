@@ -5,6 +5,7 @@ import type { CardImage } from "@/lib/card/build";
 import type { CardPreviewProps, CardView } from "@/lib/card/view";
 import { isUnlocked, PREVIEW_WIDTH } from "@/server/render/preview";
 import { cardContent, eventDesign } from "./design";
+import { canvasUploadKeys, isCanvasCard } from "@/lib/canvas/doc";
 
 export type { CardPreviewProps, CardView };
 
@@ -35,7 +36,17 @@ export async function cardView(event: Event, opts: { full?: boolean } = {}): Pro
 /** Everything <CardPreview> needs to draw an event's invitation in the browser (paid-for events and staff only). */
 export async function cardPreviewProps(event: Event): Promise<CardPreviewProps> {
   const design = eventDesign(event);
+  const canvasImages: Record<string, CardImage> = {};
+  if (isCanvasCard(design)) {
+    await Promise.all(
+      canvasUploadKeys(design.canvas).map(async (key) => {
+        const img = await image(key);
+        if (img) canvasImages[key] = img;
+      }),
+    );
+  }
   return {
+    canvasImages,
     themeKey: event.themeKey,
     design,
     language: event.language,

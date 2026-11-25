@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { buildCardSvg, buildCustomCardSvg, type CardContent, type CardImage, type CardLanguage } from "@/lib/card/build";
+import { buildCardSvg, buildCustomCardSvg, effectiveQrText, type CardContent, type CardImage, type CardLanguage } from "@/lib/card/build";
+import { buildCanvasSvg } from "@/lib/canvas/render";
+import { isCanvasCard } from "@/lib/canvas/doc";
 import type { InvitationDesign } from "@/lib/design/schema";
 import { getTheme, type ThemeKey } from "@/lib/themes/registry";
 import { SAMPLE_GUEST, themeSampleContent } from "@/lib/card/sample";
@@ -21,6 +23,7 @@ export function CardPreview({
   qrPlaceholder = true,
   backgroundImage,
   customImage,
+  canvasImages,
   className,
   title = "Invitation preview",
   lazy = false,
@@ -36,6 +39,8 @@ export function CardPreview({
   backgroundImage?: CardImage | null;
   /** When set, renders the customer's own uploaded invitation with the QR overlaid. */
   customImage?: CardImage | null;
+  /** Photos used by a Studio design, by storage key. */
+  canvasImages?: Record<string, CardImage>;
   className?: string;
   title?: string;
   /**
@@ -68,8 +73,20 @@ export function CardPreview({
       return buildCustomCardSvg({ image: customImage, design: d, qrText, qrPlaceholder, caption: language === "AR" ? "امسح الرمز لعرض دعوتك" : "Scan for your invitation" }).svg;
     }
     const g = guest === undefined ? (language === "AR" ? SAMPLE_GUEST.ar : SAMPLE_GUEST.en) : guest;
-    return buildCardSvg({ theme, design: d, language, content: content ?? themeSampleContent(theme.key), guest: g, qrText, qrPlaceholder, backgroundImage, artThumb: thumb });
-  }, [near, themeKey, design, language, content, guest, qrText, qrPlaceholder, backgroundImage, customImage, thumb]);
+    const c = content ?? themeSampleContent(theme.key);
+    if (isCanvasCard(d)) {
+      return buildCanvasSvg(d.canvas, {
+        content: c,
+        guest: g,
+        qrText: effectiveQrText(d, qrText, qrPlaceholder),
+        digits: d.digits,
+        language: language === "AR" ? "ar" : "en",
+        images: canvasImages,
+        thumbs: thumb,
+      });
+    }
+    return buildCardSvg({ theme, design: d, language, content: c, guest: g, qrText, qrPlaceholder, backgroundImage, artThumb: thumb });
+  }, [near, themeKey, design, language, content, guest, qrText, qrPlaceholder, backgroundImage, customImage, canvasImages, thumb]);
 
   if (svg === null) {
     return (

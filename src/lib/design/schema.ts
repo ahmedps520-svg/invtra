@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { FONTS, type FontKey } from "./fonts";
+import { canvasSchema } from "@/lib/canvas/schema";
 
 /**
  * The customer-editable design of an invitation. Stored as JSON on Event.design.
@@ -124,6 +125,11 @@ export const designSchema = z.object({
     size: z.number().min(0.12).max(0.45),
   }),
   digits: z.enum(["arab", "latn"]),
+  /**
+   * An INVTRA Studio design: when enabled, the card is drawn from these elements instead of the
+   * template layout (see src/lib/canvas). Patches always carry the whole document.
+   */
+  canvas: canvasSchema.default({}),
 });
 
 export type InvitationDesign = z.infer<typeof designSchema>;

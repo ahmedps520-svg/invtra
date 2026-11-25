@@ -7,6 +7,7 @@ import { getEditableEvent } from "@/server/events/access";
 import { eventDesign } from "@/server/events/design";
 import { assertEventUpload } from "@/server/uploads";
 import { staleAcceptedCount } from "@/server/sending/service";
+import { canUseStudio, guardCanvas } from "@/server/studio/access";
 import { deepMerge, designPatchSchema, designSchema } from "@/lib/design/schema";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
 import { designSourcesFor } from "@/lib/products";
@@ -23,6 +24,8 @@ const bodySchema = z.object({
   coverImageKey: z.string().max(400).nullable().optional(),
   logoKey: z.string().max(400).nullable().optional(),
   musicKey: z.string().max(400).nullable().optional(),
+  /** Turn the Studio design on or off (staff, custom events), keeping the document itself. */
+  canvasEnabled: z.boolean().optional(),
 });
 
 /** Save the design editor. Anything that changes the printed card bumps contentVersion. */
@@ -39,12 +42,16 @@ export const PATCH = route<Ctx>("events.design", async (req: NextRequest, ctx) =
     if (row && !row.isActive) throw badRequest("theme_unavailable", "This design is not available.");
     themeKey = body.themeKey;
   }
-  let design = eventDesign(event);
+  const saved = eventDesign(event);
+  let design = saved;
   if (themeKey !== event.themeKey && body.resetStyle !== false) {
     const t = getTheme(themeKey).defaults;
     design = { ...design, palette: t.palette, fonts: t.fonts, names: { ...t.names, size: design.names.size }, animation: t.animation, card: { ...design.card, qr: { ...design.card.qr, style: t.card.qr.style } } };
   }
   if (body.design) design = designSchema.parse(deepMerge(design, body.design));
+  if (body.canvasEnabled !== undefined && canUseStudio(user, event)) design = { ...design, canvas: { ...design.canvas, enabled: body.canvasEnabled } };
+  // A Studio design is staff-only (custom events) and may only place this event's own files.
+  design = await guardCanvas(user, event, design, saved);
   if (design.background.imageKey) await assertEventUpload(event.id, design.background.imageKey, ["BACKGROUND", "COVER"]);
 
   const custom = body.customImageKey !== undefined ? await assertEventUpload(event.id, body.customImageKey, ["CUSTOM_INVITATION"]) : undefined;
@@ -66,7 +73,7 @@ export const PATCH = route<Ctx>("events.design", async (req: NextRequest, ctx) =
     themeKey !== event.themeKey ||
     imageMode !== event.imageMode ||
     (custom !== undefined && (custom?.key ?? null) !== event.customImageKey) ||
-    JSON.stringify(design) !== JSON.stringify(eventDesign(event));
+    JSON.stringify(design) !== JSON.stringify(saved);
   if (cardChanged) data.contentVersion = { increment: 1 };
   // Keep the wizard's design choice in step with the editor: an uploaded design or one of ours.
   if (imageMode !== event.imageMode && event.designSource !== "REQUEST") {

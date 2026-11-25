@@ -7,6 +7,8 @@ import { findGuestAccess } from "@/server/events/cohosts";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 import { assertEventUpload } from "@/server/uploads";
 import { previewResponse, renderProtectedPreview } from "@/server/render/preview";
+import { eventDesign } from "@/server/events/design";
+import { guardCanvas } from "@/server/studio/access";
 import { normalizeDesign } from "@/lib/design/schema";
 import { getTheme, isThemeKey } from "@/lib/themes/registry";
 
@@ -49,7 +51,7 @@ export const POST = route<Ctx>("events.preview.draft", async (req: NextRequest, 
   const event = await viewable(user.id, user.role, id);
   const body = await parseJson(req, draftSchema);
   if (!isThemeKey(body.themeKey)) throw badRequest("invalid_theme", "Unknown theme.");
-  const design = normalizeDesign(getTheme(body.themeKey).defaults, body.design);
+  const design = await guardCanvas(user, event, normalizeDesign(getTheme(body.themeKey).defaults, body.design), eventDesign(event));
   if (design.background.imageKey) await assertEventUpload(event.id, design.background.imageKey, ["BACKGROUND", "COVER"]);
   const custom = body.imageMode === "CUSTOM" && body.customImageKey ? await assertEventUpload(event.id, body.customImageKey, ["CUSTOM_INVITATION"]) : null;
   const jpeg = await renderProtectedPreview(event, {

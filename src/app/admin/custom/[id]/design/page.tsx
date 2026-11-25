@@ -9,6 +9,7 @@ import { pickNamespaces } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n/provider";
 import { DesignEditor } from "@/components/editor/design-editor";
 import { CustomSteps } from "@/components/admin/custom-steps";
+import { StudioEntry } from "@/components/studio/studio-entry";
 import { PageHeader } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Design · Custom event" };
@@ -33,6 +34,8 @@ export default async function CustomDesignPage({ params, searchParams }: { param
           : { href: `/admin/custom/${event.id}/host${query}`, label: "Continue to host & payment" },
     },
   });
+  const canvas = props.initial.design.canvas;
+  const studio = canvas.elements.length ? (canvas.enabled ? "on" : "off") : "none";
   return (
     <>
       <Link
@@ -48,9 +51,11 @@ export default async function CustomDesignPage({ params, searchParams }: { param
         description="Choose any design — premium designs are included — or upload your own artwork. Set the wording, leave off any line, add your own, and choose whether there's a QR code and what it opens. Everything saves as you go."
       />
       <CustomSteps current={1} links={customStepLinks(event.id, Boolean(order))} />
+      <StudioEntry eventId={event.id} state={studio} />
       {/* The editor's copy is English in the admin area. */}
       <I18nProvider locale="en" dict={pickNamespaces("en", ["common", "editor", "themes"])}>
-        <DesignEditor {...props} />
+        {/* Remounted when Studio is switched on or off, so its preview follows. */}
+        <DesignEditor key={studio} {...props} />
       </I18nProvider>
     </>
   );

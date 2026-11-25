@@ -3,7 +3,10 @@ import type { Event, Guest, Invitation } from "@prisma/client";
 import { db } from "@/server/db";
 import { storage } from "@/server/storage";
 import { renderSvgToPng } from "@/server/render/card";
-import { buildCardSvg, buildCustomCardSvg, type CardImage } from "@/lib/card/build";
+import { buildCardSvg, buildCustomCardSvg, effectiveQrText, type CardImage } from "@/lib/card/build";
+import { buildCanvasSvg } from "@/lib/canvas/render";
+import { canvasUploadKeys, isCanvasCard } from "@/lib/canvas/doc";
+import { inlineStudioAssets } from "@/server/render/studio-assets";
 import { CARD_PHRASES } from "@/lib/invitation-copy";
 import { cardContent, eventDesign, eventTheme } from "@/server/events/design";
 import { invitationQrText, personalImageVersion, teaserImageVersion } from "./index";
@@ -54,6 +57,25 @@ export async function buildEventCardSvg(
         caption: opts.qrText || opts.qrPlaceholder ? CARD_PHRASES[lang].scan : undefined,
       }).svg;
     }
+  }
+  if (isCanvasCard(design)) {
+    // A Studio design: photos inlined, Studio pieces converted for resvg.
+    const images: Record<string, CardImage> = {};
+    await Promise.all(
+      canvasUploadKeys(design.canvas).map(async (key) => {
+        const img = await loadImage(key);
+        if (img) images[key] = img;
+      }),
+    );
+    const svg = buildCanvasSvg(design.canvas, {
+      content: cardContent(event, design),
+      guest: opts.guest ?? null,
+      qrText: effectiveQrText(design, opts.qrText, opts.qrPlaceholder),
+      digits: design.digits,
+      language: event.language === "AR" ? "ar" : "en",
+      images,
+    });
+    return inlineStudioAssets(svg);
   }
   const backgroundImage = design.background.mode === "image" ? await loadImage(design.background.imageKey) : null;
   return buildCardSvg({

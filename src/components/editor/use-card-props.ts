@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import type { CardImage } from "@/lib/card/build";
 import type { InvitationDesign } from "@/lib/design/schema";
+import { canvasUploadKeys, isCanvasCard } from "@/lib/canvas/doc";
 import { useEditor } from "./editor-context";
 import type { Draft, EditorUpload } from "./types";
 
@@ -37,6 +38,17 @@ export function useCardProps(override?: { themeKey?: Draft["themeKey"]; design?:
     [customUrl, customW, customH],
   );
 
+  // Photos placed in a Studio design.
+  const canvasKeys = isCanvasCard(design) ? canvasUploadKeys(design.canvas).join("|") : "";
+  const canvasImages = useMemo(() => {
+    const out: Record<string, CardImage> = {};
+    for (const key of canvasKeys ? canvasKeys.split("|") : []) {
+      const img = cardImageOf(uploads[key]);
+      if (img) out[key] = img;
+    }
+    return out;
+  }, [canvasKeys, uploads]);
+
   return {
     themeKey,
     design,
@@ -46,6 +58,7 @@ export function useCardProps(override?: { themeKey?: Draft["themeKey"]; design?:
     qrPlaceholder: true,
     backgroundImage,
     customImage,
+    canvasImages,
   };
 }
 

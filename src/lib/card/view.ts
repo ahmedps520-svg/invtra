@@ -9,6 +9,8 @@ export interface CardPreviewProps {
   content: CardContent;
   backgroundImage: CardImage | null;
   customImage: CardImage | null;
+  /** Photos used by a Studio design, by storage key. */
+  canvasImages?: Record<string, CardImage>;
 }
 
 /**

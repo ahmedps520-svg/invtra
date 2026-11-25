@@ -1,3 +1,4 @@
+import { EMPTY_CANVAS } from "@/lib/canvas/schema";
 import type { InvitationDesign } from "@/lib/design/schema";
 
 /** Building blocks shared by the coded designs (registry.ts) and the artwork designs (stationery.ts). */
@@ -23,7 +24,7 @@ export const baseCard: InvitationDesign["card"] = {
 
 export const emptyTexts: InvitationDesign["texts"] = { eyebrow: "", intro: "", closing: "", eyebrowAr: "", introAr: "", closingAr: "", extra: "", extraAr: "" };
 
-export function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" | "monogram" | "names" | "couple" | "customQr" | "background" | "digits"> &
+export function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" | "monogram" | "names" | "couple" | "customQr" | "background" | "digits" | "canvas"> &
   Partial<Pick<InvitationDesign, "card" | "background" | "digits" | "names">>): InvitationDesign {
   return {
     texts: emptyTexts,
@@ -34,6 +35,7 @@ export function design(d: Omit<InvitationDesign, "sections" | "card" | "texts" |
     background: { mode: "theme", imageKey: null, overlay: 0.35 },
     customQr: { x: 0.5, y: 0.82, size: 0.22 },
     digits: "arab",
+    canvas: EMPTY_CANVAS,
     ...d,
     card: d.card ?? baseCard,
   };

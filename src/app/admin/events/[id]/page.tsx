@@ -383,6 +383,7 @@ export default async function EventDetailPage({
                 content={preview.content}
                 backgroundImage={preview.backgroundImage}
                 customImage={preview.customImage}
+                canvasImages={preview.canvasImages}
                 className="rounded-xl"
                 title={`Invitation design for ${event.title}`}
               />

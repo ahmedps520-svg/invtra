@@ -88,7 +88,12 @@ function saveBody(d: Draft, s: Draft): Record<string, unknown> | null {
     body.resetStyle = true;
   }
   // Always send the full design with a theme change so the server ends up with exactly what we show.
-  if (body.themeKey || !same(d.design, s.design)) body.design = d.design;
+  // (Not the Studio document: Studio saves that itself, and an older copy here mustn't overwrite it.)
+  if (body.themeKey || !same(d.design, s.design)) {
+    const design: Partial<InvitationDesign> = { ...d.design };
+    delete design.canvas;
+    body.design = design;
+  }
   if (d.imageMode !== s.imageMode) body.imageMode = d.imageMode;
   for (const f of MEDIA_FIELDS) if (d[f] !== s[f]) body[f] = d[f];
   return Object.keys(body).length ? body : null;

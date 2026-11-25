@@ -59,6 +59,49 @@ FAMILIES = {
     "WindSong": ["400"],
     "Imperial Script": ["400"],
     "Rouge Script": ["400"],
+    # INVTRA Studio: more scripts, serifs, sans and playful faces, and more Arabic.
+    "Tangerine": ["400", "700"],
+    "Petit Formal Script": ["400"],
+    "Mrs Saint Delafield": ["400"],
+    "Herr Von Muellerhoff": ["400"],
+    "Sacramento": ["400"],
+    "Ephesis": ["400"],
+    "Corinthia": ["400", "700"],
+    "Luxurious Script": ["400"],
+    "Birthstone": ["400"],
+    "Arizonia": ["400"],
+    "EB Garamond": ["400", "500", "600", "i400"],
+    "Bodoni Moda": ["400", "500", "600"],
+    "Libre Baskerville": ["400", "700", "i400"],
+    "Lora": ["400", "500", "600", "i400"],
+    "Prata": ["400"],
+    "Gilda Display": ["400"],
+    "Cinzel Decorative": ["400", "700"],
+    "DM Serif Display": ["400", "i400"],
+    "Bellefair": ["400"],
+    "Montserrat": ["300", "400", "500", "600"],
+    "Josefin Sans": ["300", "400", "600"],
+    "Raleway": ["300", "400", "500", "600"],
+    "Poppins": ["300", "400", "500", "600"],
+    "Tenor Sans": ["400"],
+    "Nunito": ["400", "600", "700"],
+    "Caveat": ["400", "600"],
+    "Amatic SC": ["400", "700"],
+    "Comfortaa": ["400", "600"],
+    "Chewy": ["400"],
+    "Patrick Hand": ["400"],
+    "Cairo": ["300", "400", "600", "700"],
+    "Tajawal": ["300", "400", "500", "700"],
+    "Almarai": ["300", "400", "700"],
+    "Changa": ["400", "500", "600"],
+    "Harmattan": ["400", "700"],
+    "Noto Kufi Arabic": ["400", "600"],
+    "Noto Naskh Arabic": ["400", "600"],
+    "Readex Pro": ["300", "400", "600"],
+    "Lateef": ["400"],
+    "Qahiri": ["400"],
+    "Alexandria": ["300", "400", "600"],
+    "Playpen Sans Arabic": ["400", "600"],
 }
 
 def css_url(family, variants):
@@ -123,7 +166,10 @@ def main():
 ARABIC_FACTORS = {"Amiri": 0.71, "Aref Ruqaa": 0.72, "Reem Kufi": 0.53, "IBM Plex Sans Arabic": 0.81, "El Messiri": 0.84, "Baloo Bhaijaan 2": 0.75, "Lalezar": 0.87, "Rakkas": 0.81, "Marhey": 0.89, "Lemonada": 0.86, "Katibeh": 0.8,
                   # Measured against resvg (max over sample names and wording) plus ~6% headroom.
                   "Gulzar": 0.6, "Mirza": 0.78, "Scheherazade New": 0.76, "Alkalami": 1.09, "Ruwudu": 0.81, "Reem Kufi Fun": 0.54,
-                  "Kufam": 0.89, "Jomhuria": 0.83, "Vibes": 0.97, "Blaka": 0.76, "Markazi Text": 0.86}
+                  "Kufam": 0.89, "Jomhuria": 0.83, "Vibes": 0.97, "Blaka": 0.76, "Markazi Text": 0.86,
+                  # Studio's Arabic faces (resvg bounding boxes over 15 samples, plus 6%).
+                  "Cairo": 0.94, "Tajawal": 0.92, "Almarai": 0.83, "Changa": 0.88, "Harmattan": 0.82, "Noto Kufi Arabic": 0.85,
+                  "Noto Naskh Arabic": 0.85, "Readex Pro": 0.94, "Lateef": 0.83, "Qahiri": 0.82, "Alexandria": 0.98, "Playpen Sans Arabic": 0.93}
 
 def write_ts_module():
     metrics = json.load(open(METRICS))

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getCustomEvent, resolveCustomEventId } from "./service";
 
-export type CustomStep = "details" | "design" | "host" | "send";
+export type CustomStep = "details" | "design" | "studio" | "host" | "send";
 
 /**
  * Data for an Admin → Custom events step page. Links from before the design-first flow used

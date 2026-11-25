@@ -9,6 +9,7 @@ import { isUnlocked } from "@/server/render/preview";
 import { mediaUrl } from "@/server/storage";
 import { pickNamespaces } from "@/lib/i18n";
 import { designSourcesFor } from "@/lib/products";
+import { isCanvasCard } from "@/lib/canvas/doc";
 import { I18nProvider } from "@/components/i18n/provider";
 import { DesignEditor } from "@/components/editor/design-editor";
 import { DesignBrief, DesignSourcePicker } from "@/components/dashboard/wizard/design-source";
@@ -58,6 +59,9 @@ export default async function DesignPage({ params }: { params: Promise<{ id: str
   return (
     <div>
       {ordering ? <DesignSourcePicker eventId={event.id} sources={designSourcesFor(event.product)} current={event.designSource} locked={locked} /> : null}
+      {isCanvasCard(props.initial.design) ? (
+        <p className="mb-5 rounded-xl border border-bronze-200 bg-bronze-50 px-4 py-3 text-[13.5px] leading-relaxed text-ink-soft">{dict.editor.studio.hostNotice}</p>
+      ) : null}
       <I18nProvider locale={locale} dict={pickNamespaces(locale, ["editor", "themes"])}>
       <DesignEditor {...props} />
     </I18nProvider>

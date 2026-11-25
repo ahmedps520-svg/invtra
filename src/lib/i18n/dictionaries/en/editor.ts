@@ -3,6 +3,10 @@ export const editor = {
   heading: "Design your invitation",
   intro: "Choose a design, make it yours, and see exactly what your guests will receive as you go.",
 
+  studio: {
+    hostNotice: "INVTRA designed this invitation card for you. Changes here update your website; to change the card itself, message us.",
+  },
+
   save: {
     saving: "Saving…",
     saved: "All changes saved",

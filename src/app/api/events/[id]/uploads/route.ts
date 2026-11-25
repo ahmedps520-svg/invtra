@@ -6,7 +6,7 @@ import { enforceRateLimit } from "@/server/security/rate-limit";
 import { saveUpload, uploadView } from "@/server/uploads";
 
 type Ctx = { params: Promise<{ id: string }> };
-const KINDS = ["COVER", "GALLERY", "LOGO", "BACKGROUND", "CUSTOM_INVITATION", "MUSIC", "REFERENCE"] as const;
+const KINDS = ["COVER", "GALLERY", "LOGO", "BACKGROUND", "CUSTOM_INVITATION", "MUSIC", "REFERENCE", "STUDIO"] as const;
 /** Inspiration images for a custom design request. */
 const MAX_REFERENCES = 5;
 

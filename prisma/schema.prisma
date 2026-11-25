@@ -324,6 +324,7 @@ enum UploadKind {
   CUSTOM_INVITATION
   MUSIC
   REFERENCE // inspiration images for a custom design request
+  STUDIO // photos placed in an INVTRA Studio design (transparency kept)
 }
 
 model Upload {
